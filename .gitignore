@@ -54,3 +54,6 @@ dist/
 *.AppImage
 *.deb
 *.rpm
+.superpowers/
+docs/superpowers/
+ANITRACK_SPEC.md

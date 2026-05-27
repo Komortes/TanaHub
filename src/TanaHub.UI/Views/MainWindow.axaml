@@ -1,0 +1,334 @@
+<Window
+    x:Class="TanaHub.UI.Views.MainWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:TanaHub.UI.ViewModels"
+    xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    xmlns:conv="clr-namespace:TanaHub.UI.Views.Converters"
+    xmlns:pages="clr-namespace:TanaHub.UI.Views.Pages"
+    x:DataType="vm:MainWindowViewModel"
+    Title="{Binding AppName}"
+    Width="1180"
+    Height="760"
+    MinWidth="920"
+    MinHeight="600"
+    Background="{DynamicResource TanaHubBackgroundBrush}">
+
+  <Grid RowDefinitions="60,*">
+
+    <!-- ── Topbar ─────────────────────────────────────────────── -->
+    <Border Grid.Row="0" Background="{DynamicResource TanaHubSurfaceBrush}" BorderThickness="0,0,0,1">
+      <Border.BorderBrush>
+        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+          <GradientStop Color="#9B6EF878" Offset="0"/>
+          <GradientStop Color="#22D3EE40" Offset="0.40"/>
+          <GradientStop Color="#2C224400" Offset="1"/>
+        </LinearGradientBrush>
+      </Border.BorderBrush>
+
+      <Grid ColumnDefinitions="220,*,Auto" Margin="18,0">
+
+        <!-- Logo -->
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="11">
+          <Border Width="34" Height="34" CornerRadius="10" ClipToBounds="True">
+            <Border.Background>
+              <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#9B6EF8" Offset="0"/>
+                <GradientStop Color="#22D3EE" Offset="1"/>
+              </LinearGradientBrush>
+            </Border.Background>
+            <material:MaterialIcon
+                Width="18" Height="18"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Foreground="#100B1B"
+                Kind="PlayBoxMultiple"/>
+          </Border>
+          <StackPanel Spacing="1">
+            <TextBlock
+                Text="TanaHub"
+                FontSize="15"
+                FontWeight="Bold"
+                Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+            <TextBlock
+                Text="Anime · Manga"
+                FontSize="10"
+                Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+          </StackPanel>
+        </StackPanel>
+
+        <!-- Search -->
+        <Grid Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8" VerticalAlignment="Center">
+          <TextBox
+              x:Name="SearchBox"
+              Height="34"
+              PlaceholderText="Search anime, manga, genres..."
+              Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+              KeyDown="SearchBox_OnKeyDown">
+            <TextBox.InnerLeftContent>
+              <material:MaterialIcon
+                  Width="15" Height="15"
+                  Kind="Magnify"
+                  Margin="8,0,4,0"
+                  Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            </TextBox.InnerLeftContent>
+            <TextBox.KeyBindings>
+              <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}"/>
+            </TextBox.KeyBindings>
+          </TextBox>
+          <Button
+              Grid.Column="1"
+              Width="36"
+              Height="34"
+              Padding="0"
+              Command="{Binding SearchCommand}"
+              ToolTip.Tip="Search">
+            <material:MaterialIcon Width="17" Height="17" Kind="ArrowRight"/>
+          </Button>
+        </Grid>
+
+        <!-- Status chip -->
+        <Border
+            Grid.Column="2"
+            Margin="18,0,0,0"
+            Padding="10,6"
+            VerticalAlignment="Center"
+            Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
+            BorderBrush="{DynamicResource TanaHubBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="9">
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <Border
+                Width="6" Height="6"
+                CornerRadius="3"
+                VerticalAlignment="Center"
+                Background="{DynamicResource TanaHubAmberBrush}"/>
+            <TextBlock
+                Text="Local"
+                FontSize="11"
+                Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+          </StackPanel>
+        </Border>
+
+      </Grid>
+    </Border>
+
+    <!-- ── Body ───────────────────────────────────────────────── -->
+    <Grid Grid.Row="1" ColumnDefinitions="220,*">
+
+      <!-- Sidebar -->
+      <Border
+          Background="{DynamicResource TanaHubSurfaceBrush}"
+          BorderBrush="{DynamicResource TanaHubBorderBrush}"
+          BorderThickness="0,0,1,0">
+        <Grid RowDefinitions="*,Auto">
+          <Grid Margin="12,16,12,0">
+            <!-- Sliding selection highlight -->
+            <Border
+                Width="196"
+                Height="50"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Background="{DynamicResource TanaHubAccentGlowBrush}"
+                BorderBrush="{DynamicResource TanaHubAccentBrush}"
+                BorderThickness="1"
+                CornerRadius="12">
+              <Border.RenderTransform>
+                <TranslateTransform Y="{Binding SelectedNavigationOffset}">
+                  <TranslateTransform.Transitions>
+                    <Transitions>
+                      <DoubleTransition Property="Y" Duration="0:0:0.22" Easing="CubicEaseOut"/>
+                    </Transitions>
+                  </TranslateTransform.Transitions>
+                </TranslateTransform>
+              </Border.RenderTransform>
+            </Border>
+
+            <ListBox
+                Background="Transparent"
+                BorderThickness="0"
+                Padding="0"
+                ItemsSource="{Binding NavigationItems}"
+                SelectedItem="{Binding SelectedNavigationItem}">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:NavigationItemViewModel">
+                  <Grid
+                      Height="50"
+                      ColumnDefinitions="42,*"
+                      ColumnSpacing="10"
+                      ToolTip.Tip="{Binding Summary}">
+                    <Border
+                        Classes="nav-icon-border"
+                        Width="34"
+                        Height="34"
+                        CornerRadius="10"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Background="{DynamicResource TanaHubSurfaceRaisedBrush}">
+                      <material:MaterialIcon
+                          Classes="nav-icon"
+                          Width="19" Height="19"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Foreground="{DynamicResource TanaHubTextSecondaryBrush}"
+                          Kind="{Binding Key, Converter={x:Static conv:NavKeyToIconConverter.Instance}}"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                      <TextBlock
+                          Text="{Binding Title}"
+                          FontSize="13"
+                          FontWeight="SemiBold"
+                          Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+                      <TextBlock
+                          Text="{Binding Summary}"
+                          FontSize="10"
+                          Foreground="{DynamicResource TanaHubTextMutedBrush}"
+                          TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+              <ListBox.Styles>
+                <Style Selector="ListBoxItem">
+                  <Setter Property="Padding" Value="0"/>
+                  <Setter Property="Margin" Value="0,0,0,8"/>
+                </Style>
+                <Style Selector="ListBoxItem /template/ ContentPresenter">
+                  <Setter Property="Background" Value="Transparent"/>
+                  <Setter Property="CornerRadius" Value="12"/>
+                </Style>
+                <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+                  <Setter Property="Background" Value="Transparent"/>
+                </Style>
+                <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
+                  <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceHoverBrush}"/>
+                  <Setter Property="CornerRadius" Value="12"/>
+                </Style>
+                <Style Selector="ListBoxItem:selected Border.nav-icon-border">
+                  <Setter Property="Background" Value="{DynamicResource TanaHubAccentGlowBrush}"/>
+                </Style>
+                <Style Selector="ListBoxItem:selected material|MaterialIcon.nav-icon">
+                  <Setter Property="Foreground" Value="{DynamicResource TanaHubAccentLightBrush}"/>
+                </Style>
+                <Style Selector="Border.nav-icon-border">
+                  <Setter Property="Transitions">
+                    <Setter.Value>
+                      <Transitions>
+                        <BrushTransition Property="Background" Duration="0:0:0.18"/>
+                      </Transitions>
+                    </Setter.Value>
+                  </Setter>
+                </Style>
+                <Style Selector="material|MaterialIcon.nav-icon">
+                  <Setter Property="Transitions">
+                    <Setter.Value>
+                      <Transitions>
+                        <BrushTransition Property="Foreground" Duration="0:0:0.18"/>
+                      </Transitions>
+                    </Setter.Value>
+                  </Setter>
+                </Style>
+              </ListBox.Styles>
+            </ListBox>
+          </Grid>
+
+          <!-- Sidebar footer -->
+          <Border
+              Grid.Row="1"
+              Margin="12,0,12,14"
+              Padding="10,7"
+              CornerRadius="8"
+              BorderBrush="{DynamicResource TanaHubBorderBrush}"
+              BorderThickness="1">
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <material:MaterialIcon Width="12" Height="12" Kind="CodeBraces" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+              <TextBlock Text="Preview build" FontSize="10" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            </StackPanel>
+          </Border>
+        </Grid>
+      </Border>
+
+      <!-- Main content -->
+      <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="30" MaxWidth="1180">
+          <StackPanel Spacing="22">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+              <!-- Back button -->
+              <Button
+                  Grid.Column="0"
+                  Classes="ghost"
+                  IsVisible="{Binding IsDetailVisible}"
+                  VerticalAlignment="Center"
+                  Padding="10,7"
+                  Command="{Binding GoBackCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <material:MaterialIcon Width="16" Height="16" Kind="ChevronLeft"/>
+                  <TextBlock Text="Back"/>
+                </StackPanel>
+              </Button>
+
+              <!-- Page title -->
+              <Grid Grid.Column="1" ColumnDefinitions="3,*" ColumnSpacing="10" VerticalAlignment="Center">
+                <Border
+                    Width="3"
+                    Height="28"
+                    CornerRadius="2"
+                    VerticalAlignment="Center">
+                  <Border.Background>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                      <GradientStop Color="#9B6EF8" Offset="0"/>
+                      <GradientStop Color="#22D3EE" Offset="1"/>
+                    </LinearGradientBrush>
+                  </Border.Background>
+                </Border>
+                <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                  <TextBlock
+                      Text="{Binding CurrentPageTitle}"
+                      FontSize="26"
+                      FontWeight="Bold"
+                      Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+                  <TextBlock
+                      Text="{Binding CurrentPageSummary}"
+                      FontSize="12"
+                      Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+                </StackPanel>
+              </Grid>
+
+              <!-- Search status -->
+              <Border
+                  Grid.Column="2"
+                  Padding="12,7"
+                  VerticalAlignment="Center"
+                  Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
+                  BorderBrush="{DynamicResource TanaHubBorderBrush}"
+                  BorderThickness="1"
+                  CornerRadius="9">
+                <TextBlock
+                    Text="{Binding SearchStatus}"
+                    FontSize="11"
+                    Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+              </Border>
+            </Grid>
+
+            <pages:HomeView IsVisible="{Binding IsHomeVisible}"/>
+            <pages:DiscoverView IsVisible="{Binding IsDiscoverVisible}"/>
+            <pages:LibraryView IsVisible="{Binding IsLibraryVisible}"/>
+            <pages:ScheduleView IsVisible="{Binding IsScheduleVisible}"/>
+            <pages:SettingsView IsVisible="{Binding IsSettingsVisible}"/>
+
+            <ContentControl
+                IsVisible="{Binding IsDetailVisible}"
+                Content="{Binding SelectedMedia}">
+              <ContentControl.ContentTemplate>
+                <DataTemplate x:DataType="vm:MediaDetailViewModel">
+                  <pages:TitleDetailView/>
+                </DataTemplate>
+              </ContentControl.ContentTemplate>
+            </ContentControl>
+          </StackPanel>
+        </Grid>
+      </ScrollViewer>
+
+    </Grid>
+  </Grid>
+</Window>

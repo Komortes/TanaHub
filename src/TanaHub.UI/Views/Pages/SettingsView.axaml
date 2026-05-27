@@ -1,0 +1,160 @@
+<UserControl
+    x:Class="TanaHub.UI.Views.Pages.SettingsView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:TanaHub.UI.ViewModels"
+    xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    x:DataType="vm:MainWindowViewModel">
+
+  <StackPanel Spacing="18">
+    <Grid ColumnDefinitions="1.1*,*" ColumnSpacing="18">
+
+      <!-- Runtime info -->
+      <Border Padding="18" Background="{DynamicResource TanaHubSurfaceBrush}"
+              BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1"
+              CornerRadius="10" BoxShadow="0 2 8 0 #1C000000">
+        <StackPanel Spacing="14">
+          <StackPanel Spacing="3">
+            <TextBlock Text="Runtime" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+            <TextBlock Text="Current development wiring" FontSize="12" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+          </StackPanel>
+          <Border Height="1" Background="{DynamicResource TanaHubBorderBrush}"/>
+          <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="130,*" RowSpacing="10">
+            <TextBlock Text="Mode" FontSize="12" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+            <TextBlock Grid.Column="1" Text="File-backed library and settings" FontSize="12" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+            <TextBlock Grid.Row="1" Text="Theme" FontSize="12" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SettingsTheme}" FontSize="12" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+            <TextBlock Grid.Row="2" Text="Sync" FontSize="12" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding PreferredSyncSource}" FontSize="12" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- Storage info -->
+      <Border Grid.Column="1" Padding="18" Background="{DynamicResource TanaHubSurfaceBrush}"
+              BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1"
+              CornerRadius="10" BoxShadow="0 2 8 0 #1C000000">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Storage" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+          <TextBlock Text="Library and preferences persist to local JSON files between app launches." FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+          <Border Height="1" Background="{DynamicResource TanaHubBorderBrush}" Margin="0,4"/>
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <material:MaterialIcon Width="16" Height="16" Kind="DatabaseCheck" Foreground="{DynamicResource TanaHubGreenBrush}"/>
+            <TextBlock Text="{Binding SettingsStorageDetail}" FontSize="12" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <Grid ColumnDefinitions="*,*" ColumnSpacing="18">
+
+      <!-- Accounts -->
+      <Border Padding="18" Background="{DynamicResource TanaHubSurfaceBrush}"
+              BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1"
+              CornerRadius="10" BoxShadow="0 2 8 0 #1C000000">
+        <StackPanel Spacing="16">
+          <TextBlock Text="Accounts" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+          <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="34,*,Auto" RowSpacing="14">
+
+            <!-- AniList -->
+            <material:MaterialIcon Width="18" Height="18" Kind="CloudSync" Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
+            <StackPanel Grid.Column="1" Spacing="2">
+              <TextBlock Text="AniList" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+              <TextBlock Text="OAuth connection placeholder" FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            </StackPanel>
+            <Button Classes="ghost" Grid.Column="2" Height="30" Padding="10,0" VerticalAlignment="Center"
+                    Command="{Binding SelectSyncSourceCommand}" CommandParameter="AniList">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <material:MaterialIcon Width="13" Height="13" Kind="LinkVariant"/>
+                <TextBlock Text="Connect" FontSize="11"/>
+              </StackPanel>
+            </Button>
+
+            <!-- MAL -->
+            <material:MaterialIcon Grid.Row="1" Width="18" Height="18" Kind="CloudSync" Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
+            <StackPanel Grid.Row="1" Grid.Column="1" Spacing="2">
+              <TextBlock Text="MyAnimeList" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+              <TextBlock Text="List sync placeholder" FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            </StackPanel>
+            <Button Classes="ghost" Grid.Row="1" Grid.Column="2" Height="30" Padding="10,0" VerticalAlignment="Center"
+                    Command="{Binding SelectSyncSourceCommand}" CommandParameter="MyAnimeList">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <material:MaterialIcon Width="13" Height="13" Kind="LinkVariant"/>
+                <TextBlock Text="Connect" FontSize="11"/>
+              </StackPanel>
+            </Button>
+
+            <!-- MangaDex -->
+            <material:MaterialIcon Grid.Row="2" Width="18" Height="18" Kind="BookSearch" Foreground="{DynamicResource TanaHubCyanBrush}"/>
+            <StackPanel Grid.Row="2" Grid.Column="1" Spacing="2">
+              <TextBlock Text="MangaDex" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+              <TextBlock Text="Metadata source placeholder" FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            </StackPanel>
+            <Button Classes="ghost" Grid.Row="2" Grid.Column="2" Height="30" Padding="10,0" VerticalAlignment="Center"
+                    Command="{Binding SelectSyncSourceCommand}" CommandParameter="MangaDex">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <material:MaterialIcon Width="13" Height="13" Kind="LinkVariant"/>
+                <TextBlock Text="Connect" FontSize="11"/>
+              </StackPanel>
+            </Button>
+
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- Preferences -->
+      <Border Grid.Column="1" Padding="18" Background="{DynamicResource TanaHubSurfaceBrush}"
+              BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1"
+              CornerRadius="10" BoxShadow="0 2 8 0 #1C000000">
+        <StackPanel Spacing="16">
+          <TextBlock Text="Preferences" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+          <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="14">
+            <StackPanel Spacing="2">
+              <TextBlock Text="Notifications" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+              <TextBlock Text="Episode and chapter release alerts" FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            </StackPanel>
+            <Button Grid.Column="1" Width="88" Height="28" Padding="8,0" Command="{Binding ToggleNotificationsCommand}">
+              <TextBlock Text="{Binding NotificationsEnabled}" FontSize="11"/>
+            </Button>
+
+            <StackPanel Grid.Row="1" Spacing="2">
+              <TextBlock Text="Offline cache" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+              <TextBlock Text="Keep metadata available without network" FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            </StackPanel>
+            <Button Grid.Row="1" Grid.Column="1" Width="88" Height="28" Padding="8,0" Command="{Binding ToggleOfflineCacheCommand}">
+              <TextBlock Text="{Binding OfflineCacheEnabled}" FontSize="11"/>
+            </Button>
+
+            <StackPanel Grid.Row="2" Spacing="2">
+              <TextBlock Text="Recognition" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+              <TextBlock Text="trace.moe and SauceNAO integrations" FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            </StackPanel>
+            <Button Grid.Row="2" Grid.Column="1" Width="88" Height="28" Padding="8,0" Command="{Binding ToggleRecognitionServicesCommand}">
+              <TextBlock Text="{Binding RecognitionServicesEnabled}" FontSize="11"/>
+            </Button>
+          </Grid>
+
+          <Border Height="1" Background="{DynamicResource TanaHubBorderBrush}"/>
+
+          <StackPanel Spacing="6">
+            <TextBlock Text="Theme" FontSize="12" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <Button Command="{Binding SelectThemeCommand}" CommandParameter="Nebula dark">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <material:MaterialIcon Width="14" Height="14" Kind="MoonWaningCrescent"/>
+                  <TextBlock Text="Nebula"/>
+                </StackPanel>
+              </Button>
+              <Button Classes="ghost" Command="{Binding SelectThemeCommand}" CommandParameter="High contrast">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <material:MaterialIcon Width="14" Height="14" Kind="ContrastCircle"/>
+                  <TextBlock Text="High contrast"/>
+                </StackPanel>
+              </Button>
+            </StackPanel>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Grid>
+  </StackPanel>
+</UserControl>
