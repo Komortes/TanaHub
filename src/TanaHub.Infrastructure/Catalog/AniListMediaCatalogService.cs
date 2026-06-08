@@ -202,9 +202,17 @@ public sealed class AniListMediaCatalogService : IMediaCatalogService
             variables["genres"] = query.Genres;
         }
 
+        if (!string.IsNullOrWhiteSpace(query.CountryCode))
+        {
+            variableDefinitions.Add("$country: CountryCode");
+            mediaArguments.Add("countryOfOrigin: $country");
+            variables["country"] = query.CountryCode.ToUpperInvariant();
+        }
+
+        var sort = ToAniListSort(query.Sort);
         mediaArguments.Add(string.IsNullOrWhiteSpace(query.SearchText)
-            ? "sort: [TRENDING_DESC, POPULARITY_DESC]"
-            : "sort: [SEARCH_MATCH, POPULARITY_DESC]");
+            ? $"sort: [{sort}]"
+            : $"sort: [SEARCH_MATCH, {sort}]");
 
         var graphQl = $$"""
             query SearchMedia({{string.Join(", ", variableDefinitions)}}) {
@@ -326,6 +334,17 @@ public sealed class AniListMediaCatalogService : IMediaCatalogService
             MediaReleaseStatus.Cancelled => "CANCELLED",
             MediaReleaseStatus.Hiatus => "HIATUS",
             _ => null
+        };
+    }
+
+    private static string ToAniListSort(MediaSearchSort sort)
+    {
+        return sort switch
+        {
+            MediaSearchSort.Score => "SCORE_DESC",
+            MediaSearchSort.Trending => "TRENDING_DESC",
+            MediaSearchSort.Newest => "START_DATE_DESC",
+            _ => "POPULARITY_DESC"
         };
     }
 

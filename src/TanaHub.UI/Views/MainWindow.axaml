@@ -182,7 +182,7 @@
                       <TextBlock
                           Text="{Binding Summary}"
                           FontSize="10"
-                          Foreground="{DynamicResource TanaHubTextMutedBrush}"
+                          Foreground="{DynamicResource TanaHubTextSecondaryBrush}"
                           TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
                   </Grid>
@@ -198,6 +198,14 @@
                   <Setter Property="CornerRadius" Value="12"/>
                 </Style>
                 <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+                  <Setter Property="Background" Value="Transparent"/>
+                </Style>
+                <!-- Hovering the active item must not paint the hover bg over the sliding indicator -->
+                <Style Selector="ListBoxItem:selected:pointerover /template/ ContentPresenter">
+                  <Setter Property="Background" Value="Transparent"/>
+                </Style>
+                <!-- Suppress FluentTheme focus highlight so keyboard nav stays clean -->
+                <Style Selector="ListBoxItem:focus-visible /template/ ContentPresenter">
                   <Setter Property="Background" Value="Transparent"/>
                 </Style>
                 <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">

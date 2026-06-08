@@ -7,28 +7,53 @@
     xmlns:controls="clr-namespace:TanaHub.UI.Views.Controls"
     x:DataType="vm:MainWindowViewModel">
 
-  <StackPanel Spacing="28">
-    <Grid ColumnDefinitions="1.4*,*" ColumnSpacing="22">
+  <!-- Two-column dashboard: left = content, right = schedule + stats -->
+  <Grid ColumnDefinitions="1.3*,*" ColumnSpacing="22">
 
-      <!-- ── In Progress ──────────────────────────────────────── -->
+    <!-- ── Left column: In Progress + Recently Updated ─────────── -->
+    <StackPanel Spacing="22">
+
+      <!-- In Progress -->
       <StackPanel Spacing="14">
-        <Grid ColumnDefinitions="*,Auto">
-          <StackPanel Orientation="Horizontal" Spacing="8">
-            <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center" Background="{DynamicResource TanaHubCyanBrush}"/>
-            <TextBlock
-                Text="IN PROGRESS"
-                FontSize="10"
-                FontWeight="SemiBold"
-                Foreground="{DynamicResource TanaHubCyanBrush}"/>
-          </StackPanel>
-          <TextBlock
-              Grid.Column="1"
-              Text="Quick +1 from library"
-              FontSize="11"
-              Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
-        </Grid>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center"
+                  Background="{DynamicResource TanaHubCyanBrush}"/>
+          <TextBlock Text="IN PROGRESS" FontSize="10" FontWeight="SemiBold"
+                     Foreground="{DynamicResource TanaHubCyanBrush}"/>
+        </StackPanel>
 
-        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+        <!-- Empty state -->
+        <Border
+            IsVisible="{Binding !HasContinueItems}"
+            Padding="24,36"
+            Background="{DynamicResource TanaHubSurfaceBrush}"
+            BorderBrush="{DynamicResource TanaHubBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12">
+          <StackPanel HorizontalAlignment="Center" Spacing="12">
+            <material:MaterialIcon Width="40" Height="40" Kind="PlayCircleOutline"
+                                   Foreground="{DynamicResource TanaHubTextMutedBrush}"
+                                   HorizontalAlignment="Center"/>
+            <TextBlock Text="Nothing in progress" FontSize="14" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="Add titles to your library to start tracking."
+                       FontSize="12" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"
+                       HorizontalAlignment="Center"/>
+            <Button HorizontalAlignment="Center" Margin="0,4,0,0"
+                    Command="{Binding NavigateToDiscoverCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <material:MaterialIcon Width="14" Height="14" Kind="Magnify"/>
+                <TextBlock Text="Browse titles"/>
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </Border>
+
+        <!-- Horizontal scroll cards -->
+        <ScrollViewer IsVisible="{Binding HasContinueItems}"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Disabled">
           <ItemsControl ItemsSource="{Binding ContinueItems}">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
@@ -39,7 +64,7 @@
               <DataTemplate x:DataType="vm:LibraryEntryViewModel">
                 <Border
                     Width="144"
-                    Height="214"
+                    Height="210"
                     CornerRadius="12"
                     ClipToBounds="True"
                     Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
@@ -55,7 +80,7 @@
                       <Setter Property="RenderTransform" Value="translateY(-2px)"/>
                     </Style>
                   </Border.Styles>
-                  <Grid RowDefinitions="*,Auto,4">
+                  <Grid RowDefinitions="*,Auto">
                     <Border>
                       <Border.Background>
                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
@@ -67,56 +92,32 @@
                       <Grid>
                         <controls:RemoteImage SourceUri="{Binding PosterUri}"/>
                         <material:MaterialIcon
-                            Width="38" Height="38"
+                            Width="36" Height="36"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            Foreground="#FFFFFF42"
+                            Foreground="#FFFFFF38"
                             Kind="PlayCircleOutline"/>
                         <Button
-                            Width="30" Height="30"
-                            Padding="0"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Bottom"
+                            Width="30" Height="30" Padding="0"
+                            HorizontalAlignment="Right" VerticalAlignment="Bottom"
                             Margin="0,0,8,8"
                             Command="{Binding IncrementCommand}"
                             ToolTip.Tip="Increment progress">
-                          <material:MaterialIcon Width="16" Height="16" Kind="Plus"/>
+                          <material:MaterialIcon Width="15" Height="15" Kind="Plus"/>
                         </Button>
                       </Grid>
                     </Border>
-                    <StackPanel Grid.Row="1" Margin="10,9,10,10" Spacing="3">
-                      <TextBlock
-                          Text="{Binding Title}"
-                          FontSize="12"
-                          FontWeight="SemiBold"
-                          Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
-                          TextTrimming="CharacterEllipsis"/>
+                    <StackPanel Grid.Row="1" Margin="10,9,10,11" Spacing="4">
+                      <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold"
+                                 Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
+                                 TextTrimming="CharacterEllipsis"/>
                       <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock
-                            Classes="mono"
-                            Text="{Binding Progress}"
-                            FontSize="11"
-                            Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-                        <TextBlock
-                            Classes="mono"
-                            Grid.Column="1"
-                            Text="{Binding Score}"
-                            FontSize="11"
-                            Foreground="{DynamicResource TanaHubAmberBrush}"/>
+                        <TextBlock Classes="mono" Text="{Binding Progress}" FontSize="11"
+                                   Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+                        <TextBlock Classes="mono" Grid.Column="1" Text="{Binding Score}"
+                                   FontSize="11" Foreground="{DynamicResource TanaHubAmberBrush}"/>
                       </Grid>
                     </StackPanel>
-                    <!-- Progress bar -->
-                    <Border
-                        Grid.Row="2"
-                        Width="90"
-                        HorizontalAlignment="Left">
-                      <Border.Background>
-                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
-                          <GradientStop Color="#9B6EF8" Offset="0"/>
-                          <GradientStop Color="#22D3EE" Offset="1"/>
-                        </LinearGradientBrush>
-                      </Border.Background>
-                    </Border>
                   </Grid>
                 </Border>
               </DataTemplate>
@@ -125,145 +126,210 @@
         </ScrollViewer>
       </StackPanel>
 
-      <!-- ── Airing Today ─────────────────────────────────────── -->
-      <StackPanel Grid.Column="1" Spacing="14">
+      <!-- Recently Updated -->
+      <StackPanel Spacing="14">
         <Grid ColumnDefinitions="*,Auto">
           <StackPanel Orientation="Horizontal" Spacing="8">
-            <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center" Background="{DynamicResource TanaHubSakuraBrush}"/>
-            <TextBlock
-                Text="AIRING TODAY"
-                FontSize="10"
-                FontWeight="SemiBold"
-                Foreground="{DynamicResource TanaHubSakuraBrush}"/>
+          <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center"
+                  Background="{DynamicResource TanaHubAccentLightBrush}"/>
+          <TextBlock Text="RECENTLY UPDATED" FontSize="10" FontWeight="SemiBold"
+                     Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
           </StackPanel>
-          <TextBlock
-              Grid.Column="1"
-              Text="Local seed"
-              FontSize="11"
-              Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+          <Button Classes="ghost" Grid.Column="1" Height="24" Padding="8,0"
+                  Command="{Binding NavigateToLibraryCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="5">
+              <TextBlock Text="Library" FontSize="11"/>
+              <material:MaterialIcon Width="12" Height="12" Kind="ChevronRight"/>
+            </StackPanel>
+          </Button>
         </Grid>
 
-        <ItemsControl ItemsSource="{Binding ScheduleItems}">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate x:DataType="vm:ScheduleItemViewModel">
-              <Border
-                  Margin="0,0,0,6"
-                  Background="{DynamicResource TanaHubSurfaceBrush}"
-                  BorderBrush="{DynamicResource TanaHubBorderBrush}"
-                  BorderThickness="1"
-                  CornerRadius="10"
-                  ClipToBounds="True">
-                <Border.Transitions>
-                  <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.12"/>
-                  </Transitions>
-                </Border.Transitions>
-                <Border.Styles>
-                  <Style Selector="Border:pointerover">
-                    <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceRaisedBrush}"/>
-                  </Style>
-                </Border.Styles>
-                <Grid ColumnDefinitions="3,*">
-                  <!-- Left colour strip -->
-                  <Border CornerRadius="10,0,0,10" Background="{DynamicResource TanaHubSakuraBrush}" Opacity="0.6"/>
-                  <!-- Content -->
-                  <Grid Grid.Column="1" ColumnDefinitions="42,*,Auto" ColumnSpacing="12" Margin="10,10,12,10">
-                    <Border Width="34" Height="46" CornerRadius="7">
-                      <Border.Background>
-                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                          <GradientStop Color="#254E5A" Offset="0"/>
-                          <GradientStop Color="#181020" Offset="1"/>
-                        </LinearGradientBrush>
-                      </Border.Background>
-                      <material:MaterialIcon
-                          Width="18" Height="18"
-                          HorizontalAlignment="Center"
-                          VerticalAlignment="Center"
-                          Foreground="{DynamicResource TanaHubCyanBrush}"
-                          Kind="Television"/>
-                    </Border>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="3">
-                      <TextBlock
-                          Text="{Binding Title}"
-                          FontSize="13"
-                          FontWeight="SemiBold"
-                          Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
-                          TextTrimming="CharacterEllipsis"/>
-                      <TextBlock
-                          Text="{Binding Detail}"
-                          FontSize="11"
-                          Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-                    </StackPanel>
-                    <Border VerticalAlignment="Center" Padding="8,3" CornerRadius="6" Background="{DynamicResource TanaHubAccentGlowBrush}">
-                      <TextBlock
-                          Classes="mono"
-                          Text="{Binding Time}"
-                          FontSize="11"
-                          FontWeight="SemiBold"
-                          Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
-                    </Border>
-                  </Grid>
-                </Grid>
-              </Border>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </StackPanel>
-    </Grid>
+        <!-- Empty state -->
+        <Border
+            IsVisible="{Binding IsLibraryEmpty}"
+            Padding="20,24"
+            Background="{DynamicResource TanaHubSurfaceBrush}"
+            BorderBrush="{DynamicResource TanaHubBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12">
+          <StackPanel HorizontalAlignment="Center" Spacing="10">
+            <material:MaterialIcon Width="32" Height="32" Kind="Bookshelf"
+                                   Foreground="{DynamicResource TanaHubTextMutedBrush}"
+                                   HorizontalAlignment="Center"/>
+            <TextBlock Text="Your library is empty" FontSize="13" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="Titles you add from Discover will appear here."
+                       FontSize="11" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"
+                       HorizontalAlignment="Center"/>
+          </StackPanel>
+        </Border>
 
-    <Grid ColumnDefinitions="2*,*" ColumnSpacing="22">
-
-      <!-- ── Recently Updated ─────────────────────────────────── -->
-      <StackPanel Spacing="14">
-        <StackPanel Orientation="Horizontal" Spacing="8">
-          <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center" Background="{DynamicResource TanaHubAccentLightBrush}"/>
-          <TextBlock
-              Text="RECENTLY UPDATED"
-              FontSize="10"
-              FontWeight="SemiBold"
-              Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
-        </StackPanel>
-        <ItemsControl ItemsSource="{Binding LibraryEntries}">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate x:DataType="vm:LibraryEntryViewModel">
-              <Border
-                  Margin="0,0,0,5"
-                  Background="{DynamicResource TanaHubSurfaceBrush}"
-                  BorderBrush="{DynamicResource TanaHubBorderBrush}"
-                  BorderThickness="1"
-                  CornerRadius="10"
-                  ClipToBounds="True">
-                <Border.Transitions>
-                  <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.12"/>
-                  </Transitions>
-                </Border.Transitions>
-                <Border.Styles>
-                  <Style Selector="Border:pointerover">
-                    <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceRaisedBrush}"/>
-                  </Style>
-                </Border.Styles>
-                <Grid ColumnDefinitions="3,*">
-                  <Border CornerRadius="10,0,0,10" Background="{DynamicResource TanaHubAccentBrush}" Opacity="0.25"/>
-                  <Grid Grid.Column="1" ColumnDefinitions="36,*,Auto" ColumnSpacing="12" Margin="10,10,12,10">
-                    <Border Width="28" Height="38" CornerRadius="6" Background="{DynamicResource TanaHubAccentGlowBrush}" ClipToBounds="True">
+        <!-- Entries (capped so this section doesn't overflow the column) -->
+        <ScrollViewer IsVisible="{Binding !IsLibraryEmpty}"
+                      MaxHeight="280"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+          <ItemsControl ItemsSource="{Binding LibraryEntries}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:LibraryEntryViewModel">
+                <Border
+                    Margin="0,0,0,5"
+                    Padding="10,10"
+                    Background="{DynamicResource TanaHubSurfaceBrush}"
+                    BorderBrush="{DynamicResource TanaHubBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="10">
+                  <Border.Transitions>
+                    <Transitions>
+                      <BrushTransition Property="Background" Duration="0:0:0.12"/>
+                    </Transitions>
+                  </Border.Transitions>
+                  <Border.Styles>
+                    <Style Selector="Border:pointerover">
+                      <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceRaisedBrush}"/>
+                    </Style>
+                  </Border.Styles>
+                  <Grid ColumnDefinitions="36,*,Auto,30" ColumnSpacing="10">
+                    <Border Width="28" Height="38" CornerRadius="6"
+                            Background="{DynamicResource TanaHubAccentGlowBrush}"
+                            ClipToBounds="True" VerticalAlignment="Center">
                       <controls:RemoteImage SourceUri="{Binding PosterUri}"/>
                     </Border>
                     <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
-                      <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
-                      <TextBlock Text="{Binding Status}" FontSize="11" Foreground="{Binding StatusForeground}"/>
+                      <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
+                                 Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
+                                 TextTrimming="CharacterEllipsis"/>
+                      <TextBlock Text="{Binding Status}" FontSize="11"
+                                 Foreground="{Binding StatusForeground}"/>
                     </StackPanel>
-                    <TextBlock Classes="mono" Grid.Column="2" Text="{Binding Progress}" FontSize="12" VerticalAlignment="Center" Foreground="{DynamicResource TanaHubCyanBrush}"/>
+                    <TextBlock Classes="mono" Grid.Column="2" Text="{Binding Progress}"
+                               FontSize="12" VerticalAlignment="Center"
+                               Foreground="{DynamicResource TanaHubCyanBrush}"/>
+                    <Button Classes="ghost" Grid.Column="3" Width="30" Height="30" Padding="0"
+                            VerticalAlignment="Center" Command="{Binding OpenDetailCommand}"
+                            ToolTip.Tip="View details">
+                      <material:MaterialIcon Width="14" Height="14" Kind="ChevronRight"/>
+                    </Button>
                   </Grid>
-                </Grid>
-              </Border>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
       </StackPanel>
 
-      <!-- ── Stats ────────────────────────────────────────────── -->
-      <ItemsControl Grid.Column="1" ItemsSource="{Binding DashboardMetrics}">
+    </StackPanel>
+
+    <!-- ── Right column: Airing Today + Stats ──────────────────── -->
+    <StackPanel Grid.Column="1" Spacing="22">
+
+      <!-- Airing Today (capped height prevents column overflow) -->
+      <StackPanel Spacing="14">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+          <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center"
+                  Background="{DynamicResource TanaHubSakuraBrush}"/>
+          <TextBlock Text="AIRING TODAY" FontSize="10" FontWeight="SemiBold"
+                     Foreground="{DynamicResource TanaHubSakuraBrush}"/>
+          </StackPanel>
+          <Button Classes="ghost" Grid.Column="1" Height="24" Padding="8,0"
+                  Command="{Binding NavigateToScheduleCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="5">
+              <TextBlock Text="Schedule" FontSize="11"/>
+              <material:MaterialIcon Width="12" Height="12" Kind="ChevronRight"/>
+            </StackPanel>
+          </Button>
+        </Grid>
+
+        <!-- Empty state -->
+        <Border
+            IsVisible="{Binding !HasScheduleItems}"
+            Padding="20,28"
+            Background="{DynamicResource TanaHubSurfaceBrush}"
+            BorderBrush="{DynamicResource TanaHubBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12">
+          <StackPanel HorizontalAlignment="Center" Spacing="10">
+            <material:MaterialIcon Width="32" Height="32" Kind="CalendarBlank"
+                                   Foreground="{DynamicResource TanaHubTextMutedBrush}"
+                                   HorizontalAlignment="Center"/>
+            <TextBlock Text="No episodes today" FontSize="13" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="Episodes from your library will appear here on their air date."
+                       FontSize="11" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"
+                       HorizontalAlignment="Center" TextWrapping="Wrap"/>
+          </StackPanel>
+        </Border>
+
+        <!-- Schedule rows: capped so stats remain visible below -->
+        <ScrollViewer IsVisible="{Binding HasScheduleItems}"
+                      MaxHeight="300"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+          <ItemsControl ItemsSource="{Binding ScheduleItems}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:ScheduleItemViewModel">
+                <Border
+                    Margin="0,0,0,6"
+                    Padding="12,10"
+                    Background="{DynamicResource TanaHubSurfaceBrush}"
+                    BorderBrush="{DynamicResource TanaHubBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="10">
+                  <Border.Transitions>
+                    <Transitions>
+                      <BrushTransition Property="Background" Duration="0:0:0.12"/>
+                    </Transitions>
+                  </Border.Transitions>
+                  <Border.Styles>
+                    <Style Selector="Border:pointerover">
+                      <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceRaisedBrush}"/>
+                    </Style>
+                  </Border.Styles>
+                  <Grid ColumnDefinitions="40,*,Auto,30" ColumnSpacing="10">
+                    <Border Width="32" Height="44" CornerRadius="7" ClipToBounds="True"
+                            VerticalAlignment="Center">
+                      <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                          <GradientStop Color="#1B3040" Offset="0"/>
+                          <GradientStop Color="#0E0B15" Offset="1"/>
+                        </LinearGradientBrush>
+                      </Border.Background>
+                      <controls:RemoteImage SourceUri="{Binding PosterUri}"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="3">
+                      <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
+                                 Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
+                                 TextTrimming="CharacterEllipsis"/>
+                      <TextBlock Text="{Binding Detail}" FontSize="11"
+                                 Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="3"
+                                HorizontalAlignment="Right">
+                      <TextBlock Classes="mono" Text="{Binding Episode}" FontSize="11"
+                                 FontWeight="SemiBold" Foreground="{DynamicResource TanaHubCyanBrush}"
+                                 HorizontalAlignment="Right"/>
+                      <TextBlock Classes="mono" Text="{Binding Time}" FontSize="10"
+                                 Foreground="{DynamicResource TanaHubTextMutedBrush}"
+                                 HorizontalAlignment="Right"/>
+                    </StackPanel>
+                    <Button Classes="ghost" Grid.Column="3" Width="30" Height="30" Padding="0"
+                            VerticalAlignment="Center" Command="{Binding OpenDetailCommand}"
+                            ToolTip.Tip="View details">
+                      <material:MaterialIcon Width="14" Height="14" Kind="ChevronRight"/>
+                    </Button>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </StackPanel>
+
+      <!-- Stats -->
+      <ItemsControl ItemsSource="{Binding DashboardMetrics}">
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
             <StackPanel Spacing="10"/>
@@ -280,26 +346,31 @@
                 BoxShadow="0 2 10 0 #20000000">
               <Grid RowDefinitions="Auto,Auto">
                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                  <Border Width="36" Height="36" CornerRadius="10" Background="{DynamicResource TanaHubAccentGlowBrush}">
-                    <material:MaterialIcon
-                        Width="18" Height="18"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Kind="{Binding Icon}"
-                        Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
+                  <Border Width="36" Height="36" CornerRadius="10"
+                          Background="{DynamicResource TanaHubAccentGlowBrush}">
+                    <material:MaterialIcon Width="18" Height="18"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          Kind="{Binding Icon}"
+                                          Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
                   </Border>
                   <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
-                    <TextBlock Text="{Binding Label}" FontSize="11" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-                    <TextBlock Classes="mono" Text="{Binding Value}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+                    <TextBlock Text="{Binding Label}" FontSize="11"
+                               Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+                    <TextBlock Classes="mono" Text="{Binding Value}" FontSize="28"
+                               FontWeight="Bold"
+                               Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
                   </StackPanel>
                 </Grid>
-                <TextBlock Grid.Row="1" Margin="0,8,0,0" Text="{Binding Detail}" FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+                <TextBlock Grid.Row="1" Margin="0,8,0,0" Text="{Binding Detail}"
+                           FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
               </Grid>
             </Border>
           </DataTemplate>
         </ItemsControl.ItemTemplate>
       </ItemsControl>
 
-    </Grid>
-  </StackPanel>
+    </StackPanel>
+
+  </Grid>
 </UserControl>

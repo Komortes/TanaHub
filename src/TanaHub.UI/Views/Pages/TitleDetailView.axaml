@@ -7,200 +7,205 @@
     xmlns:controls="clr-namespace:TanaHub.UI.Views.Controls"
     x:DataType="vm:MediaDetailViewModel">
 
-  <StackPanel Spacing="22">
+  <StackPanel Spacing="20">
 
-    <!-- ── Banner ─────────────────────────────────────────────── -->
-    <Border
-        Height="170"
-        CornerRadius="14"
-        ClipToBounds="True"
-        IsVisible="{Binding HasBanner}"
-        BoxShadow="0 4 24 0 #2E000000">
-      <Border.Background>
-        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-          <GradientStop Color="#24183A" Offset="0"/>
-          <GradientStop Color="#0E0B15" Offset="1"/>
-        </LinearGradientBrush>
-      </Border.Background>
-      <Grid>
-        <controls:RemoteImage SourceUri="{Binding BannerUri}"/>
-        <!-- Bottom fade -->
-        <Border VerticalAlignment="Bottom" Height="60">
-          <Border.Background>
-            <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-              <GradientStop Color="#00000000" Offset="0"/>
-              <GradientStop Color="#CC09080F" Offset="1"/>
-            </LinearGradientBrush>
-          </Border.Background>
-        </Border>
-      </Grid>
-    </Border>
+    <!-- ── Hero: banner + overlapping poster + info ───────────── -->
+    <StackPanel Spacing="0">
 
-    <!-- ── Hero: poster + key info ───────────────────────────── -->
-    <Grid ColumnDefinitions="180,*" ColumnSpacing="28">
-
-      <!-- Poster -->
-      <Border
-          Width="160" Height="228"
-          CornerRadius="14"
-          ClipToBounds="True"
-          BoxShadow="0 8 32 0 #3C000000">
+      <!-- Banner (always 200px; gradient fallback when no image) -->
+      <Border Height="200" CornerRadius="12" ClipToBounds="True">
         <Border.Background>
           <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-            <GradientStop Color="#3B1D63" Offset="0"/>
-            <GradientStop Color="#10131F" Offset="1"/>
+            <GradientStop Color="#1E1238" Offset="0"/>
+            <GradientStop Color="#09080F" Offset="1"/>
           </LinearGradientBrush>
         </Border.Background>
-        <controls:RemoteImage SourceUri="{Binding PosterUri}"/>
+        <Grid>
+          <controls:RemoteImage SourceUri="{Binding BannerUri}" IsVisible="{Binding HasBanner}"/>
+          <Border VerticalAlignment="Bottom" Height="100">
+            <Border.Background>
+              <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                <GradientStop Color="#00000000" Offset="0"/>
+                <GradientStop Color="#CC09080F" Offset="1"/>
+              </LinearGradientBrush>
+            </Border.Background>
+          </Border>
+        </Grid>
       </Border>
 
-      <!-- Info column -->
-      <StackPanel Spacing="10">
+      <!-- Poster + Info: -70px top margin overlaps poster into banner -->
+      <Grid ColumnDefinitions="Auto,*" ColumnSpacing="24" Margin="0,-70,0,0">
 
-        <!-- Format / Year / Status chips -->
-        <StackPanel Orientation="Horizontal" Spacing="7">
-          <Border Padding="8,4" CornerRadius="7"
-                  Background="{DynamicResource TanaHubAccentGlowBrush}"
-                  BorderBrush="{DynamicResource TanaHubAccentBrush}" BorderThickness="1">
-            <StackPanel Orientation="Horizontal" Spacing="5">
-              <material:MaterialIcon Width="13" Height="13" Kind="{Binding TypeIcon}" Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
-              <TextBlock Text="{Binding Format}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
-            </StackPanel>
-          </Border>
-          <Border Padding="8,4" CornerRadius="7"
-                  Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-                  BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
-            <TextBlock Classes="mono" Text="{Binding Year}" FontSize="11" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-          </Border>
-          <Border Padding="8,4" CornerRadius="7"
-                  Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-                  BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
-            <TextBlock Text="{Binding ReleaseStatus}" FontSize="11" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-          </Border>
-        </StackPanel>
-
-        <!-- Title -->
-        <TextBlock
-            Text="{Binding Title}"
-            FontSize="30"
-            FontWeight="Bold"
-            TextWrapping="Wrap"
-            Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
-
-        <!-- Romaji subtitle -->
-        <TextBlock
-            Text="{Binding RomajiTitle}"
-            FontSize="13"
-            Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
-
-        <!-- Score — big data display -->
+        <!-- Poster card -->
         <Border
-            Padding="12,8"
+            Width="160" Height="228"
+            VerticalAlignment="Top"
             CornerRadius="10"
-            Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-            BorderBrush="{DynamicResource TanaHubBorderBrush}"
-            BorderThickness="1"
-            HorizontalAlignment="Left"
-            Margin="0,4,0,0">
-          <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-            <material:MaterialIcon Width="22" Height="22" Kind="Star" Foreground="{DynamicResource TanaHubAmberBrush}"/>
-            <TextBlock Classes="mono" Text="{Binding Score}" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
-            <TextBlock Text="/ 100" FontSize="13" Foreground="{DynamicResource TanaHubTextMutedBrush}" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
-          </StackPanel>
+            ClipToBounds="True"
+            BoxShadow="0 8 32 0 #4C000000">
+          <Grid>
+            <Border>
+              <Border.Background>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                  <GradientStop Color="#3B1D63" Offset="0"/>
+                  <GradientStop Color="#10131F" Offset="1"/>
+                </LinearGradientBrush>
+              </Border.Background>
+            </Border>
+            <controls:RemoteImage SourceUri="{Binding PosterUri}"/>
+          </Grid>
         </Border>
 
-        <!-- Library actions -->
-        <StackPanel Orientation="Horizontal" Spacing="7" Margin="0,6,0,0">
+        <!-- Info column: margin-top equals the overlap, so content starts at the banner bottom -->
+        <StackPanel Grid.Column="1" Margin="0,70,0,0" Spacing="10">
 
-          <Button IsVisible="{Binding !IsInLibrary}" Command="{Binding AddToLibraryCommand}">
-            <StackPanel Orientation="Horizontal" Spacing="7">
-              <material:MaterialIcon Width="15" Height="15" Kind="BookmarkPlusOutline"/>
-              <TextBlock Text="Add to Library"/>
+          <!-- Format / Year / Status chips -->
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <Border Padding="8,4" CornerRadius="7"
+                    Background="{DynamicResource TanaHubAccentGlowBrush}"
+                    BorderBrush="{DynamicResource TanaHubAccentBrush}" BorderThickness="1">
+              <StackPanel Orientation="Horizontal" Spacing="5">
+                <material:MaterialIcon Width="13" Height="13" Kind="{Binding TypeIcon}"
+                                       Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
+                <TextBlock Text="{Binding Format}" FontSize="11" FontWeight="SemiBold"
+                           Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
+              </StackPanel>
+            </Border>
+            <Border Padding="8,4" CornerRadius="7"
+                    Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
+                    BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
+              <TextBlock Classes="mono" Text="{Binding Year}" FontSize="11"
+                         Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+            </Border>
+            <Border Padding="8,4" CornerRadius="7"
+                    Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
+                    BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
+              <TextBlock Text="{Binding ReleaseStatus}" FontSize="11"
+                         Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+            </Border>
+          </StackPanel>
+
+          <!-- Title -->
+          <TextBlock
+              Text="{Binding Title}"
+              FontSize="22"
+              FontWeight="SemiBold"
+              TextWrapping="Wrap"
+              Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+
+          <!-- Romaji subtitle -->
+          <TextBlock
+              Text="{Binding RomajiTitle}"
+              IsVisible="{Binding HasRomajiTitle}"
+              FontSize="13"
+              TextTrimming="CharacterEllipsis"
+              Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+
+          <!-- Score -->
+          <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+            <material:MaterialIcon Width="18" Height="18" Kind="Star"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TanaHubAmberBrush}"/>
+            <TextBlock Classes="mono" Text="{Binding Score}" FontSize="26" FontWeight="Bold"
+                       Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+            <TextBlock Text="/ 10" FontSize="12" VerticalAlignment="Bottom" Margin="0,0,0,4"
+                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+          </StackPanel>
+
+          <!-- Library actions -->
+          <StackPanel Orientation="Horizontal" Spacing="7" Margin="0,4,0,0">
+
+            <Button IsVisible="{Binding !IsInLibrary}" Command="{Binding AddToLibraryCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="7">
+                <material:MaterialIcon Width="15" Height="15" Kind="BookmarkPlusOutline"/>
+                <TextBlock Text="Add to Library"/>
+              </StackPanel>
+            </Button>
+
+            <Border
+                IsVisible="{Binding IsInLibrary}"
+                Padding="10,7" CornerRadius="8"
+                Background="{DynamicResource TanaHubAccentGlowBrush}"
+                BorderBrush="{DynamicResource TanaHubAccentBrush}" BorderThickness="1">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <material:MaterialIcon Width="14" Height="14" Kind="Bookmark" Foreground="{Binding StatusForeground}"/>
+                <TextBlock Text="{Binding LibraryStatus}" FontSize="12" FontWeight="SemiBold"
+                           Foreground="{Binding StatusForeground}"/>
+              </StackPanel>
+            </Border>
+
+            <Button IsVisible="{Binding IsInLibrary}" Command="{Binding IncrementProgressCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="7">
+                <material:MaterialIcon Width="15" Height="15" Kind="Plus"/>
+                <TextBlock Text="{Binding IncrementLabel}"/>
+              </StackPanel>
+            </Button>
+
+            <Button IsVisible="{Binding IsInLibrary}" Command="{Binding MarkCompletedCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="7">
+                <material:MaterialIcon Width="15" Height="15" Kind="CheckCircleOutline"/>
+                <TextBlock Text="Complete"/>
+              </StackPanel>
+            </Button>
+
+            <Button IsVisible="{Binding IsInLibrary}" Command="{Binding IncreaseScoreCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="7">
+                <material:MaterialIcon Width="15" Height="15" Kind="StarPlus"/>
+                <TextBlock Text="Score"/>
+              </StackPanel>
+            </Button>
+
+            <Button
+                Classes="danger"
+                IsVisible="{Binding IsInLibrary}"
+                Width="34" Height="34" Padding="0"
+                Command="{Binding RemoveCommand}"
+                ToolTip.Tip="Remove from library">
+              <material:MaterialIcon Width="15" Height="15" Kind="TrashCanOutline"/>
+            </Button>
+          </StackPanel>
+
+          <!-- Status change row (only when in library) -->
+          <StackPanel IsVisible="{Binding IsInLibrary}" Spacing="8" Margin="0,2,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Border Width="3" Height="11" CornerRadius="2" VerticalAlignment="Center"
+                      Background="{DynamicResource TanaHubTextSecondaryBrush}"/>
+              <TextBlock Text="SET STATUS" FontSize="10" FontWeight="SemiBold"
+                         Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
             </StackPanel>
-          </Button>
-
-          <Border
-              IsVisible="{Binding IsInLibrary}"
-              Padding="10,7"
-              CornerRadius="8"
-              Background="{DynamicResource TanaHubAccentGlowBrush}"
-              BorderBrush="{DynamicResource TanaHubAccentBrush}"
-              BorderThickness="1">
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <material:MaterialIcon Width="14" Height="14" Kind="Bookmark" Foreground="{Binding StatusForeground}"/>
-              <TextBlock Text="{Binding LibraryStatus}" FontSize="12" FontWeight="SemiBold" Foreground="{Binding StatusForeground}"/>
+              <Button Classes="ghost" Command="{Binding MarkCurrentCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <material:MaterialIcon Width="14" Height="14" Kind="PlayCircleOutline"/>
+                  <TextBlock Text="Current"/>
+                </StackPanel>
+              </Button>
+              <Button Classes="ghost" Command="{Binding MarkPlanningCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <material:MaterialIcon Width="14" Height="14" Kind="BookmarkPlusOutline"/>
+                  <TextBlock Text="Planning"/>
+                </StackPanel>
+              </Button>
+              <Button Classes="ghost" Command="{Binding MarkPausedCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <material:MaterialIcon Width="14" Height="14" Kind="PauseCircleOutline"/>
+                  <TextBlock Text="Paused"/>
+                </StackPanel>
+              </Button>
+              <Button Classes="ghost danger" Command="{Binding MarkDroppedCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <material:MaterialIcon Width="14" Height="14" Kind="CloseCircleOutline"/>
+                  <TextBlock Text="Dropped"/>
+                </StackPanel>
+              </Button>
             </StackPanel>
-          </Border>
-
-          <Button IsVisible="{Binding IsInLibrary}" Command="{Binding IncrementProgressCommand}">
-            <StackPanel Orientation="Horizontal" Spacing="7">
-              <material:MaterialIcon Width="15" Height="15" Kind="Plus"/>
-              <TextBlock Text="{Binding IncrementLabel}"/>
-            </StackPanel>
-          </Button>
-
-          <Button IsVisible="{Binding IsInLibrary}" Command="{Binding MarkCompletedCommand}">
-            <StackPanel Orientation="Horizontal" Spacing="7">
-              <material:MaterialIcon Width="15" Height="15" Kind="CheckCircleOutline"/>
-              <TextBlock Text="Complete"/>
-            </StackPanel>
-          </Button>
-
-          <Button IsVisible="{Binding IsInLibrary}" Command="{Binding IncreaseScoreCommand}">
-            <StackPanel Orientation="Horizontal" Spacing="7">
-              <material:MaterialIcon Width="15" Height="15" Kind="StarPlus"/>
-              <TextBlock Text="Score"/>
-            </StackPanel>
-          </Button>
-
-          <Button
-              Classes="danger"
-              IsVisible="{Binding IsInLibrary}"
-              Width="34" Height="34" Padding="0"
-              Command="{Binding RemoveCommand}"
-              ToolTip.Tip="Remove from library">
-            <material:MaterialIcon Width="15" Height="15" Kind="TrashCanOutline"/>
-          </Button>
-        </StackPanel>
-
-        <!-- Status change row -->
-        <StackPanel IsVisible="{Binding IsInLibrary}" Spacing="8" Margin="0,4,0,0">
-          <StackPanel Orientation="Horizontal" Spacing="8">
-            <Border Width="3" Height="11" CornerRadius="2" VerticalAlignment="Center" Background="{DynamicResource TanaHubTextMutedBrush}"/>
-            <TextBlock Text="SET STATUS" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
           </StackPanel>
-          <StackPanel Orientation="Horizontal" Spacing="6">
-            <Button Classes="ghost" Command="{Binding MarkCurrentCommand}">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <material:MaterialIcon Width="14" Height="14" Kind="PlayCircleOutline"/>
-                <TextBlock Text="Current"/>
-              </StackPanel>
-            </Button>
-            <Button Classes="ghost" Command="{Binding MarkPlanningCommand}">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <material:MaterialIcon Width="14" Height="14" Kind="BookmarkPlusOutline"/>
-                <TextBlock Text="Planning"/>
-              </StackPanel>
-            </Button>
-            <Button Classes="ghost" Command="{Binding MarkPausedCommand}">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <material:MaterialIcon Width="14" Height="14" Kind="PauseCircleOutline"/>
-                <TextBlock Text="Paused"/>
-              </StackPanel>
-            </Button>
-            <Button Classes="ghost danger" Command="{Binding MarkDroppedCommand}">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <material:MaterialIcon Width="14" Height="14" Kind="CloseCircleOutline"/>
-                <TextBlock Text="Dropped"/>
-              </StackPanel>
-            </Button>
-          </StackPanel>
+
         </StackPanel>
+      </Grid>
+    </StackPanel>
 
-      </StackPanel>
-    </Grid>
-
-    <!-- ── Synopsis ───────────────────────────────────────────── -->
+    <!-- ── Synopsis ─────────────────────────────────────────────── -->
     <Border
         IsVisible="{Binding HasDescription}"
         Padding="20,16"
@@ -211,8 +216,10 @@
         BoxShadow="0 2 10 0 #1C000000">
       <StackPanel Spacing="12">
         <StackPanel Orientation="Horizontal" Spacing="8">
-          <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center" Background="{DynamicResource TanaHubAccentLightBrush}"/>
-          <TextBlock Text="SYNOPSIS" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
+          <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center"
+                  Background="{DynamicResource TanaHubAccentLightBrush}"/>
+          <TextBlock Text="SYNOPSIS" FontSize="10" FontWeight="SemiBold"
+                     Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
         </StackPanel>
         <TextBlock
             Text="{Binding Description}"
@@ -223,11 +230,13 @@
       </StackPanel>
     </Border>
 
-    <!-- ── Genres ─────────────────────────────────────────────── -->
+    <!-- ── Genres ────────────────────────────────────────────────── -->
     <StackPanel Spacing="10">
       <StackPanel Orientation="Horizontal" Spacing="8">
-        <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center" Background="{DynamicResource TanaHubTextMutedBrush}"/>
-        <TextBlock Text="GENRES" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+        <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center"
+                Background="{DynamicResource TanaHubTextMutedBrush}"/>
+        <TextBlock Text="GENRES" FontSize="10" FontWeight="SemiBold"
+                   Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
       </StackPanel>
       <ItemsControl ItemsSource="{Binding Genres}">
         <ItemsControl.ItemsPanel>
@@ -251,7 +260,7 @@
       </ItemsControl>
     </StackPanel>
 
-    <!-- ── Details + Library panels ──────────────────────────── -->
+    <!-- ── Details + Library panels ─────────────────────────────── -->
     <Grid ColumnDefinitions="*,*" ColumnSpacing="18">
 
       <!-- Media details -->
@@ -264,24 +273,36 @@
           BoxShadow="0 2 10 0 #1C000000">
         <StackPanel Spacing="14">
           <StackPanel Orientation="Horizontal" Spacing="8">
-            <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center" Background="{DynamicResource TanaHubTextMutedBrush}"/>
-            <TextBlock Text="DETAILS" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center"
+                    Background="{DynamicResource TanaHubTextMutedBrush}"/>
+            <TextBlock Text="DETAILS" FontSize="10" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
           </StackPanel>
           <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="10">
             <TextBlock Text="Format" FontSize="12" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-            <TextBlock Grid.Column="1" Text="{Binding Format}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+            <TextBlock Grid.Column="1" Text="{Binding Format}" FontSize="12" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
 
-            <TextBlock Grid.Row="1" Text="Year" FontSize="12" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-            <TextBlock Classes="mono" Grid.Row="1" Grid.Column="1" Text="{Binding Year}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+            <TextBlock Grid.Row="1" Text="Year" FontSize="12"
+                       Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+            <TextBlock Classes="mono" Grid.Row="1" Grid.Column="1" Text="{Binding Year}"
+                       FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
 
-            <TextBlock Grid.Row="2" Text="Status" FontSize="12" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ReleaseStatus}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+            <TextBlock Grid.Row="2" Text="Status" FontSize="12"
+                       Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ReleaseStatus}"
+                       FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
 
-            <TextBlock Grid.Row="3" Text="{Binding ProgressLabel}" FontSize="12" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-            <TextBlock Classes="mono" Grid.Row="3" Grid.Column="1" Text="{Binding ProgressValue}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubCyanBrush}"/>
+            <TextBlock Grid.Row="3" Text="{Binding ProgressLabel}" FontSize="12"
+                       Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+            <TextBlock Classes="mono" Grid.Row="3" Grid.Column="1" Text="{Binding ProgressValue}"
+                       FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubCyanBrush}"/>
 
-            <TextBlock Grid.Row="4" Text="Studio" FontSize="12" IsVisible="{Binding HasStudio}" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Studio}" FontSize="12" FontWeight="SemiBold" IsVisible="{Binding HasStudio}" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+            <TextBlock Grid.Row="4" Text="Studio" FontSize="12" IsVisible="{Binding HasStudio}"
+                       Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Studio}" FontSize="12"
+                       FontWeight="SemiBold" IsVisible="{Binding HasStudio}"
+                       Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
           </Grid>
         </StackPanel>
       </Border>
@@ -296,12 +317,15 @@
           BoxShadow="0 2 10 0 #1C000000">
         <StackPanel Spacing="14">
           <StackPanel Orientation="Horizontal" Spacing="8">
-            <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center" Background="{DynamicResource TanaHubTextMutedBrush}"/>
-            <TextBlock Text="YOUR LIBRARY" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center"
+                    Background="{DynamicResource TanaHubTextMutedBrush}"/>
+            <TextBlock Text="YOUR LIBRARY" FontSize="10" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
           </StackPanel>
 
-          <!-- Not in library -->
-          <StackPanel IsVisible="{Binding !IsInLibrary}" Spacing="10" HorizontalAlignment="Center" Margin="0,14,0,14">
+          <!-- Not in library empty state -->
+          <StackPanel IsVisible="{Binding !IsInLibrary}" Spacing="10"
+                      HorizontalAlignment="Center" Margin="0,14,0,14">
             <material:MaterialIcon
                 Width="36" Height="36"
                 Kind="BookmarkOffOutline"
@@ -314,20 +338,26 @@
                 Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
           </StackPanel>
 
-          <!-- In library -->
-          <Grid IsVisible="{Binding IsInLibrary}" RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="12">
+          <!-- In library status grid -->
+          <Grid IsVisible="{Binding IsInLibrary}"
+                RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="12">
             <TextBlock Text="Status" FontSize="12" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
             <Border Grid.Column="1" Padding="8,4" CornerRadius="6"
                     Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
                     BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
-              <TextBlock Text="{Binding LibraryStatus}" FontSize="11" FontWeight="Bold" Foreground="{Binding StatusForeground}"/>
+              <TextBlock Text="{Binding LibraryStatus}" FontSize="11" FontWeight="Bold"
+                         Foreground="{Binding StatusForeground}"/>
             </Border>
 
-            <TextBlock Grid.Row="1" Text="Progress" FontSize="12" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-            <TextBlock Classes="mono" Grid.Row="1" Grid.Column="1" Text="{Binding LibraryProgress}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TanaHubCyanBrush}"/>
+            <TextBlock Grid.Row="1" Text="Progress" FontSize="12"
+                       Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+            <TextBlock Classes="mono" Grid.Row="1" Grid.Column="1" Text="{Binding LibraryProgress}"
+                       FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TanaHubCyanBrush}"/>
 
-            <TextBlock Grid.Row="2" Text="Score" FontSize="12" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-            <TextBlock Classes="mono" Grid.Row="2" Grid.Column="1" Text="{Binding LibraryScore}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TanaHubAmberBrush}"/>
+            <TextBlock Grid.Row="2" Text="Score" FontSize="12"
+                       Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+            <TextBlock Classes="mono" Grid.Row="2" Grid.Column="1" Text="{Binding LibraryScore}"
+                       FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TanaHubAmberBrush}"/>
           </Grid>
         </StackPanel>
       </Border>

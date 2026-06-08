@@ -2,7 +2,9 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
+using TanaHub.Desktop.Services;
 using TanaHub.Infrastructure.DependencyInjection;
+using TanaHub.UI.Services;
 using TanaHub.UI.ViewModels;
 using TanaHub.UI.Views;
 
@@ -35,6 +37,8 @@ public sealed partial class App : Avalonia.Application
         var services = new ServiceCollection();
 
         services.AddTanaHubInfrastructure();
+        services.AddSingleton<IAppThemeService, AvaloniaAppThemeService>();
+        services.AddSingleton<IFileSaveService, AvaloniaFileSaveService>();
         services.AddTransient<MainWindowViewModel>();
         services.AddTransient<MainWindow>();
 

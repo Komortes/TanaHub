@@ -7,4 +7,6 @@ public sealed record PagedResult<T>(
     int? TotalCount = null)
 {
     public bool HasItems => Items.Count > 0;
+
+    public bool HasNextPage => TotalCount is not null && Page * PageSize < TotalCount.Value;
 }

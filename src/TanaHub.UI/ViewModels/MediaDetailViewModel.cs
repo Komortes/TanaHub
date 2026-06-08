@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using Material.Icons;
@@ -48,7 +49,7 @@ public sealed class MediaDetailViewModel
         ReleaseStatus = releaseStatus;
         Year = year;
         Score = score;
-        Description = description;
+        Description = StripHtml(description);
         Genres = genres;
         PosterUri = posterUri;
         BannerUri = bannerUri;
@@ -97,6 +98,7 @@ public sealed class MediaDetailViewModel
 
     public bool IsAnime => MediaType == "Anime";
     public bool HasBanner => BannerUri is not null;
+    public bool HasRomajiTitle => !string.IsNullOrWhiteSpace(RomajiTitle);
     public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
     public bool HasStudio => IsAnime && !string.IsNullOrWhiteSpace(Studio) && Studio != "Unknown";
     public string IncrementLabel => IsAnime ? "+1 Episode" : "+1 Chapter";
@@ -126,4 +128,13 @@ public sealed class MediaDetailViewModel
     public IAsyncRelayCommand MarkDroppedCommand { get; }
     public IAsyncRelayCommand IncreaseScoreCommand { get; }
     public IAsyncRelayCommand RemoveCommand { get; }
+
+    private static string StripHtml(string html)
+    {
+        if (string.IsNullOrEmpty(html)) return html;
+        var withNewlines = Regex.Replace(html, @"<br\s*/?>", "\n", RegexOptions.IgnoreCase);
+        var stripped = Regex.Replace(withNewlines, "<[^>]+>", "");
+        var collapsed = Regex.Replace(stripped, @"\n{3,}", "\n\n");
+        return collapsed.Trim();
+    }
 }

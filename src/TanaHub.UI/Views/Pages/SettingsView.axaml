@@ -48,25 +48,25 @@
 
     <Grid ColumnDefinitions="*,*" ColumnSpacing="18">
 
-      <!-- Accounts -->
+      <!-- Data sources -->
       <Border Padding="18" Background="{DynamicResource TanaHubSurfaceBrush}"
               BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1"
               CornerRadius="10" BoxShadow="0 2 8 0 #1C000000">
         <StackPanel Spacing="16">
-          <TextBlock Text="Accounts" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+          <TextBlock Text="Data source" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
           <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="34,*,Auto" RowSpacing="14">
 
             <!-- AniList -->
             <material:MaterialIcon Width="18" Height="18" Kind="CloudSync" Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
             <StackPanel Grid.Column="1" Spacing="2">
               <TextBlock Text="AniList" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
-              <TextBlock Text="OAuth connection placeholder" FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+              <TextBlock Text="Search, metadata and airing schedule" FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
             </StackPanel>
             <Button Classes="ghost" Grid.Column="2" Height="30" Padding="10,0" VerticalAlignment="Center"
                     Command="{Binding SelectSyncSourceCommand}" CommandParameter="AniList">
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <material:MaterialIcon Width="13" Height="13" Kind="LinkVariant"/>
-                <TextBlock Text="Connect" FontSize="11"/>
+                <material:MaterialIcon Width="13" Height="13" Kind="Check" IsVisible="{Binding IsAniListSyncSelected}"/>
+                <TextBlock Text="Use" FontSize="11"/>
               </StackPanel>
             </Button>
 
@@ -74,13 +74,13 @@
             <material:MaterialIcon Grid.Row="1" Width="18" Height="18" Kind="CloudSync" Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
             <StackPanel Grid.Row="1" Grid.Column="1" Spacing="2">
               <TextBlock Text="MyAnimeList" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
-              <TextBlock Text="List sync placeholder" FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+              <TextBlock Text="Preferred future list synchronization source" FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
             </StackPanel>
             <Button Classes="ghost" Grid.Row="1" Grid.Column="2" Height="30" Padding="10,0" VerticalAlignment="Center"
                     Command="{Binding SelectSyncSourceCommand}" CommandParameter="MyAnimeList">
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <material:MaterialIcon Width="13" Height="13" Kind="LinkVariant"/>
-                <TextBlock Text="Connect" FontSize="11"/>
+                <material:MaterialIcon Width="13" Height="13" Kind="Check" IsVisible="{Binding IsMyAnimeListSyncSelected}"/>
+                <TextBlock Text="Use" FontSize="11"/>
               </StackPanel>
             </Button>
 
@@ -88,13 +88,13 @@
             <material:MaterialIcon Grid.Row="2" Width="18" Height="18" Kind="BookSearch" Foreground="{DynamicResource TanaHubCyanBrush}"/>
             <StackPanel Grid.Row="2" Grid.Column="1" Spacing="2">
               <TextBlock Text="MangaDex" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
-              <TextBlock Text="Metadata source placeholder" FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+              <TextBlock Text="Preferred future manga metadata source" FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
             </StackPanel>
             <Button Classes="ghost" Grid.Row="2" Grid.Column="2" Height="30" Padding="10,0" VerticalAlignment="Center"
                     Command="{Binding SelectSyncSourceCommand}" CommandParameter="MangaDex">
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <material:MaterialIcon Width="13" Height="13" Kind="LinkVariant"/>
-                <TextBlock Text="Connect" FontSize="11"/>
+                <material:MaterialIcon Width="13" Height="13" Kind="Check" IsVisible="{Binding IsMangaDexSyncSelected}"/>
+                <TextBlock Text="Use" FontSize="11"/>
               </StackPanel>
             </Button>
 
@@ -113,25 +113,25 @@
               <TextBlock Text="Notifications" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
               <TextBlock Text="Episode and chapter release alerts" FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
             </StackPanel>
-            <Button Grid.Column="1" Width="88" Height="28" Padding="8,0" Command="{Binding ToggleNotificationsCommand}">
-              <TextBlock Text="{Binding NotificationsEnabled}" FontSize="11"/>
-            </Button>
+            <ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
+                          IsChecked="{Binding NotificationsEnabled, Mode=OneWay}"
+                          Command="{Binding ToggleNotificationsCommand}"/>
 
             <StackPanel Grid.Row="1" Spacing="2">
               <TextBlock Text="Offline cache" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
               <TextBlock Text="Keep metadata available without network" FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
             </StackPanel>
-            <Button Grid.Row="1" Grid.Column="1" Width="88" Height="28" Padding="8,0" Command="{Binding ToggleOfflineCacheCommand}">
-              <TextBlock Text="{Binding OfflineCacheEnabled}" FontSize="11"/>
-            </Button>
+            <ToggleSwitch Grid.Row="1" Grid.Column="1" VerticalAlignment="Center"
+                          IsChecked="{Binding OfflineCacheEnabled, Mode=OneWay}"
+                          Command="{Binding ToggleOfflineCacheCommand}"/>
 
             <StackPanel Grid.Row="2" Spacing="2">
               <TextBlock Text="Recognition" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
               <TextBlock Text="trace.moe and SauceNAO integrations" FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
             </StackPanel>
-            <Button Grid.Row="2" Grid.Column="1" Width="88" Height="28" Padding="8,0" Command="{Binding ToggleRecognitionServicesCommand}">
-              <TextBlock Text="{Binding RecognitionServicesEnabled}" FontSize="11"/>
-            </Button>
+            <ToggleSwitch Grid.Row="2" Grid.Column="1" VerticalAlignment="Center"
+                          IsChecked="{Binding RecognitionServicesEnabled, Mode=OneWay}"
+                          Command="{Binding ToggleRecognitionServicesCommand}"/>
           </Grid>
 
           <Border Height="1" Background="{DynamicResource TanaHubBorderBrush}"/>
@@ -139,22 +139,49 @@
           <StackPanel Spacing="6">
             <TextBlock Text="Theme" FontSize="12" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
             <StackPanel Orientation="Horizontal" Spacing="7">
-              <Button Command="{Binding SelectThemeCommand}" CommandParameter="Nebula dark">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <material:MaterialIcon Width="14" Height="14" Kind="MoonWaningCrescent"/>
-                  <TextBlock Text="Nebula"/>
-                </StackPanel>
-              </Button>
-              <Button Classes="ghost" Command="{Binding SelectThemeCommand}" CommandParameter="High contrast">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <material:MaterialIcon Width="14" Height="14" Kind="ContrastCircle"/>
-                  <TextBlock Text="High contrast"/>
-                </StackPanel>
-              </Button>
+              <StackPanel Spacing="2">
+                <Button Classes="ghost" Command="{Binding SelectThemeCommand}" CommandParameter="Nebula dark">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <material:MaterialIcon Width="14" Height="14" Kind="MoonWaningCrescent"/>
+                    <TextBlock Text="Nebula"/>
+                  </StackPanel>
+                </Button>
+                <Border Height="2" Background="{DynamicResource TanaHubAccentBrush}"
+                        IsVisible="{Binding IsNebulaThemeSelected}"/>
+              </StackPanel>
+              <StackPanel Spacing="2">
+                <Button Classes="ghost" Command="{Binding SelectThemeCommand}" CommandParameter="High contrast">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <material:MaterialIcon Width="14" Height="14" Kind="ContrastCircle"/>
+                    <TextBlock Text="High contrast"/>
+                  </StackPanel>
+                </Button>
+                <Border Height="2" Background="{DynamicResource TanaHubAccentBrush}"
+                        IsVisible="{Binding IsHighContrastThemeSelected}"/>
+              </StackPanel>
             </StackPanel>
           </StackPanel>
         </StackPanel>
       </Border>
     </Grid>
+
+    <Border Padding="18" Background="{DynamicResource TanaHubSurfaceBrush}"
+            BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1"
+            CornerRadius="10" BoxShadow="0 2 8 0 #1C000000">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
+        <StackPanel Spacing="4">
+          <TextBlock Text="Library export" FontSize="16" FontWeight="Bold"
+                     Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+          <TextBlock Text="{Binding LibraryExportStatus}" FontSize="12"
+                     Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+        </StackPanel>
+        <Button Grid.Column="1" VerticalAlignment="Center" Command="{Binding ExportLibraryCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <material:MaterialIcon Width="15" Height="15" Kind="FileExportOutline"/>
+            <TextBlock Text="Export CSV"/>
+          </StackPanel>
+        </Button>
+      </Grid>
+    </Border>
   </StackPanel>
 </UserControl>

@@ -60,10 +60,29 @@ public sealed class InMemoryMediaCatalogService : IMediaCatalogService
             filtered = filtered.Where(item => query.Genres.All(genre => HasGenre(item, genre)));
         }
 
+        if (!string.IsNullOrWhiteSpace(query.CountryCode))
+        {
+            filtered = filtered.Where(item => MatchesCountry(item, query.CountryCode));
+        }
+
         if (!string.IsNullOrWhiteSpace(query.SearchText))
         {
             filtered = filtered.Where(item => MatchesSearchText(item, query.SearchText));
         }
+
+        filtered = query.Sort switch
+        {
+            MediaSearchSort.Score => filtered
+                .OrderByDescending(item => item.AverageScore ?? -1)
+                .ThenBy(item => item.Title.DisplayTitle, StringComparer.OrdinalIgnoreCase),
+            MediaSearchSort.Newest => filtered
+                .OrderByDescending(item => item.StartYear ?? int.MinValue)
+                .ThenByDescending(item => item.AverageScore ?? -1),
+            MediaSearchSort.Trending => filtered
+                .OrderByDescending(item => item.ReleaseStatus == Domain.Enums.MediaReleaseStatus.Releasing)
+                .ThenByDescending(item => item.AverageScore ?? -1),
+            _ => filtered
+        };
 
         var totalCount = filtered.Count();
         var items = filtered
@@ -100,6 +119,16 @@ public sealed class InMemoryMediaCatalogService : IMediaCatalogService
     private static bool HasGenre(MediaItem item, string genre)
     {
         return item.Genres.Any(itemGenre => itemGenre.Equals(genre, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool MatchesCountry(MediaItem item, string countryCode)
+    {
+        return countryCode.ToUpperInvariant() switch
+        {
+            "KR" => item.Format == Domain.Enums.MediaFormat.Manhwa,
+            "CN" => item.Format == Domain.Enums.MediaFormat.Manhua,
+            _ => true
+        };
     }
 
     private static bool Contains(string? value, string searchText)

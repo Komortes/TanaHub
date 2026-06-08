@@ -31,6 +31,21 @@ public sealed class ApplicationContractTests
         Assert.True(result.HasItems);
     }
 
+    [Theory]
+    [InlineData(1, 12, 25, true)]
+    [InlineData(2, 12, 24, false)]
+    [InlineData(1, 12, null, false)]
+    public void PagedResult_HasNextPage_UsesTotalCount(
+        int page,
+        int pageSize,
+        int? totalCount,
+        bool expected)
+    {
+        var result = new PagedResult<int>([1], page, pageSize, totalCount);
+
+        Assert.Equal(expected, result.HasNextPage);
+    }
+
     [Fact]
     public void MediaSearchQuery_DefaultsToFirstPage()
     {

@@ -57,3 +57,5 @@ dist/
 .superpowers/
 docs/superpowers/
 ANITRACK_SPEC.md
+PRODUCT.md
+DESIGN.md
