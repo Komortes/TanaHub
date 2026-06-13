@@ -12,15 +12,11 @@
     <!-- Shared card template for all 5 curated sections -->
     <DataTemplate x:Key="DiscoverCardTemplate" x:DataType="vm:MediaSearchResultViewModel">
       <Border
+          Classes="card"
           Width="166"
           Height="256"
           Margin="0,0,10,0"
-          Background="{DynamicResource TanaHubSurfaceBrush}"
-          BorderBrush="{DynamicResource TanaHubBorderBrush}"
-          BorderThickness="1"
-          CornerRadius="10"
           ClipToBounds="True"
-          BoxShadow="0 2 10 0 #22000000"
           RenderTransformOrigin="0.5,0.5">
         <Border.Transitions>
           <Transitions>
@@ -128,55 +124,49 @@
       <StackPanel Spacing="12">
 
         <!-- Type selector -->
-        <Border
-            Padding="14"
-            Background="{DynamicResource TanaHubSurfaceBrush}"
-            BorderBrush="{DynamicResource TanaHubBorderBrush}"
-            BorderThickness="1"
-            CornerRadius="10"
-            BoxShadow="0 2 8 0 #1C000000">
+        <Border Classes="panel">
           <StackPanel Spacing="10">
             <TextBlock Text="Browse" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
-            <StackPanel Spacing="4">
-              <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                      Command="{Binding SelectDiscoverTypeCommand}" CommandParameter="All">
-                <StackPanel Orientation="Horizontal" Spacing="7">
-                  <material:MaterialIcon Width="14" Height="14" Kind="ViewGrid"/>
-                  <TextBlock Text="All media"/>
-                </StackPanel>
-              </Button>
-              <Border Height="2" CornerRadius="1" Background="{DynamicResource TanaHubAccentBrush}"
-                      IsVisible="{Binding IsDiscoverAllSelected}"/>
-              <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                      Command="{Binding SelectDiscoverTypeCommand}" CommandParameter="Anime">
-                <StackPanel Orientation="Horizontal" Spacing="7">
-                  <material:MaterialIcon Width="14" Height="14" Kind="MovieOpenPlay"/>
-                  <TextBlock Text="Anime"/>
-                </StackPanel>
-              </Button>
-              <Border Height="2" CornerRadius="1" Background="{DynamicResource TanaHubAccentBrush}"
-                      IsVisible="{Binding IsDiscoverAnimeSelected}"/>
-              <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                      Command="{Binding SelectDiscoverTypeCommand}" CommandParameter="Manga">
-                <StackPanel Orientation="Horizontal" Spacing="7">
-                  <material:MaterialIcon Width="14" Height="14" Kind="BookOpenPageVariant"/>
-                  <TextBlock Text="Manga"/>
-                </StackPanel>
-              </Button>
-              <Border Height="2" CornerRadius="1" Background="{DynamicResource TanaHubAccentBrush}"
-                      IsVisible="{Binding IsDiscoverMangaSelected}"/>
+            <StackPanel Spacing="2">
+              <StackPanel Spacing="0">
+                <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Command="{Binding SelectDiscoverTypeCommand}" CommandParameter="All">
+                  <StackPanel Orientation="Horizontal" Spacing="7">
+                    <material:MaterialIcon Width="14" Height="14" Kind="ViewGrid"/>
+                    <TextBlock Text="All media"/>
+                  </StackPanel>
+                </Button>
+                <Border Height="2" CornerRadius="1" Background="{DynamicResource TanaHubAccentBrush}"
+                        IsVisible="{Binding IsDiscoverAllSelected}"/>
+              </StackPanel>
+              <StackPanel Spacing="0">
+                <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Command="{Binding SelectDiscoverTypeCommand}" CommandParameter="Anime">
+                  <StackPanel Orientation="Horizontal" Spacing="7">
+                    <material:MaterialIcon Width="14" Height="14" Kind="MovieOpenPlay"/>
+                    <TextBlock Text="Anime"/>
+                  </StackPanel>
+                </Button>
+                <Border Height="2" CornerRadius="1" Background="{DynamicResource TanaHubAccentBrush}"
+                        IsVisible="{Binding IsDiscoverAnimeSelected}"/>
+              </StackPanel>
+              <StackPanel Spacing="0">
+                <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Command="{Binding SelectDiscoverTypeCommand}" CommandParameter="Manga">
+                  <StackPanel Orientation="Horizontal" Spacing="7">
+                    <material:MaterialIcon Width="14" Height="14" Kind="BookOpenPageVariant"/>
+                    <TextBlock Text="Manga"/>
+                  </StackPanel>
+                </Button>
+                <Border Height="2" CornerRadius="1" Background="{DynamicResource TanaHubAccentBrush}"
+                        IsVisible="{Binding IsDiscoverMangaSelected}"/>
+              </StackPanel>
             </StackPanel>
           </StackPanel>
         </Border>
 
         <!-- Genres -->
-        <Border
-            Padding="14"
-            Background="{DynamicResource TanaHubSurfaceBrush}"
-            BorderBrush="{DynamicResource TanaHubBorderBrush}"
-            BorderThickness="1"
-            CornerRadius="10"
-            BoxShadow="0 2 8 0 #1C000000">
+        <Border Classes="panel">
           <StackPanel Spacing="10">
             <TextBlock Text="Genres" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
             <ListBox
@@ -237,64 +227,60 @@
         </Border>
 
         <!-- Sort -->
-        <Border
-            Padding="14"
-            Background="{DynamicResource TanaHubSurfaceBrush}"
-            BorderBrush="{DynamicResource TanaHubBorderBrush}"
-            BorderThickness="1"
-            CornerRadius="10"
-            BoxShadow="0 2 8 0 #1C000000">
+        <Border Classes="panel">
           <StackPanel Spacing="10">
             <TextBlock Text="Sort by" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
-            <StackPanel Spacing="4">
-              <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                      Command="{Binding SelectDiscoverSortCommand}" CommandParameter="Popularity">
-                <StackPanel Orientation="Horizontal" Spacing="7">
-                  <material:MaterialIcon Width="14" Height="14" Kind="TrendingUp"/>
-                  <TextBlock Text="Popularity"/>
-                </StackPanel>
-              </Button>
-              <Border Height="2" CornerRadius="1" Background="{DynamicResource TanaHubAccentBrush}"
-                      IsVisible="{Binding IsDiscoverPopularitySelected}"/>
-              <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                      Command="{Binding SelectDiscoverSortCommand}" CommandParameter="Score">
-                <StackPanel Orientation="Horizontal" Spacing="7">
-                  <material:MaterialIcon Width="14" Height="14" Kind="StarOutline"/>
-                  <TextBlock Text="Score"/>
-                </StackPanel>
-              </Button>
-              <Border Height="2" CornerRadius="1" Background="{DynamicResource TanaHubAccentBrush}"
-                      IsVisible="{Binding IsDiscoverScoreSelected}"/>
-              <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                      Command="{Binding SelectDiscoverSortCommand}" CommandParameter="Trending">
-                <StackPanel Orientation="Horizontal" Spacing="7">
-                  <material:MaterialIcon Width="14" Height="14" Kind="Fire"/>
-                  <TextBlock Text="Trending"/>
-                </StackPanel>
-              </Button>
-              <Border Height="2" CornerRadius="1" Background="{DynamicResource TanaHubAccentBrush}"
-                      IsVisible="{Binding IsDiscoverTrendingSelected}"/>
-              <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                      Command="{Binding SelectDiscoverSortCommand}" CommandParameter="New">
-                <StackPanel Orientation="Horizontal" Spacing="7">
-                  <material:MaterialIcon Width="14" Height="14" Kind="NewBox"/>
-                  <TextBlock Text="New releases"/>
-                </StackPanel>
-              </Button>
-              <Border Height="2" CornerRadius="1" Background="{DynamicResource TanaHubAccentBrush}"
-                      IsVisible="{Binding IsDiscoverNewSelected}"/>
+            <StackPanel Spacing="2">
+              <StackPanel Spacing="0">
+                <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Command="{Binding SelectDiscoverSortCommand}" CommandParameter="Popularity">
+                  <StackPanel Orientation="Horizontal" Spacing="7">
+                    <material:MaterialIcon Width="14" Height="14" Kind="TrendingUp"/>
+                    <TextBlock Text="Popularity"/>
+                  </StackPanel>
+                </Button>
+                <Border Height="2" CornerRadius="1" Background="{DynamicResource TanaHubAccentBrush}"
+                        IsVisible="{Binding IsDiscoverPopularitySelected}"/>
+              </StackPanel>
+              <StackPanel Spacing="0">
+                <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Command="{Binding SelectDiscoverSortCommand}" CommandParameter="Score">
+                  <StackPanel Orientation="Horizontal" Spacing="7">
+                    <material:MaterialIcon Width="14" Height="14" Kind="StarOutline"/>
+                    <TextBlock Text="Score"/>
+                  </StackPanel>
+                </Button>
+                <Border Height="2" CornerRadius="1" Background="{DynamicResource TanaHubAccentBrush}"
+                        IsVisible="{Binding IsDiscoverScoreSelected}"/>
+              </StackPanel>
+              <StackPanel Spacing="0">
+                <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Command="{Binding SelectDiscoverSortCommand}" CommandParameter="Trending">
+                  <StackPanel Orientation="Horizontal" Spacing="7">
+                    <material:MaterialIcon Width="14" Height="14" Kind="Fire"/>
+                    <TextBlock Text="Trending"/>
+                  </StackPanel>
+                </Button>
+                <Border Height="2" CornerRadius="1" Background="{DynamicResource TanaHubAccentBrush}"
+                        IsVisible="{Binding IsDiscoverTrendingSelected}"/>
+              </StackPanel>
+              <StackPanel Spacing="0">
+                <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Command="{Binding SelectDiscoverSortCommand}" CommandParameter="New">
+                  <StackPanel Orientation="Horizontal" Spacing="7">
+                    <material:MaterialIcon Width="14" Height="14" Kind="NewBox"/>
+                    <TextBlock Text="New releases"/>
+                  </StackPanel>
+                </Button>
+                <Border Height="2" CornerRadius="1" Background="{DynamicResource TanaHubAccentBrush}"
+                        IsVisible="{Binding IsDiscoverNewSelected}"/>
+              </StackPanel>
             </StackPanel>
           </StackPanel>
         </Border>
 
         <!-- Recognition drop zone -->
-        <Border
-            Padding="14"
-            Background="{DynamicResource TanaHubSurfaceBrush}"
-            BorderBrush="{DynamicResource TanaHubBorderBrush}"
-            BorderThickness="1"
-            CornerRadius="10"
-            BoxShadow="0 2 8 0 #1C000000">
+        <Border Classes="panel">
           <StackPanel Spacing="12">
             <TextBlock Text="Recognition" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
             <Border
@@ -317,12 +303,7 @@
                 </StackPanel>
               </StackPanel>
             </Border>
-            <Border
-                Padding="9,6"
-                CornerRadius="8"
-                Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-                BorderBrush="{DynamicResource TanaHubBorderBrush}"
-                BorderThickness="1">
+            <Border Classes="chip" Padding="9,6">
               <StackPanel Orientation="Horizontal" Spacing="7">
                 <material:MaterialIcon Width="12" Height="12" Kind="Keyboard"
                                        Foreground="{DynamicResource TanaHubTextMutedBrush}" VerticalAlignment="Center"/>
@@ -349,10 +330,9 @@
               <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center" Background="{DynamicResource TanaHubCyanBrush}"/>
               <TextBlock Grid.Column="1" Text="TRENDING NOW" FontSize="10" FontWeight="SemiBold"
                          Foreground="{DynamicResource TanaHubCyanBrush}" VerticalAlignment="Center"/>
-              <Border Grid.Column="2" Height="18" Padding="7,0" CornerRadius="5" VerticalAlignment="Center"
+              <Border Grid.Column="2" Height="18" Padding="7,0" CornerRadius="6" VerticalAlignment="Center"
                       HorizontalAlignment="Left" Margin="4,0,0,0"
-                      Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-                      BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
+                      Background="{DynamicResource TanaHubSurfaceRaisedBrush}">
                 <TextBlock Classes="mono" Text="{Binding TrendingItems.Count}" FontSize="10"
                            Foreground="{DynamicResource TanaHubTextMutedBrush}" VerticalAlignment="Center"/>
               </Border>
@@ -376,10 +356,9 @@
               <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center" Background="{DynamicResource TanaHubSakuraBrush}"/>
               <TextBlock Grid.Column="1" Text="THIS SEASON" FontSize="10" FontWeight="SemiBold"
                          Foreground="{DynamicResource TanaHubSakuraBrush}" VerticalAlignment="Center"/>
-              <Border Grid.Column="2" Height="18" Padding="7,0" CornerRadius="5" VerticalAlignment="Center"
+              <Border Grid.Column="2" Height="18" Padding="7,0" CornerRadius="6" VerticalAlignment="Center"
                       HorizontalAlignment="Left" Margin="4,0,0,0"
-                      Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-                      BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
+                      Background="{DynamicResource TanaHubSurfaceRaisedBrush}">
                 <TextBlock Classes="mono" Text="{Binding ThisSeasonItems.Count}" FontSize="10"
                            Foreground="{DynamicResource TanaHubTextMutedBrush}" VerticalAlignment="Center"/>
               </Border>
@@ -403,10 +382,9 @@
               <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center" Background="{DynamicResource TanaHubAmberBrush}"/>
               <TextBlock Grid.Column="1" Text="TOP RATED" FontSize="10" FontWeight="SemiBold"
                          Foreground="{DynamicResource TanaHubAmberBrush}" VerticalAlignment="Center"/>
-              <Border Grid.Column="2" Height="18" Padding="7,0" CornerRadius="5" VerticalAlignment="Center"
+              <Border Grid.Column="2" Height="18" Padding="7,0" CornerRadius="6" VerticalAlignment="Center"
                       HorizontalAlignment="Left" Margin="4,0,0,0"
-                      Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-                      BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
+                      Background="{DynamicResource TanaHubSurfaceRaisedBrush}">
                 <TextBlock Classes="mono" Text="{Binding TopRatedItems.Count}" FontSize="10"
                            Foreground="{DynamicResource TanaHubTextMutedBrush}" VerticalAlignment="Center"/>
               </Border>
@@ -430,10 +408,9 @@
               <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center" Background="{DynamicResource TanaHubAccentLightBrush}"/>
               <TextBlock Grid.Column="1" Text="UPCOMING NEXT SEASON" FontSize="10" FontWeight="SemiBold"
                          Foreground="{DynamicResource TanaHubAccentLightBrush}" VerticalAlignment="Center"/>
-              <Border Grid.Column="2" Height="18" Padding="7,0" CornerRadius="5" VerticalAlignment="Center"
+              <Border Grid.Column="2" Height="18" Padding="7,0" CornerRadius="6" VerticalAlignment="Center"
                       HorizontalAlignment="Left" Margin="4,0,0,0"
-                      Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-                      BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
+                      Background="{DynamicResource TanaHubSurfaceRaisedBrush}">
                 <TextBlock Classes="mono" Text="{Binding UpcomingItems.Count}" FontSize="10"
                            Foreground="{DynamicResource TanaHubTextMutedBrush}" VerticalAlignment="Center"/>
               </Border>
@@ -457,10 +434,9 @@
               <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center" Background="{DynamicResource TanaHubGreenBrush}"/>
               <TextBlock Grid.Column="1" Text="POPULAR MANHWA" FontSize="10" FontWeight="SemiBold"
                          Foreground="{DynamicResource TanaHubGreenBrush}" VerticalAlignment="Center"/>
-              <Border Grid.Column="2" Height="18" Padding="7,0" CornerRadius="5" VerticalAlignment="Center"
+              <Border Grid.Column="2" Height="18" Padding="7,0" CornerRadius="6" VerticalAlignment="Center"
                       HorizontalAlignment="Left" Margin="4,0,0,0"
-                      Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-                      BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
+                      Background="{DynamicResource TanaHubSurfaceRaisedBrush}">
                 <TextBlock Classes="mono" Text="{Binding ManhwaItems.Count}" FontSize="10"
                            Foreground="{DynamicResource TanaHubTextMutedBrush}" VerticalAlignment="Center"/>
               </Border>
@@ -488,10 +464,9 @@
             <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center" Background="{DynamicResource TanaHubSakuraBrush}"/>
             <TextBlock Grid.Column="1" Text="SEARCH RESULTS" FontSize="10" FontWeight="SemiBold"
                        Foreground="{DynamicResource TanaHubSakuraBrush}" VerticalAlignment="Center"/>
-            <Border Grid.Column="2" Height="18" Padding="7,0" CornerRadius="5" VerticalAlignment="Center"
+            <Border Grid.Column="2" Height="18" Padding="7,0" CornerRadius="6" VerticalAlignment="Center"
                     HorizontalAlignment="Left" Margin="4,0,0,0"
-                    Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-                    BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
+                    Background="{DynamicResource TanaHubSurfaceRaisedBrush}">
               <TextBlock Classes="mono" Text="{Binding SearchResults.Count}" FontSize="10"
                          Foreground="{DynamicResource TanaHubTextMutedBrush}" VerticalAlignment="Center"/>
             </Border>
@@ -499,12 +474,9 @@
 
           <!-- Empty state -->
           <Border
+              Classes="panel"
               IsVisible="{Binding !HasSearchResults}"
-              Padding="32"
-              Background="{DynamicResource TanaHubSurfaceBrush}"
-              BorderBrush="{DynamicResource TanaHubBorderBrush}"
-              BorderThickness="1"
-              CornerRadius="10">
+              Padding="32">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
               <material:MaterialIcon Width="36" Height="36" Kind="Magnify"
                                      Foreground="{DynamicResource TanaHubTextMutedBrush}"
@@ -528,23 +500,7 @@
           <ItemsControl IsVisible="{Binding HasSearchResults}" ItemsSource="{Binding SearchResults}">
             <ItemsControl.ItemTemplate>
               <DataTemplate x:DataType="vm:MediaSearchResultViewModel">
-                <Border
-                    Margin="0,0,0,6"
-                    Padding="14,12"
-                    Background="{DynamicResource TanaHubSurfaceBrush}"
-                    BorderBrush="{DynamicResource TanaHubBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="10">
-                  <Border.Transitions>
-                    <Transitions>
-                      <BrushTransition Property="Background" Duration="0:0:0.12"/>
-                    </Transitions>
-                  </Border.Transitions>
-                  <Border.Styles>
-                    <Style Selector="Border:pointerover">
-                      <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceRaisedBrush}"/>
-                    </Style>
-                  </Border.Styles>
+                <Border Classes="row" Margin="0,0,0,6" Padding="14,12">
                   <Grid ColumnDefinitions="52,*,Auto,Auto,Auto" ColumnSpacing="13">
                     <Border Width="42" Height="58" CornerRadius="8"
                             Background="{DynamicResource TanaHubAccentGlowBrush}"
@@ -560,10 +516,7 @@
                       <TextBlock FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"
                                  Text="{Binding Genres}" TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
-                    <Border Grid.Column="2" Padding="8,4" Height="26" VerticalAlignment="Center"
-                            Background="{DynamicResource TanaHubAccentGlowBrush}"
-                            BorderBrush="{DynamicResource TanaHubAccentBrush}" BorderThickness="1"
-                            CornerRadius="7">
+                    <Border Grid.Column="2" Classes="chip-accent" Height="26" VerticalAlignment="Center">
                       <TextBlock FontSize="11" FontWeight="SemiBold"
                                  Foreground="{DynamicResource TanaHubAccentLightBrush}"
                                  Text="{Binding Type}" VerticalAlignment="Center"/>

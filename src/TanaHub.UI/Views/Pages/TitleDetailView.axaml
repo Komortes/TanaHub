@@ -12,29 +12,30 @@
     <!-- ── Hero: banner + overlapping poster + info ───────────── -->
     <StackPanel Spacing="0">
 
-      <!-- Banner (always 200px; gradient fallback when no image) -->
-      <Border Height="200" CornerRadius="12" ClipToBounds="True">
+      <!-- Banner (always 240px; gradient fallback when no image) -->
+      <Border Height="240" CornerRadius="12" ClipToBounds="True">
         <Border.Background>
           <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-            <GradientStop Color="#1E1238" Offset="0"/>
-            <GradientStop Color="#09080F" Offset="1"/>
+            <GradientStop Color="#261540" Offset="0"/>
+            <GradientStop Color="#0E0C1A" Offset="1"/>
           </LinearGradientBrush>
         </Border.Background>
         <Grid>
           <controls:RemoteImage SourceUri="{Binding BannerUri}" IsVisible="{Binding HasBanner}"/>
-          <Border VerticalAlignment="Bottom" Height="100">
+          <!-- Deep scrim so title text reads cleanly over any banner image -->
+          <Border VerticalAlignment="Bottom" Height="160">
             <Border.Background>
               <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
                 <GradientStop Color="#00000000" Offset="0"/>
-                <GradientStop Color="#CC09080F" Offset="1"/>
+                <GradientStop Color="#E507060E" Offset="1"/>
               </LinearGradientBrush>
             </Border.Background>
           </Border>
         </Grid>
       </Border>
 
-      <!-- Poster + Info: -70px top margin overlaps poster into banner -->
-      <Grid ColumnDefinitions="Auto,*" ColumnSpacing="24" Margin="0,-70,0,0">
+      <!-- Poster + Info: -90px overlap keeps poster anchored into the banner -->
+      <Grid ColumnDefinitions="Auto,*" ColumnSpacing="24" Margin="0,-90,0,0">
 
         <!-- Poster card -->
         <Border
@@ -56,14 +57,12 @@
           </Grid>
         </Border>
 
-        <!-- Info column: margin-top equals the overlap, so content starts at the banner bottom -->
-        <StackPanel Grid.Column="1" Margin="0,70,0,0" Spacing="10">
+        <!-- Info column: sits inside the banner's lower gradient zone for a proper hero layout -->
+        <StackPanel Grid.Column="1" Margin="0,20,0,0" Spacing="10">
 
           <!-- Format / Year / Status chips -->
           <StackPanel Orientation="Horizontal" Spacing="7">
-            <Border Padding="8,4" CornerRadius="7"
-                    Background="{DynamicResource TanaHubAccentGlowBrush}"
-                    BorderBrush="{DynamicResource TanaHubAccentBrush}" BorderThickness="1">
+            <Border Classes="chip-accent">
               <StackPanel Orientation="Horizontal" Spacing="5">
                 <material:MaterialIcon Width="13" Height="13" Kind="{Binding TypeIcon}"
                                        Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
@@ -71,15 +70,11 @@
                            Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
               </StackPanel>
             </Border>
-            <Border Padding="8,4" CornerRadius="7"
-                    Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-                    BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
+            <Border Classes="chip">
               <TextBlock Classes="mono" Text="{Binding Year}" FontSize="11"
                          Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
             </Border>
-            <Border Padding="8,4" CornerRadius="7"
-                    Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-                    BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
+            <Border Classes="chip">
               <TextBlock Text="{Binding ReleaseStatus}" FontSize="11"
                          Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
             </Border>
@@ -122,11 +117,7 @@
               </StackPanel>
             </Button>
 
-            <Border
-                IsVisible="{Binding IsInLibrary}"
-                Padding="10,7" CornerRadius="8"
-                Background="{DynamicResource TanaHubAccentGlowBrush}"
-                BorderBrush="{DynamicResource TanaHubAccentBrush}" BorderThickness="1">
+            <Border Classes="chip-accent" IsVisible="{Binding IsInLibrary}" Padding="10,7">
               <StackPanel Orientation="Horizontal" Spacing="6">
                 <material:MaterialIcon Width="14" Height="14" Kind="Bookmark" Foreground="{Binding StatusForeground}"/>
                 <TextBlock Text="{Binding LibraryStatus}" FontSize="12" FontWeight="SemiBold"
@@ -206,14 +197,7 @@
     </StackPanel>
 
     <!-- ── Synopsis ─────────────────────────────────────────────── -->
-    <Border
-        IsVisible="{Binding HasDescription}"
-        Padding="20,16"
-        Background="{DynamicResource TanaHubSurfaceBrush}"
-        BorderBrush="{DynamicResource TanaHubBorderBrush}"
-        BorderThickness="1"
-        CornerRadius="12"
-        BoxShadow="0 2 10 0 #1C000000">
+    <Border Classes="panel" IsVisible="{Binding HasDescription}">
       <StackPanel Spacing="12">
         <StackPanel Orientation="Horizontal" Spacing="8">
           <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center"
@@ -246,13 +230,7 @@
         </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <Border
-                Margin="0,0,8,8"
-                Padding="10,5"
-                CornerRadius="7"
-                Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-                BorderBrush="{DynamicResource TanaHubBorderLightBrush}"
-                BorderThickness="1">
+            <Border Classes="chip" Margin="0,0,8,8" Padding="10,5">
               <TextBlock Text="{Binding}" FontSize="12" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
             </Border>
           </DataTemplate>
@@ -264,13 +242,7 @@
     <Grid ColumnDefinitions="*,*" ColumnSpacing="18">
 
       <!-- Media details -->
-      <Border
-          Padding="18,16"
-          Background="{DynamicResource TanaHubSurfaceBrush}"
-          BorderBrush="{DynamicResource TanaHubBorderBrush}"
-          BorderThickness="1"
-          CornerRadius="12"
-          BoxShadow="0 2 10 0 #1C000000">
+      <Border Classes="panel">
         <StackPanel Spacing="14">
           <StackPanel Orientation="Horizontal" Spacing="8">
             <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center"
@@ -308,13 +280,7 @@
       </Border>
 
       <!-- Library status -->
-      <Border
-          Padding="18,16"
-          Background="{DynamicResource TanaHubSurfaceBrush}"
-          BorderBrush="{DynamicResource TanaHubBorderBrush}"
-          BorderThickness="1"
-          CornerRadius="12"
-          BoxShadow="0 2 10 0 #1C000000">
+      <Border Classes="panel">
         <StackPanel Spacing="14">
           <StackPanel Orientation="Horizontal" Spacing="8">
             <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center"
@@ -342,9 +308,7 @@
           <Grid IsVisible="{Binding IsInLibrary}"
                 RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="12">
             <TextBlock Text="Status" FontSize="12" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-            <Border Grid.Column="1" Padding="8,4" CornerRadius="6"
-                    Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-                    BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
+            <Border Grid.Column="1" Classes="chip">
               <TextBlock Text="{Binding LibraryStatus}" FontSize="11" FontWeight="Bold"
                          Foreground="{Binding StatusForeground}"/>
             </Border>

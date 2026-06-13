@@ -10,15 +10,13 @@
     <Grid ColumnDefinitions="1.1*,*" ColumnSpacing="18">
 
       <!-- Runtime info -->
-      <Border Padding="18" Background="{DynamicResource TanaHubSurfaceBrush}"
-              BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1"
-              CornerRadius="10" BoxShadow="0 2 8 0 #1C000000">
+      <Border Classes="panel">
         <StackPanel Spacing="14">
           <StackPanel Spacing="3">
             <TextBlock Text="Runtime" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
             <TextBlock Text="Current development wiring" FontSize="12" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
           </StackPanel>
-          <Border Height="1" Background="{DynamicResource TanaHubBorderBrush}"/>
+          <Border Classes="divider"/>
           <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="130,*" RowSpacing="10">
             <TextBlock Text="Mode" FontSize="12" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
             <TextBlock Grid.Column="1" Text="File-backed library and settings" FontSize="12" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
@@ -31,13 +29,11 @@
       </Border>
 
       <!-- Storage info -->
-      <Border Grid.Column="1" Padding="18" Background="{DynamicResource TanaHubSurfaceBrush}"
-              BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1"
-              CornerRadius="10" BoxShadow="0 2 8 0 #1C000000">
+      <Border Grid.Column="1" Classes="panel">
         <StackPanel Spacing="12">
           <TextBlock Text="Storage" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
           <TextBlock Text="Library and preferences persist to local JSON files between app launches." FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-          <Border Height="1" Background="{DynamicResource TanaHubBorderBrush}" Margin="0,4"/>
+          <Border Classes="divider" Margin="0,4"/>
           <StackPanel Orientation="Horizontal" Spacing="8">
             <material:MaterialIcon Width="16" Height="16" Kind="DatabaseCheck" Foreground="{DynamicResource TanaHubGreenBrush}"/>
             <TextBlock Text="{Binding SettingsStorageDetail}" FontSize="12" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
@@ -49,9 +45,7 @@
     <Grid ColumnDefinitions="*,*" ColumnSpacing="18">
 
       <!-- Data sources -->
-      <Border Padding="18" Background="{DynamicResource TanaHubSurfaceBrush}"
-              BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1"
-              CornerRadius="10" BoxShadow="0 2 8 0 #1C000000">
+      <Border Classes="panel">
         <StackPanel Spacing="16">
           <TextBlock Text="Data source" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
           <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="34,*,Auto" RowSpacing="14">
@@ -103,9 +97,7 @@
       </Border>
 
       <!-- Preferences -->
-      <Border Grid.Column="1" Padding="18" Background="{DynamicResource TanaHubSurfaceBrush}"
-              BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1"
-              CornerRadius="10" BoxShadow="0 2 8 0 #1C000000">
+      <Border Grid.Column="1" Classes="panel">
         <StackPanel Spacing="16">
           <TextBlock Text="Preferences" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
           <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="14">
@@ -134,7 +126,7 @@
                           Command="{Binding ToggleRecognitionServicesCommand}"/>
           </Grid>
 
-          <Border Height="1" Background="{DynamicResource TanaHubBorderBrush}"/>
+          <Border Classes="divider"/>
 
           <StackPanel Spacing="6">
             <TextBlock Text="Theme" FontSize="12" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
@@ -165,9 +157,7 @@
       </Border>
     </Grid>
 
-    <Border Padding="18" Background="{DynamicResource TanaHubSurfaceBrush}"
-            BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1"
-            CornerRadius="10" BoxShadow="0 2 8 0 #1C000000">
+    <Border Classes="panel">
       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
         <StackPanel Spacing="4">
           <TextBlock Text="Library export" FontSize="16" FontWeight="Bold"

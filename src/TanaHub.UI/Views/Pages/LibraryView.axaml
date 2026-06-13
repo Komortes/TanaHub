@@ -8,21 +8,20 @@
     x:DataType="vm:MainWindowViewModel">
 
 
-  <Grid ColumnDefinitions="190,*" ColumnSpacing="20">
+  <Grid ColumnDefinitions="220,*" ColumnSpacing="20">
 
-    <!-- ── Sidebar ─────────────────────────────────────────────── -->
-    <StackPanel Spacing="12">
+    <!-- ── Sidebar — unified panel ──────────────────────────────── -->
+    <Border Classes="panel">
+      <StackPanel Spacing="20">
 
-      <!-- Lists (status filter) -->
-      <Border
-          Padding="14"
-          Background="{DynamicResource TanaHubSurfaceBrush}"
-          BorderBrush="{DynamicResource TanaHubBorderBrush}"
-          BorderThickness="1"
-          CornerRadius="10"
-          BoxShadow="0 2 8 0 #1C000000">
-        <StackPanel Spacing="10">
-          <TextBlock Text="Lists" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+        <!-- LISTS section -->
+        <StackPanel Spacing="6">
+          <StackPanel Orientation="Horizontal" Spacing="7" Margin="2,0,0,4">
+            <Border Width="3" Height="11" CornerRadius="2" VerticalAlignment="Center"
+                    Background="{DynamicResource TanaHubAccentBrush}"/>
+            <TextBlock Text="LISTS" FontSize="10" FontWeight="Bold"
+                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+          </StackPanel>
           <ListBox
               ItemsSource="{Binding LibraryStatusFilters}"
               SelectedItem="{Binding SelectedLibraryStatus, Mode=TwoWay}"
@@ -35,18 +34,19 @@
             <ListBox.Styles>
               <Style Selector="ListBoxItem">
                 <Setter Property="Padding" Value="0"/>
-                <Setter Property="Margin" Value="0,0,0,2"/>
+                <Setter Property="Margin" Value="0,0,0,1"/>
                 <Setter Property="CornerRadius" Value="8"/>
               </Style>
               <Style Selector="ListBoxItem /template/ ContentPresenter">
                 <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="CornerRadius" Value="8"/>
-                <Setter Property="Padding" Value="10,7"/>
+                <Setter Property="Padding" Value="10,9"/>
               </Style>
               <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-                <Setter Property="Background" Value="{DynamicResource TanaHubAccentGlowStrongBrush}"/>
+                <Setter Property="Background" Value="{DynamicResource TanaHubAccentGlowBrush}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource TanaHubAccentBrush}"/>
-                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="BorderThickness" Value="3,0,0,0"/>
+                <Setter Property="CornerRadius" Value="0,8,8,0"/>
               </Style>
               <Style Selector="ListBoxItem:pointerover:not(:selected) /template/ ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceRaisedBrush}"/>
@@ -62,18 +62,18 @@
             </ListBox.Styles>
           </ListBox>
         </StackPanel>
-      </Border>
 
-      <!-- Sort -->
-      <Border
-          Padding="14"
-          Background="{DynamicResource TanaHubSurfaceBrush}"
-          BorderBrush="{DynamicResource TanaHubBorderBrush}"
-          BorderThickness="1"
-          CornerRadius="10"
-          BoxShadow="0 2 8 0 #1C000000">
-        <StackPanel Spacing="10">
-          <TextBlock Text="Sort" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+        <!-- Section divider -->
+        <Border Classes="divider" Margin="2,0"/>
+
+        <!-- SORT section -->
+        <StackPanel Spacing="6">
+          <StackPanel Orientation="Horizontal" Spacing="7" Margin="2,0,0,4">
+            <Border Width="3" Height="11" CornerRadius="2" VerticalAlignment="Center"
+                    Background="{DynamicResource TanaHubCyanBrush}"/>
+            <TextBlock Text="SORT" FontSize="10" FontWeight="Bold"
+                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+          </StackPanel>
           <ListBox
               ItemsSource="{Binding LibrarySortOptions}"
               SelectedItem="{Binding SelectedLibrarySort, Mode=TwoWay}"
@@ -86,18 +86,19 @@
             <ListBox.Styles>
               <Style Selector="ListBoxItem">
                 <Setter Property="Padding" Value="0"/>
-                <Setter Property="Margin" Value="0,0,0,2"/>
+                <Setter Property="Margin" Value="0,0,0,1"/>
                 <Setter Property="CornerRadius" Value="8"/>
               </Style>
               <Style Selector="ListBoxItem /template/ ContentPresenter">
                 <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="CornerRadius" Value="8"/>
-                <Setter Property="Padding" Value="10,7"/>
+                <Setter Property="Padding" Value="10,9"/>
               </Style>
               <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-                <Setter Property="Background" Value="{DynamicResource TanaHubAccentGlowStrongBrush}"/>
-                <Setter Property="BorderBrush" Value="{DynamicResource TanaHubAccentBrush}"/>
-                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Background" Value="{DynamicResource TanaHubCyanGlowBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource TanaHubCyanBrush}"/>
+                <Setter Property="BorderThickness" Value="3,0,0,0"/>
+                <Setter Property="CornerRadius" Value="0,8,8,0"/>
               </Style>
               <Style Selector="ListBoxItem:pointerover:not(:selected) /template/ ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceRaisedBrush}"/>
@@ -107,15 +108,15 @@
                 <Setter Property="FontSize" Value="13"/>
               </Style>
               <Style Selector="ListBoxItem:selected TextBlock">
-                <Setter Property="Foreground" Value="{DynamicResource TanaHubAccentLightBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource TanaHubCyanBrush}"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
               </Style>
             </ListBox.Styles>
           </ListBox>
         </StackPanel>
-      </Border>
 
-    </StackPanel>
+      </StackPanel>
+    </Border>
 
     <!-- ── Main content ────────────────────────────────────────── -->
     <StackPanel Grid.Column="1" Spacing="12">
@@ -210,13 +211,7 @@
       </Grid>
 
       <!-- ── Empty state ────────────────────────────────────────── -->
-      <Border
-          IsVisible="{Binding IsLibraryEmpty}"
-          Padding="48,56"
-          Background="{DynamicResource TanaHubSurfaceBrush}"
-          BorderBrush="{DynamicResource TanaHubBorderBrush}"
-          BorderThickness="1"
-          CornerRadius="12">
+      <Border Classes="panel" IsVisible="{Binding IsLibraryEmpty}" Padding="48,56">
         <StackPanel HorizontalAlignment="Center" Spacing="16">
           <material:MaterialIcon Width="52" Height="52" Kind="Bookshelf"
                                  Foreground="{DynamicResource TanaHubTextMutedBrush}"
@@ -238,17 +233,20 @@
       </Border>
 
       <!-- ── List view ──────────────────────────────────────────── -->
-      <StackPanel IsVisible="{Binding IsLibraryListVisible}" Spacing="0">
+      <StackPanel IsVisible="{Binding IsLibraryListVisible}" Spacing="4">
 
-        <!-- Column headers — connected to rows below -->
+        <!-- Column headers -->
         <Border
             IsVisible="{Binding !IsLibraryEmpty}"
-            Padding="12,7"
-            Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-            BorderBrush="{DynamicResource TanaHubBorderBrush}"
-            BorderThickness="1"
-            CornerRadius="8,8,0,0">
-          <Grid ColumnDefinitions="48,*,96,78,60,32,128" ColumnSpacing="10">
+            Padding="12,8"
+            CornerRadius="8">
+          <Border.Background>
+            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+              <GradientStop Color="#9B6EF814" Offset="0"/>
+              <GradientStop Color="#22D3EE0A" Offset="1"/>
+            </LinearGradientBrush>
+          </Border.Background>
+          <Grid ColumnDefinitions="48,*,96,78,60,128" ColumnSpacing="10">
             <TextBlock Grid.Column="1" Text="TITLE" FontSize="10" FontWeight="SemiBold"
                        Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
             <TextBlock Grid.Column="2" Text="STATUS" FontSize="10" FontWeight="SemiBold"
@@ -257,31 +255,19 @@
                        Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
             <TextBlock Grid.Column="4" Text="SCORE" FontSize="10" FontWeight="SemiBold"
                        Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-            <TextBlock Grid.Column="6" Text="ACTIONS" FontSize="10" FontWeight="SemiBold"
+            <TextBlock Grid.Column="5" Text="ACTIONS" FontSize="10" FontWeight="SemiBold"
+                       HorizontalAlignment="Left"
                        Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
           </Grid>
         </Border>
 
-        <!-- Rows — no top border to connect flush to header -->
+        <!-- Rows — individual glass cards, each clickable -->
         <ItemsControl IsVisible="{Binding !IsLibraryEmpty}" ItemsSource="{Binding LibraryEntries}">
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:LibraryEntryViewModel">
-              <Border
-                  Background="{DynamicResource TanaHubSurfaceBrush}"
-                  BorderBrush="{DynamicResource TanaHubBorderBrush}"
-                  BorderThickness="1,0,1,1"
-                  ClipToBounds="True">
-                <Border.Transitions>
-                  <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.12"/>
-                  </Transitions>
-                </Border.Transitions>
-                <Border.Styles>
-                  <Style Selector="Border:pointerover">
-                    <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceRaisedBrush}"/>
-                  </Style>
-                </Border.Styles>
-                <Grid ColumnDefinitions="48,*,96,78,60,32,128" ColumnSpacing="10" Margin="12,10,12,10">
+              <Button Classes="row" Padding="12,10" CornerRadius="8"
+                      Command="{Binding OpenDetailCommand}">
+                <Grid ColumnDefinitions="48,*,96,78,60,128" ColumnSpacing="10">
                   <Border Width="36" Height="50" CornerRadius="7" ClipToBounds="True">
                     <Border.Background>
                       <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
@@ -299,8 +285,7 @@
                                Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
                   </StackPanel>
                   <Border Grid.Column="2" Height="22" Padding="8,0" CornerRadius="6" VerticalAlignment="Center"
-                          Background="{DynamicResource TanaHubSurfaceElevatedBrush}"
-                          BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
+                          Background="{DynamicResource TanaHubSurfaceElevatedBrush}">
                     <TextBlock Text="{Binding Status}" FontSize="11" FontWeight="SemiBold"
                                VerticalAlignment="Center" Foreground="{Binding StatusForeground}"/>
                   </Border>
@@ -310,13 +295,7 @@
                   <TextBlock Classes="mono" Grid.Column="4" Text="{Binding Score}"
                              FontSize="13" FontWeight="Bold" VerticalAlignment="Center"
                              Foreground="{Binding ScoreForeground}"/>
-                  <Button Classes="ghost" Grid.Column="5" Width="30" Height="30" Padding="0"
-                          VerticalAlignment="Center" Command="{Binding OpenDetailCommand}"
-                          ToolTip.Tip="View details">
-                    <material:MaterialIcon Width="15" Height="15" Kind="ChevronRight"
-                                          Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-                  </Button>
-                  <StackPanel Grid.Column="6" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                  <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
                     <Button Classes="ghost" Width="30" Height="30" Padding="0" Command="{Binding IncrementCommand}" ToolTip.Tip="Increment progress">
                       <material:MaterialIcon Width="16" Height="16" Kind="Plus"/>
                     </Button>
@@ -331,17 +310,10 @@
                     </Button>
                   </StackPanel>
                 </Grid>
-              </Border>
+              </Button>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
-
-        <!-- Bottom cap to round off the list -->
-        <Border IsVisible="{Binding !IsLibraryEmpty}" Height="8"
-                CornerRadius="0,0,8,8"
-                Background="{DynamicResource TanaHubSurfaceBrush}"
-                BorderBrush="{DynamicResource TanaHubBorderBrush}"
-                BorderThickness="1,0,1,1"/>
 
       </StackPanel>
 
@@ -349,69 +321,52 @@
       <ItemsControl IsVisible="{Binding IsLibraryGridVisible}" ItemsSource="{Binding LibraryEntries}">
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
-            <WrapPanel/>
+            <WrapPanel ItemWidth="184"/>
           </ItemsPanelTemplate>
         </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
           <DataTemplate x:DataType="vm:LibraryEntryViewModel">
-            <Border
-                Width="172" Height="262"
-                Margin="0,0,12,12"
-                Background="{DynamicResource TanaHubSurfaceBrush}"
-                BorderBrush="{DynamicResource TanaHubBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="10"
-                ClipToBounds="True"
-                RenderTransformOrigin="0.5,0.5">
-              <Border.Transitions>
-                <Transitions>
-                  <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" Easing="CubicEaseOut"/>
-                </Transitions>
-              </Border.Transitions>
-              <Border.Styles>
-                <Style Selector="Border:pointerover">
-                  <Setter Property="RenderTransform" Value="translateY(-2px)"/>
-                </Style>
-              </Border.Styles>
-              <Grid RowDefinitions="154,*,Auto">
-                <Border>
-                  <Border.Background>
-                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                      <GradientStop Color="#38215F" Offset="0"/>
-                      <GradientStop Color="#10131F" Offset="1"/>
-                    </LinearGradientBrush>
-                  </Border.Background>
-                  <controls:RemoteImage SourceUri="{Binding PosterUri}"/>
-                </Border>
-                <StackPanel Grid.Row="1" Margin="12,10,12,0" Spacing="4">
-                  <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
-                             Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
-                             TextTrimming="CharacterEllipsis"/>
-                  <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Text="{Binding Status}" FontSize="11"
-                               Foreground="{Binding StatusForeground}" TextTrimming="CharacterEllipsis"/>
-                    <TextBlock Classes="mono" Grid.Column="1" Text="{Binding Score}"
-                               FontSize="12" FontWeight="Bold" Foreground="{Binding ScoreForeground}"/>
-                  </Grid>
-                  <TextBlock Classes="mono" Text="{Binding Progress}" FontSize="11"
-                             Foreground="{DynamicResource TanaHubCyanBrush}"/>
-                </StackPanel>
-                <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="5" Margin="12,0,12,12">
-                  <Button Classes="ghost" Width="30" Height="30" Padding="0" Command="{Binding OpenDetailCommand}" ToolTip.Tip="View details">
-                    <material:MaterialIcon Width="15" Height="15" Kind="ChevronRight"/>
-                  </Button>
-                  <Button Classes="ghost" Width="30" Height="30" Padding="0" Command="{Binding IncrementCommand}" ToolTip.Tip="Increment progress">
-                    <material:MaterialIcon Width="15" Height="15" Kind="Plus"/>
-                  </Button>
-                  <Button Classes="ghost" Width="30" Height="30" Padding="0" Command="{Binding IncreaseScoreCommand}" ToolTip.Tip="Increase score">
-                    <material:MaterialIcon Width="15" Height="15" Kind="StarPlus"/>
-                  </Button>
-                  <Button Classes="danger" Width="30" Height="30" Padding="0" Command="{Binding RemoveCommand}" ToolTip.Tip="Remove from library">
-                    <material:MaterialIcon Width="15" Height="15" Kind="TrashCanOutline"/>
-                  </Button>
-                </StackPanel>
-              </Grid>
-            </Border>
+            <Button Classes="card" Command="{Binding OpenDetailCommand}"
+                    Width="172" Height="262" Margin="0,0,12,12"
+                    RenderTransformOrigin="0.5,0.5">
+              <Border Classes="card" ClipToBounds="True">
+                <Grid RowDefinitions="154,*,Auto">
+                  <Border>
+                    <Border.Background>
+                      <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Color="#38215F" Offset="0"/>
+                        <GradientStop Color="#10131F" Offset="1"/>
+                      </LinearGradientBrush>
+                    </Border.Background>
+                    <controls:RemoteImage SourceUri="{Binding PosterUri}"/>
+                  </Border>
+                  <StackPanel Grid.Row="1" Margin="12,10,12,0" Spacing="4">
+                    <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
+                               TextTrimming="CharacterEllipsis"/>
+                    <Grid ColumnDefinitions="*,Auto">
+                      <TextBlock Text="{Binding Status}" FontSize="11"
+                                 Foreground="{Binding StatusForeground}" TextTrimming="CharacterEllipsis"/>
+                      <TextBlock Classes="mono" Grid.Column="1" Text="{Binding Score}"
+                                 FontSize="12" FontWeight="Bold" Foreground="{Binding ScoreForeground}"/>
+                    </Grid>
+                    <TextBlock Classes="mono" Text="{Binding Progress}" FontSize="11"
+                               Foreground="{DynamicResource TanaHubCyanBrush}"/>
+                  </StackPanel>
+                  <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="5" Margin="12,0,12,12">
+                    <Button Classes="ghost" Width="30" Height="30" Padding="0" Command="{Binding IncrementCommand}" ToolTip.Tip="Increment progress">
+                      <material:MaterialIcon Width="15" Height="15" Kind="Plus"/>
+                    </Button>
+                    <Button Classes="ghost" Width="30" Height="30" Padding="0" Command="{Binding IncreaseScoreCommand}" ToolTip.Tip="Increase score">
+                      <material:MaterialIcon Width="15" Height="15" Kind="StarPlus"/>
+                    </Button>
+                    <Button Classes="danger" Width="30" Height="30" Padding="0" Command="{Binding RemoveCommand}" ToolTip.Tip="Remove from library">
+                      <material:MaterialIcon Width="15" Height="15" Kind="TrashCanOutline"/>
+                    </Button>
+                  </StackPanel>
+                </Grid>
+              </Border>
+            </Button>
           </DataTemplate>
         </ItemsControl.ItemTemplate>
       </ItemsControl>

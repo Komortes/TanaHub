@@ -94,8 +94,6 @@
             Padding="10,6"
             VerticalAlignment="Center"
             Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-            BorderBrush="{DynamicResource TanaHubBorderBrush}"
-            BorderThickness="1"
             CornerRadius="9">
           <StackPanel Orientation="Horizontal" Spacing="7">
             <Border
@@ -246,8 +244,7 @@
               Margin="12,0,12,14"
               Padding="10,7"
               CornerRadius="8"
-              BorderBrush="{DynamicResource TanaHubBorderBrush}"
-              BorderThickness="1">
+              Background="{DynamicResource TanaHubSurfaceRaisedBrush}">
             <StackPanel Orientation="Horizontal" Spacing="7">
               <material:MaterialIcon Width="12" Height="12" Kind="CodeBraces" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
               <TextBlock Text="Preview build" FontSize="10" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
@@ -258,7 +255,7 @@
 
       <!-- Main content -->
       <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Disabled">
-        <Grid Margin="30" MaxWidth="1180">
+        <Grid Margin="24,20" MaxWidth="1180">
           <StackPanel Spacing="22">
             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
               <!-- Back button -->
@@ -308,8 +305,6 @@
                   Padding="12,7"
                   VerticalAlignment="Center"
                   Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-                  BorderBrush="{DynamicResource TanaHubBorderBrush}"
-                  BorderThickness="1"
                   CornerRadius="9">
                 <TextBlock
                     Text="{Binding SearchStatus}"

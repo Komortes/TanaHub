@@ -7,17 +7,15 @@
     xmlns:controls="clr-namespace:TanaHub.UI.Views.Controls"
     x:DataType="vm:MainWindowViewModel">
 
-  <Grid ColumnDefinitions="210,*" ColumnSpacing="20">
+  <Grid ColumnDefinitions="220,*" ColumnSpacing="20">
 
     <!-- ── Sidebar ────────────────────────────────────────────── -->
     <StackPanel Spacing="12">
-      <Border Padding="14" Background="{DynamicResource TanaHubSurfaceBrush}"
-              BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1"
-              CornerRadius="10" BoxShadow="0 2 8 0 #1C000000">
+      <Border Classes="panel">
         <StackPanel Spacing="10">
           <TextBlock Text="Week" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
           <StackPanel Spacing="2">
-            <Button Classes="ghost" HorizontalContentAlignment="Left"
+            <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                     Command="{Binding SelectScheduleRangeCommand}" CommandParameter="Today">
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <material:MaterialIcon Width="13" Height="13" Kind="CalendarToday"/>
@@ -28,7 +26,7 @@
                     IsVisible="{Binding IsScheduleTodaySelected}"/>
           </StackPanel>
           <StackPanel Spacing="2">
-            <Button Classes="ghost" HorizontalContentAlignment="Left"
+            <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                     Command="{Binding SelectScheduleRangeCommand}" CommandParameter="Tomorrow">
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <material:MaterialIcon Width="13" Height="13" Kind="CalendarArrowRight"/>
@@ -39,7 +37,7 @@
                     IsVisible="{Binding IsScheduleTomorrowSelected}"/>
           </StackPanel>
           <StackPanel Spacing="2">
-            <Button Classes="ghost" HorizontalContentAlignment="Left"
+            <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                     Command="{Binding SelectScheduleRangeCommand}" CommandParameter="This week">
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <material:MaterialIcon Width="13" Height="13" Kind="CalendarWeek"/>
@@ -50,7 +48,7 @@
                     IsVisible="{Binding IsScheduleThisWeekSelected}"/>
           </StackPanel>
           <StackPanel Spacing="2">
-            <Button Classes="ghost" HorizontalContentAlignment="Left"
+            <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                     Command="{Binding SelectScheduleRangeCommand}" CommandParameter="Next week">
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <material:MaterialIcon Width="13" Height="13" Kind="CalendarMonth"/>
@@ -63,9 +61,7 @@
         </StackPanel>
       </Border>
 
-      <Border Padding="14" Background="{DynamicResource TanaHubSurfaceBrush}"
-              BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1"
-              CornerRadius="10" BoxShadow="0 2 8 0 #1C000000">
+      <Border Classes="panel">
         <StackPanel Spacing="10">
           <TextBlock Text="Legend" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
           <StackPanel Orientation="Horizontal" Spacing="8">
@@ -102,25 +98,8 @@
       <ItemsControl ItemsSource="{Binding ScheduleItems}">
         <ItemsControl.ItemTemplate>
           <DataTemplate x:DataType="vm:ScheduleItemViewModel">
-            <Border
-                Margin="0,0,0,6"
-                Padding="16,13"
-                Background="{DynamicResource TanaHubSurfaceBrush}"
-                BorderBrush="{DynamicResource TanaHubBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="10"
-                BoxShadow="0 1 6 0 #18000000">
-              <Border.Transitions>
-                <Transitions>
-                  <BrushTransition Property="Background" Duration="0:0:0.12"/>
-                </Transitions>
-              </Border.Transitions>
-              <Border.Styles>
-                <Style Selector="Border:pointerover">
-                  <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceRaisedBrush}"/>
-                </Style>
-              </Border.Styles>
-              <Grid ColumnDefinitions="100,80,44,52,*,Auto,Auto" ColumnSpacing="14">
+            <Border Classes="row" Margin="0,0,0,6" Padding="16,13">
+              <Grid ColumnDefinitions="80,80,44,52,*,Auto,Auto" ColumnSpacing="14">
                 <TextBlock Classes="mono" Text="{Binding Day}" FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
                 <TextBlock Classes="mono" Grid.Column="1" Text="{Binding Time}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{DynamicResource TanaHubSakuraBrush}"/>
                 <Border Grid.Column="2" Width="30" Height="30" CornerRadius="8" Background="{DynamicResource TanaHubAccentGlowBrush}">
@@ -136,9 +115,7 @@
                     <TextBlock Text="{Binding Detail}" FontSize="11" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
                   </StackPanel>
                 </StackPanel>
-                <Border Grid.Column="5" Padding="8,4" CornerRadius="7" VerticalAlignment="Center"
-                        Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-                        BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
+                <Border Grid.Column="5" Classes="chip" VerticalAlignment="Center">
                   <TextBlock Text="{Binding LibraryMatchLabel}" FontSize="11" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
                 </Border>
                 <Button
@@ -159,15 +136,11 @@
         </ItemsControl.ItemTemplate>
       </ItemsControl>
 
-      <Border Padding="18" Background="{DynamicResource TanaHubSurfaceBrush}"
-              BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1"
-              CornerRadius="10" BoxShadow="0 2 8 0 #1C000000">
+      <Border Classes="panel">
         <StackPanel Spacing="14">
           <TextBlock Text="Upcoming next season" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
           <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
-            <Border Padding="14" CornerRadius="10"
-                    Background="{DynamicResource TanaHubAccentGlowBrush}"
-                    BorderBrush="{DynamicResource TanaHubAccentBrush}" BorderThickness="1">
+            <Border Classes="tile" Padding="14">
               <StackPanel Spacing="8">
                 <material:MaterialIcon Width="22" Height="22" Kind="Television" Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
                 <StackPanel Spacing="3">
@@ -176,9 +149,7 @@
                 </StackPanel>
               </StackPanel>
             </Border>
-            <Border Grid.Column="1" Padding="14" CornerRadius="10"
-                    Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-                    BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
+            <Border Grid.Column="1" Classes="tile" Padding="14">
               <StackPanel Spacing="8">
                 <material:MaterialIcon Width="22" Height="22" Kind="BookOpenPageVariant" Foreground="{DynamicResource TanaHubCyanBrush}"/>
                 <StackPanel Spacing="3">
@@ -187,9 +158,7 @@
                 </StackPanel>
               </StackPanel>
             </Border>
-            <Border Grid.Column="2" Padding="14" CornerRadius="10"
-                    Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-                    BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
+            <Border Grid.Column="2" Classes="tile" Padding="14">
               <StackPanel Spacing="8">
                 <material:MaterialIcon Width="22" Height="22" Kind="AccountSync" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
                 <StackPanel Spacing="3">

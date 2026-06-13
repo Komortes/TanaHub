@@ -7,13 +7,14 @@
   <Application.Resources>
 
     <!-- ── Surfaces ──────────────────────────────────────────── -->
-    <Color x:Key="TanaHubBackgroundColor">#09080F</Color>
-    <Color x:Key="TanaHubSurfaceColor">#120F1C</Color>
-    <Color x:Key="TanaHubSurfaceRaisedColor">#1A1628</Color>
-    <Color x:Key="TanaHubSurfaceElevatedColor">#201C30</Color>
-    <Color x:Key="TanaHubSurfaceHoverColor">#271F38</Color>
-    <Color x:Key="TanaHubBorderColor">#2C2244</Color>
-    <Color x:Key="TanaHubBorderLightColor">#3C2E58</Color>
+    <Color x:Key="TanaHubBackgroundColor">#07060E</Color>
+    <Color x:Key="TanaHubSurfaceColor">#100D1A</Color>
+    <Color x:Key="TanaHubSurfaceRaisedColor">#181426</Color>
+    <Color x:Key="TanaHubSurfaceElevatedColor">#1E1A2E</Color>
+    <Color x:Key="TanaHubSurfaceHoverColor">#231C34</Color>
+    <!-- Accent-tinted borders — purple hue blends with the palette, no harsh white -->
+    <Color x:Key="TanaHubBorderColor">#9B6EF818</Color>
+    <Color x:Key="TanaHubBorderLightColor">#9B6EF830</Color>
 
     <!-- ── Accent / Primary ───────────────────────────────────── -->
     <Color x:Key="TanaHubAccentColor">#9B6EF8</Color>
@@ -61,6 +62,21 @@
     <SolidColorBrush x:Key="TanaHubTextPrimaryBrush"     Color="{StaticResource TanaHubTextPrimaryColor}" />
     <SolidColorBrush x:Key="TanaHubTextSecondaryBrush"   Color="{StaticResource TanaHubTextSecondaryColor}" />
     <SolidColorBrush x:Key="TanaHubTextMutedBrush"       Color="{StaticResource TanaHubTextMutedColor}" />
+
+    <!-- TextBox watermark / placeholder -->
+    <SolidColorBrush x:Key="TextControlPlaceholderForeground"            Color="{StaticResource TanaHubTextMutedColor}"/>
+    <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="{StaticResource TanaHubTextMutedColor}"/>
+    <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused"     Color="{StaticResource TanaHubTextMutedColor}"/>
+
+    <!-- ToggleSwitch dark theme -->
+    <SolidColorBrush x:Key="ToggleSwitchFillOff"            Color="{StaticResource TanaHubSurfaceRaisedColor}"/>
+    <SolidColorBrush x:Key="ToggleSwitchFillOffPointerOver" Color="{StaticResource TanaHubSurfaceElevatedColor}"/>
+    <SolidColorBrush x:Key="ToggleSwitchFillOn"             Color="{StaticResource TanaHubAccentColor}"/>
+    <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver"  Color="{StaticResource TanaHubAccentLightColor}"/>
+    <SolidColorBrush x:Key="ToggleSwitchStrokeOff"          Color="{StaticResource TanaHubBorderLightColor}"/>
+    <SolidColorBrush x:Key="ToggleSwitchStrokeOn"           Color="{StaticResource TanaHubAccentColor}"/>
+    <SolidColorBrush x:Key="ToggleSwitchKnobFillOff"        Color="{StaticResource TanaHubTextSecondaryColor}"/>
+    <SolidColorBrush x:Key="ToggleSwitchKnobFillOn"         Color="{StaticResource TanaHubTextPrimaryColor}"/>
 
   </Application.Resources>
 
@@ -113,7 +129,7 @@
     <!-- Ghost / secondary button — use Classes="ghost" -->
     <Style Selector="Button.ghost">
       <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="{DynamicResource TanaHubBorderBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource TanaHubBorderLightBrush}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="Foreground" Value="{DynamicResource TanaHubTextSecondaryBrush}" />
     </Style>
@@ -139,12 +155,60 @@
       <Setter Property="Foreground" Value="{DynamicResource TanaHubRedBrush}" />
     </Style>
 
-    <!-- Icons and text inside buttons always vertically centred -->
+    <!-- ToggleSwitch: hide default On/Off text labels -->
+    <Style Selector="ToggleSwitch">
+      <Setter Property="OnContent"  Value=""/>
+      <Setter Property="OffContent" Value=""/>
+    </Style>
+
+    <!-- TextBox watermark text (belt-and-suspenders alongside resource keys above) -->
+    <Style Selector="TextBox /template/ TextBlock#PART_Watermark">
+      <Setter Property="Foreground" Value="{DynamicResource TanaHubTextMutedBrush}"/>
+    </Style>
+
+    <!-- Icons and text inside buttons always vertically centred + foreground inherited -->
     <Style Selector="Button material|MaterialIcon">
       <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}"/>
     </Style>
     <Style Selector="Button TextBlock">
       <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- Poster card — transparent outer shell, inner Border handles visuals and rounded clip -->
+    <Style Selector="Button.card">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+      <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+    </Style>
+    <Style Selector="Button.card:pointerover">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="{DynamicResource TanaHubTextPrimaryBrush}"/>
+      <Setter Property="RenderTransform" Value="translateY(-2px)"/>
+    </Style>
+    <Style Selector="Button.card:pressed">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="RenderTransform" Value="scale(0.97)"/>
+    </Style>
+
+    <!-- Row card — borderless, elevation from background contrast + spacing -->
+    <Style Selector="Button.row">
+      <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceBrush}"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="10,10"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.row:pointerover">
+      <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceRaisedBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource TanaHubTextPrimaryBrush}"/>
+    </Style>
+    <Style Selector="Button.row:pressed">
+      <Setter Property="RenderTransform" Value="scale(0.995)"/>
     </Style>
 
     <!-- ── TextBox ───────────────────────────────────────────── -->
@@ -182,6 +246,86 @@
     </Style>
     <Style Selector="ScrollBar:pointerover">
       <Setter Property="Opacity" Value="0.9"/>
+    </Style>
+
+    <!-- ════ Surface system ════════════════════════════════════════
+         One elevation language across every page: depth comes from a
+         soft shadow + background contrast, never a hard 1px outline.
+         Keeps panels from looking boxed-in. Radius scale steps cleanly:
+         controls 8 · tiles 10 · cards 12 · panels 14. -->
+
+    <!-- Large container — sidebars, settings blocks, detail panels -->
+    <Style Selector="Border.panel">
+      <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceBrush}"/>
+      <Setter Property="CornerRadius" Value="14"/>
+      <Setter Property="Padding" Value="16"/>
+      <Setter Property="BoxShadow" Value="0 8 28 0 #3A000000"/>
+    </Style>
+
+    <!-- Content card — list rows, schedule rows, media surfaces -->
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceBrush}"/>
+      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="BoxShadow" Value="0 4 16 0 #2C000000"/>
+    </Style>
+
+    <!-- Flat list row — dense lists (schedule, search results). No shadow;
+         separation comes from spacing + a hover lift to the raised surface,
+         matching the Button.row treatment used on Home and Library. -->
+    <Style Selector="Border.row">
+      <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceBrush}"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="Transitions">
+        <Setter.Value>
+          <Transitions>
+            <BrushTransition Property="Background" Duration="0:0:0.14"/>
+          </Transitions>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style Selector="Border.row:pointerover">
+      <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceRaisedBrush}"/>
+    </Style>
+
+    <!-- Flat inset tile — mini stat tiles / nested surfaces, no shadow -->
+    <Style Selector="Border.tile">
+      <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceRaisedBrush}"/>
+      <Setter Property="CornerRadius" Value="10"/>
+    </Style>
+
+    <!-- Small pill / badge -->
+    <Style Selector="Border.chip">
+      <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceRaisedBrush}"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Padding" Value="8,4"/>
+    </Style>
+
+    <!-- Accent pill — selected / branded chip -->
+    <Style Selector="Border.chip-accent">
+      <Setter Property="Background" Value="{DynamicResource TanaHubAccentGlowBrush}"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Padding" Value="8,4"/>
+    </Style>
+
+    <!-- Hairline divider -->
+    <Style Selector="Border.divider">
+      <Setter Property="Height" Value="1"/>
+      <Setter Property="Background" Value="{DynamicResource TanaHubBorderLightBrush}"/>
+    </Style>
+
+    <!-- Section eyebrow accent bar — the 3px colour tick before a label -->
+    <Style Selector="Border.eyebrow-bar">
+      <Setter Property="Width" Value="3"/>
+      <Setter Property="Height" Value="13"/>
+      <Setter Property="CornerRadius" Value="2"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Section eyebrow label — uppercase micro-heading -->
+    <Style Selector="TextBlock.eyebrow">
+      <Setter Property="FontSize" Value="10"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 
   </Application.Styles>
