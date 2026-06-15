@@ -24,6 +24,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IFileSaveService fileSaveService;
     private readonly IAniListAuthService aniListAuthService;
     private readonly IAniListSyncService aniListSyncService;
+    private readonly INotificationService notificationService;
+    private readonly ICatalogSourceSelector catalogSourceSelector;
+    private readonly HashSet<string> notifiedThisSession = new(StringComparer.OrdinalIgnoreCase);
     private AppSettings appSettings = new();
 
     public MainWindowViewModel(
@@ -34,7 +37,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IAppThemeService appThemeService,
         IFileSaveService fileSaveService,
         IAniListAuthService aniListAuthService,
-        IAniListSyncService aniListSyncService)
+        IAniListSyncService aniListSyncService,
+        INotificationService notificationService,
+        ICatalogSourceSelector catalogSourceSelector)
     {
         this.mediaCatalogService = mediaCatalogService;
         this.userLibraryService = userLibraryService;
@@ -44,6 +49,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         this.fileSaveService = fileSaveService;
         this.aniListAuthService = aniListAuthService;
         this.aniListSyncService = aniListSyncService;
+        this.notificationService = notificationService;
+        this.catalogSourceSelector = catalogSourceSelector;
 
         NavigationItems =
         [
@@ -705,6 +712,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         OfflineCacheEnabled = appSettings.OfflineCacheEnabled;
         RecognitionServicesEnabled = appSettings.RecognitionServicesEnabled;
         PreferredSyncSource = appSettings.PreferredSyncSource;
+        catalogSourceSelector.SetSource(PreferredSyncSource);
         NotifySyncSourceSelectionChanged();
         SettingsStorageDetail = $"Settings saved {appSettings.UpdatedAt:yyyy-MM-dd HH:mm}";
         AniListClientId = appSettings.AniListClientId;
@@ -811,10 +819,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private async Task SelectSyncSourceAsync(string source)
     {
-        await SaveSettingsAsync(appSettings with
-        {
-            PreferredSyncSource = string.IsNullOrWhiteSpace(source) ? "AniList" : source
-        });
+        var resolved = string.IsNullOrWhiteSpace(source) ? "AniList" : source;
+        catalogSourceSelector.SetSource(resolved);
+        await SaveSettingsAsync(appSettings with { PreferredSyncSource = resolved });
     }
 
     [RelayCommand]
@@ -873,6 +880,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         OfflineCacheEnabled = appSettings.OfflineCacheEnabled;
         RecognitionServicesEnabled = appSettings.RecognitionServicesEnabled;
         PreferredSyncSource = appSettings.PreferredSyncSource;
+        catalogSourceSelector.SetSource(PreferredSyncSource);
         NotifySyncSourceSelectionChanged();
         SettingsStorageDetail = $"Settings saved {appSettings.UpdatedAt:yyyy-MM-dd HH:mm}";
         IsAniListConnected = !string.IsNullOrWhiteSpace(appSettings.AniListAccessToken);
@@ -970,6 +978,26 @@ public sealed partial class MainWindowViewModel : ObservableObject
         }
 
         OnPropertyChanged(nameof(HasScheduleItems));
+
+        if (NotificationsEnabled && SelectedScheduleRange == "Today")
+            await NotifyAiringTodayAsync(result.Value!, libraryIds);
+    }
+
+    private async Task NotifyAiringTodayAsync(
+        IReadOnlyList<AiringScheduleItem> items,
+        IReadOnlySet<string> libraryIds)
+    {
+        var today = DateTimeOffset.Now.Date;
+        foreach (var item in items)
+        {
+            if (!libraryIds.Contains(item.MediaId)) continue;
+            if (item.AiringAt.LocalDateTime.Date != today) continue;
+            if (!notifiedThisSession.Add(item.MediaId + ":" + item.Episode)) continue;
+
+            await notificationService.NotifyAsync(
+                "TanaHub — Airing today",
+                $"EP {item.Episode} of {item.Title} is out!");
+        }
     }
 
     private (DateTimeOffset From, DateTimeOffset To) GetScheduleWindow()

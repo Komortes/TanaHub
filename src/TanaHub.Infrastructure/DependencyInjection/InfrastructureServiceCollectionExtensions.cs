@@ -6,6 +6,7 @@ using TanaHub.Infrastructure.Catalog;
 using TanaHub.Infrastructure.Library;
 using TanaHub.Infrastructure.Schedule;
 using TanaHub.Infrastructure.Settings;
+using TanaHub.Infrastructure.Notifications;
 using TanaHub.Infrastructure.Sync;
 
 namespace TanaHub.Infrastructure.DependencyInjection;
@@ -15,19 +16,35 @@ public static class InfrastructureServiceCollectionExtensions
     public static IServiceCollection AddTanaHubInfrastructure(this IServiceCollection services)
     {
         services.AddSingleton<InMemoryMediaCatalogService>();
-        services.AddSingleton<IMediaCatalogService>(provider =>
+        services.AddSingleton<OfflineCatalogCache>(provider =>
         {
-            var httpClient = new HttpClient
-            {
-                Timeout = TimeSpan.FromSeconds(10)
-            };
-
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var cache = new OfflineCatalogCache(Path.Combine(appData, "TanaHub", "catalog_cache.json"));
+            Task.Run(() => cache.LoadAsync());
+            return cache;
+        });
+        services.AddSingleton<AniListMediaCatalogService>(provider =>
+        {
+            var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
             httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("TanaHub/0.1");
-
             return new AniListMediaCatalogService(
                 httpClient,
-                provider.GetRequiredService<InMemoryMediaCatalogService>());
+                provider.GetRequiredService<InMemoryMediaCatalogService>(),
+                provider.GetRequiredService<OfflineCatalogCache>());
         });
+        services.AddSingleton<MangaDexMediaCatalogService>(_ =>
+        {
+            var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("TanaHub/0.1");
+            return new MangaDexMediaCatalogService(httpClient);
+        });
+        services.AddSingleton<RoutedMediaCatalogService>(provider => new RoutedMediaCatalogService(
+            provider.GetRequiredService<AniListMediaCatalogService>(),
+            provider.GetRequiredService<MangaDexMediaCatalogService>()));
+        services.AddSingleton<IMediaCatalogService>(provider =>
+            provider.GetRequiredService<RoutedMediaCatalogService>());
+        services.AddSingleton<ICatalogSourceSelector>(provider =>
+            provider.GetRequiredService<RoutedMediaCatalogService>());
         services.AddSingleton<IUserLibraryService>(_ => new FileUserLibraryService(
             GetDefaultLibraryPath(),
             CreateSeedLibraryEntries()));
@@ -43,6 +60,8 @@ public static class InfrastructureServiceCollectionExtensions
             httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("TanaHub/0.1");
             return new AniListAiringScheduleService(httpClient);
         });
+
+        services.AddSingleton<INotificationService, OsNotificationService>();
 
         services.AddSingleton<IAniListAuthService>(_ => new AniListOAuthService(
             new HttpClient { Timeout = TimeSpan.FromSeconds(15) }));

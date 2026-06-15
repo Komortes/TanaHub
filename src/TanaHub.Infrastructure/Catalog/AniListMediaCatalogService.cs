@@ -9,18 +9,23 @@ using TanaHub.Domain.Models;
 
 namespace TanaHub.Infrastructure.Catalog;
 
-public sealed class AniListMediaCatalogService : IMediaCatalogService
+internal sealed class AniListMediaCatalogService : IMediaCatalogService
 {
     private const string GraphQlEndpoint = "https://graphql.anilist.co/";
 
     private readonly HttpClient httpClient;
     private readonly IMediaCatalogService fallbackCatalog;
+    private readonly OfflineCatalogCache? offlineCache;
     private readonly ConcurrentDictionary<string, MediaItem> fetchedItems = new(StringComparer.OrdinalIgnoreCase);
 
-    public AniListMediaCatalogService(HttpClient httpClient, IMediaCatalogService fallbackCatalog)
+    public AniListMediaCatalogService(
+        HttpClient httpClient,
+        IMediaCatalogService fallbackCatalog,
+        OfflineCatalogCache? offlineCache = null)
     {
         this.httpClient = httpClient;
         this.fallbackCatalog = fallbackCatalog;
+        this.offlineCache = offlineCache;
     }
 
     public async Task<Result<PagedResult<MediaItem>>> SearchAsync(
@@ -56,6 +61,12 @@ public sealed class AniListMediaCatalogService : IMediaCatalogService
             foreach (var item in items)
             {
                 fetchedItems[item.Id] = item;
+            }
+
+            if (offlineCache is not null)
+            {
+                offlineCache.PutRange(items);
+                _ = offlineCache.FlushAsync(cancellationToken);
             }
 
             return Result<PagedResult<MediaItem>>.Success(new PagedResult<MediaItem>(
@@ -108,16 +119,28 @@ public sealed class AniListMediaCatalogService : IMediaCatalogService
 
             var item = ToMediaItem(media);
             fetchedItems[item.Id] = item;
+            if (offlineCache is not null)
+            {
+                offlineCache.Put(item);
+                _ = offlineCache.FlushAsync(cancellationToken);
+            }
             return Result<MediaItem>.Success(item);
         }
         catch (HttpRequestException)
         {
-            return await fallbackCatalog.GetByIdAsync(mediaId, cancellationToken);
+            return await TryOfflineOrFallback(mediaId, cancellationToken);
         }
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            return await fallbackCatalog.GetByIdAsync(mediaId, cancellationToken);
+            return await TryOfflineOrFallback(mediaId, cancellationToken);
         }
+    }
+
+    private Task<Result<MediaItem>> TryOfflineOrFallback(string mediaId, CancellationToken cancellationToken)
+    {
+        if (offlineCache is not null && offlineCache.TryGet(mediaId, out var cached))
+            return Task.FromResult(Result<MediaItem>.Success(cached));
+        return fallbackCatalog.GetByIdAsync(mediaId, cancellationToken);
     }
 
     private async Task<GraphQlResponse<T>> PostGraphQlAsync<T>(
