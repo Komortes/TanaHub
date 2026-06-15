@@ -1,54 +1,90 @@
 # TanaHub
 
-A native desktop anime and manga tracker built with .NET and Avalonia UI.
+A native desktop app for tracking anime and manga. Built with .NET and Avalonia UI — no Electron, no web wrapper.
 
-## Features
+![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-blue)
+![.NET](https://img.shields.io/badge/.NET-10-purple)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-- Browse and search titles via AniList catalog
-- Track watching/reading progress per title
-- Personal library with status management (Watching, Completed, Planning, Paused, Dropped)
-- Airing schedule view
-- Export library to CSV
-- Dark theme with a custom design system
+---
 
-## Tech Stack
+## What it does
 
-- **.NET 10** — runtime and async infrastructure
-- **Avalonia UI** — cross-platform native UI (no Electron)
-- **AniList GraphQL API** — catalog and schedule data
-- **Clean Architecture** — Domain / Application / Infrastructure / UI layers
+- **Discover** — search and browse anime/manga via AniList, with cover art, scores, and metadata
+- **Library** — track your watching/reading list with statuses: Watching, Completed, Planning, Paused, Dropped
+- **Title detail** — synopsis, characters, relations, airing info, and personal notes all in one place
+- **Schedule** — see what's airing this week and when
+- **Recognize** — identify an anime from a screenshot using trace.moe
+- **AniList sync** — connect your AniList account via OAuth and sync your list both ways
+- **Offline cache** — catalog data is cached locally so the app works without a connection
+- **Export** — dump your library to CSV anytime
 
-## Structure
+---
 
-```text
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Runtime | .NET 10 |
+| UI | Avalonia UI (native, cross-platform) |
+| Anime catalog | AniList GraphQL API |
+| Manga catalog | MangaDex REST API |
+| Anime recognition | trace.moe API |
+| Persistence | JSON files (local) |
+| Architecture | Clean Architecture — Domain / Application / Infrastructure / UI |
+
+---
+
+## Architecture
+
+```
 src/
-  TanaHub.Desktop/         Entry point, DI composition root
-  TanaHub.UI/              Views and ViewModels (Avalonia)
-  TanaHub.Application/     Use cases, service interfaces, export
-  TanaHub.Infrastructure/  AniList client, file persistence, settings
-  TanaHub.Domain/          Models and enums
+  TanaHub.Desktop/          Entry point, DI composition root
+  TanaHub.UI/               Views, ViewModels, controls (Avalonia MVVM)
+  TanaHub.Application/      Use cases, service interfaces, CSV export
+  TanaHub.Infrastructure/   API clients, file persistence, sync, notifications
+  TanaHub.Domain/           Core models and enums
+
 tests/
   TanaHub.Application.Tests/
   TanaHub.Infrastructure.Tests/
 ```
 
-## Requirements
+The infrastructure layer is swappable — the application core has zero knowledge of AniList or any external API. Adding a new catalog source means implementing one interface.
 
-- .NET SDK 10.0.201+
+---
 
-## Build & Run
+## Getting started
+
+**Requirements:** .NET SDK 10.0.201+
 
 ```bash
+git clone https://github.com/Komortes/TanaHub.git
+cd TanaHub
+
 dotnet restore TanaHub.sln
-dotnet build TanaHub.sln -m:1 /p:BuildInParallel=false
+dotnet build TanaHub.sln
 dotnet run --project src/TanaHub.Desktop/TanaHub.Desktop.csproj
 ```
 
-## Tests
-
 ```bash
-dotnet test TanaHub.sln --no-build -m:1 /p:BuildInParallel=false
+# Tests
+dotnet test TanaHub.sln
 ```
+
+---
+
+## Planned
+
+- [ ] Ratings and reviews per title
+- [ ] Reading progress tracking for manga (chapter/volume)
+- [ ] Library statistics and watch-time charts
+- [ ] MAL (MyAnimeList) import/export
+- [ ] Custom lists and tags
+- [ ] Recommendations based on your library
+- [ ] Auto-update checker
+
+---
 
 ## License
 
