@@ -26,6 +26,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IAniListSyncService aniListSyncService;
     private readonly INotificationService notificationService;
     private readonly ICatalogSourceSelector catalogSourceSelector;
+    private readonly IRecognitionService recognitionService;
+    private readonly IFileOpenService fileOpenService;
     private readonly HashSet<string> notifiedThisSession = new(StringComparer.OrdinalIgnoreCase);
     private AppSettings appSettings = new();
 
@@ -39,7 +41,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IAniListAuthService aniListAuthService,
         IAniListSyncService aniListSyncService,
         INotificationService notificationService,
-        ICatalogSourceSelector catalogSourceSelector)
+        ICatalogSourceSelector catalogSourceSelector,
+        IRecognitionService recognitionService,
+        IFileOpenService fileOpenService)
     {
         this.mediaCatalogService = mediaCatalogService;
         this.userLibraryService = userLibraryService;
@@ -51,6 +55,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         this.aniListSyncService = aniListSyncService;
         this.notificationService = notificationService;
         this.catalogSourceSelector = catalogSourceSelector;
+        this.recognitionService = recognitionService;
+        this.fileOpenService = fileOpenService;
 
         NavigationItems =
         [
@@ -74,6 +80,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 "Schedule",
                 "See upcoming episodes grouped by day and filtered by your lists.",
                 "Schedule will be wired after anime list sync and airing metadata exist."),
+            new(
+                "recognize",
+                "Recognize",
+                "Identify anime from a screenshot using trace.moe reverse image search.",
+                "Enable Recognition services in Settings → Preferences to use this feature."),
             new(
                 "settings",
                 "Settings",
@@ -266,6 +277,17 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private bool isSettingsVisible;
 
     [ObservableProperty]
+    private bool isRecognizeVisible;
+
+    [ObservableProperty]
+    private bool isRecognizing;
+
+    [ObservableProperty]
+    private string recognitionStatus = string.Empty;
+
+    public ObservableCollection<RecognitionResultViewModel> RecognitionResults { get; } = [];
+
+    [ObservableProperty]
     private bool isDetailVisible;
 
     public bool IsLibraryListVisible => SelectedLibraryViewMode == "List";
@@ -442,6 +464,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             new AsyncRelayCommand<string?>(s => SetScoreDirectAsync(mediaId, int.TryParse(s, out var v) ? v : 0)),
             new AsyncRelayCommand(() => RemoveFromLibraryAsync(mediaId)),
             libraryVm?.Notes,
+            item.Characters,
             new AsyncRelayCommand<string?>(notes => SaveNotesAsync(mediaId, notes)));
 
         CurrentPageTitle = item.Title.DisplayTitle;
@@ -1133,6 +1156,66 @@ public sealed partial class MainWindowViewModel : ObservableObject
         await RefreshDetailIfOpenAsync(mediaId);
     }
 
+    [RelayCommand]
+    private Task RecognizeFromFileAsync() => RunRecognitionAsync(fileOpenService.PickImageAsync);
+
+    [RelayCommand]
+    private Task PasteAndRecognizeAsync() => RunRecognitionAsync(fileOpenService.PasteImageAsync);
+
+    private async Task RunRecognitionAsync(Func<CancellationToken, Task<(Stream? Stream, string MimeType)>> getImage)
+    {
+        var (stream, mime) = await getImage(CancellationToken.None);
+        if (stream is null)
+        {
+            RecognitionStatus = "No image selected.";
+            return;
+        }
+
+        IsRecognizing = true;
+        RecognitionStatus = "Searching…";
+        RecognitionResults.Clear();
+
+        try
+        {
+            using (stream)
+            {
+                var result = await recognitionService.RecognizeAsync(stream, mime);
+                if (result.IsFailure)
+                {
+                    RecognitionStatus = result.Error.Message;
+                    return;
+                }
+
+                var matches = result.Value!;
+                if (matches.Count == 0)
+                {
+                    RecognitionStatus = "No matches found.";
+                    return;
+                }
+
+                foreach (var match in matches)
+                {
+                    var mediaId = $"anilist:{match.AniListId}";
+                    var ep = match.Episode is not null ? $"EP {match.Episode}" : string.Empty;
+                    var pct = $"{match.Similarity * 100:F1}%";
+                    RecognitionResults.Add(new RecognitionResultViewModel(
+                        MediaId: mediaId,
+                        Title: match.EnglishTitle ?? match.RomajiTitle,
+                        EpisodeLabel: ep,
+                        SimilarityLabel: pct,
+                        ThumbnailUri: match.ThumbnailUri,
+                        OpenCommand: new AsyncRelayCommand(() => OpenDetailAsync(mediaId))));
+                }
+
+                RecognitionStatus = $"{matches.Count} match{(matches.Count == 1 ? string.Empty : "es")} · powered by trace.moe";
+            }
+        }
+        finally
+        {
+            IsRecognizing = false;
+        }
+    }
+
     private void SetVisiblePage(string pageKey)
     {
         IsHomeVisible = pageKey == "home";
@@ -1140,6 +1223,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IsLibraryVisible = pageKey == "library";
         IsScheduleVisible = pageKey == "schedule";
         IsSettingsVisible = pageKey == "settings";
+        IsRecognizeVisible = pageKey == "recognize";
     }
 
     private void SelectNavigationItem(string key)

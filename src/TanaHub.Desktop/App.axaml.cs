@@ -39,6 +39,7 @@ public sealed partial class App : Avalonia.Application
         services.AddTanaHubInfrastructure();
         services.AddSingleton<IAppThemeService, AvaloniaAppThemeService>();
         services.AddSingleton<IFileSaveService, AvaloniaFileSaveService>();
+        services.AddSingleton<IFileOpenService, AvaloniaFileOpenService>();
         services.AddTransient<MainWindowViewModel>();
         services.AddTransient<MainWindow>();
 

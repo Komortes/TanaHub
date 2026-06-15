@@ -280,6 +280,14 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
             ToUri(media.BannerImage),
             ToUri(media.CoverImage?.Medium));
 
+        var characters = media.Characters?.Edges?
+            .Where(e => e.Node?.Name?.Full is not null)
+            .Select(e => new CharacterInfo(
+                e.Node!.Name!.Full!,
+                ToUri(e.Node.Image?.Medium),
+                e.Role switch { "MAIN" => "Main", "SUPPORTING" => "Supporting", _ => "Background" }))
+            .ToList() ?? [];
+
         if (media.Type == "MANGA")
         {
             return new Manga($"anilist:{media.Id}", title, format, status)
@@ -290,6 +298,7 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
                 AverageScore = media.AverageScore,
                 Description = media.Description,
                 Genres = media.Genres ?? [],
+                Characters = characters,
                 Images = images
             };
         }
@@ -302,6 +311,7 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
             AverageScore = media.AverageScore,
             Description = media.Description,
             Genres = media.Genres ?? [],
+            Characters = characters,
             Images = images,
             Studio = media.Studios?.Nodes?.FirstOrDefault()?.Name
         };
@@ -426,6 +436,12 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
             coverImage { extraLarge large medium }
             bannerImage
             studios(isMain: true) { nodes { name } }
+            characters(sort: ROLE, perPage: 6) {
+              edges {
+                role
+                node { name { full } image { medium } }
+              }
+            }
           }
         }
         """;
@@ -523,6 +539,9 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
 
         [JsonPropertyName("studios")]
         public AniListStudioConnection? Studios { get; init; }
+
+        [JsonPropertyName("characters")]
+        public AniListCharacterConnection? Characters { get; init; }
     }
 
     private sealed record AniListTitle
@@ -565,5 +584,41 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
     {
         [JsonPropertyName("name")]
         public string? Name { get; init; }
+    }
+
+    private sealed record AniListCharacterConnection
+    {
+        [JsonPropertyName("edges")]
+        public IReadOnlyList<AniListCharacterEdge>? Edges { get; init; }
+    }
+
+    private sealed record AniListCharacterEdge
+    {
+        [JsonPropertyName("role")]
+        public string? Role { get; init; }
+
+        [JsonPropertyName("node")]
+        public AniListCharacterNode? Node { get; init; }
+    }
+
+    private sealed record AniListCharacterNode
+    {
+        [JsonPropertyName("name")]
+        public AniListCharacterName? Name { get; init; }
+
+        [JsonPropertyName("image")]
+        public AniListCharacterImage? Image { get; init; }
+    }
+
+    private sealed record AniListCharacterName
+    {
+        [JsonPropertyName("full")]
+        public string? Full { get; init; }
+    }
+
+    private sealed record AniListCharacterImage
+    {
+        [JsonPropertyName("medium")]
+        public string? Medium { get; init; }
     }
 }

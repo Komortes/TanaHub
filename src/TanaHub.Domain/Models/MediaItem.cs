@@ -38,5 +38,7 @@ public abstract record MediaItem
 
     public IReadOnlyList<string> Genres { get; init; } = [];
 
+    public IReadOnlyList<CharacterInfo> Characters { get; init; } = [];
+
     public MediaImages Images { get; init; } = new();
 }

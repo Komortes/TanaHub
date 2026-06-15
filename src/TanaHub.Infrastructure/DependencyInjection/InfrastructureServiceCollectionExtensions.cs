@@ -7,6 +7,7 @@ using TanaHub.Infrastructure.Library;
 using TanaHub.Infrastructure.Schedule;
 using TanaHub.Infrastructure.Settings;
 using TanaHub.Infrastructure.Notifications;
+using TanaHub.Infrastructure.Recognition;
 using TanaHub.Infrastructure.Sync;
 
 namespace TanaHub.Infrastructure.DependencyInjection;
@@ -62,6 +63,8 @@ public static class InfrastructureServiceCollectionExtensions
         });
 
         services.AddSingleton<INotificationService, OsNotificationService>();
+        services.AddSingleton<IRecognitionService>(_ => new TraceMoeService(
+            new HttpClient { Timeout = TimeSpan.FromSeconds(30) }));
 
         services.AddSingleton<IAniListAuthService>(_ => new AniListOAuthService(
             new HttpClient { Timeout = TimeSpan.FromSeconds(15) }));

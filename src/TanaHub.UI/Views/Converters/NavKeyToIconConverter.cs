@@ -17,8 +17,9 @@ public sealed class NavKeyToIconConverter : IValueConverter
             "discover" => MaterialIconKind.CompassOutline,
             "library"  => MaterialIconKind.Bookshelf,
             "schedule" => MaterialIconKind.CalendarClock,
-            "settings" => MaterialIconKind.CogOutline,
-            _          => MaterialIconKind.HelpCircle
+            "settings"   => MaterialIconKind.CogOutline,
+            "recognize"  => MaterialIconKind.ImageSearchOutline,
+            _            => MaterialIconKind.HelpCircle
         } : MaterialIconKind.HelpCircle;
     }
 

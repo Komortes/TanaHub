@@ -1,0 +1,136 @@
+<UserControl
+    x:Class="TanaHub.UI.Views.Pages.RecognizeView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:TanaHub.UI.ViewModels"
+    xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    xmlns:controls="clr-namespace:TanaHub.UI.Views.Controls"
+    x:DataType="vm:MainWindowViewModel">
+
+  <StackPanel Spacing="18">
+
+    <!-- Drop zone -->
+    <Border Classes="panel">
+      <StackPanel Spacing="14">
+        <StackPanel Spacing="3">
+          <TextBlock Text="Reverse image search" FontSize="16" FontWeight="Bold"
+                     Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+          <TextBlock Text="Identify anime from a screenshot via trace.moe" FontSize="12"
+                     Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+        </StackPanel>
+        <Border Classes="divider"/>
+
+        <!-- Disabled overlay -->
+        <StackPanel IsVisible="{Binding !RecognitionServicesEnabled}" Spacing="12"
+                    HorizontalAlignment="Center" Margin="0,20">
+          <material:MaterialIcon Kind="EyeOffOutline" Width="40" Height="40"
+                                 Foreground="{DynamicResource TanaHubTextMutedBrush}"
+                                 HorizontalAlignment="Center"/>
+          <TextBlock Text="Recognition is disabled" FontSize="14" FontWeight="SemiBold"
+                     Foreground="{DynamicResource TanaHubTextSecondaryBrush}"
+                     HorizontalAlignment="Center"/>
+          <TextBlock Text="Turn on Recognition in Settings → Preferences to use this feature."
+                     FontSize="12" Foreground="{DynamicResource TanaHubTextMutedBrush}"
+                     HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"
+                     MaxWidth="380"/>
+        </StackPanel>
+
+        <!-- Active UI -->
+        <StackPanel IsVisible="{Binding RecognitionServicesEnabled}" Spacing="16">
+          <!-- Placeholder drop zone -->
+          <Border CornerRadius="12" Padding="32,28"
+                  BorderThickness="1.5" BorderBrush="{DynamicResource TanaHubBorderBrush}"
+                  Background="{DynamicResource TanaHubSurfaceRaisedBrush}">
+            <StackPanel Spacing="10" HorizontalAlignment="Center">
+              <material:MaterialIcon Kind="ImageSearchOutline" Width="42" Height="42"
+                                     Foreground="{DynamicResource TanaHubTextMutedBrush}"
+                                     HorizontalAlignment="Center"/>
+              <TextBlock Text="Paste or choose a screenshot" FontSize="14"
+                         Foreground="{DynamicResource TanaHubTextSecondaryBrush}"
+                         HorizontalAlignment="Center"/>
+              <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center"
+                          Margin="0,6,0,0">
+                <Button Command="{Binding RecognizeFromFileCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="7">
+                    <material:MaterialIcon Width="15" Height="15" Kind="FolderOpenOutline"/>
+                    <TextBlock Text="Choose file"/>
+                  </StackPanel>
+                </Button>
+                <Button Classes="ghost" Command="{Binding PasteAndRecognizeCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="7">
+                    <material:MaterialIcon Width="15" Height="15" Kind="ContentPaste"/>
+                    <TextBlock Text="Paste image"/>
+                  </StackPanel>
+                </Button>
+              </StackPanel>
+            </StackPanel>
+          </Border>
+
+          <!-- Status / spinner -->
+          <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center"
+                      IsVisible="{Binding RecognitionStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            <material:MaterialIcon Kind="Loading" Width="14" Height="14"
+                                   Foreground="{DynamicResource TanaHubAccentBrush}"
+                                   IsVisible="{Binding IsRecognizing}"/>
+            <TextBlock Text="{Binding RecognitionStatus}" FontSize="12"
+                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+          </StackPanel>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- Results -->
+    <ItemsControl ItemsSource="{Binding RecognitionResults}"
+                  IsVisible="{Binding RecognitionResults.Count, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate>
+          <WrapPanel Orientation="Horizontal"/>
+        </ItemsPanelTemplate>
+      </ItemsControl.ItemsPanel>
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="vm:RecognitionResultViewModel">
+          <Border Classes="card" Width="180" Height="280" Margin="0,0,14,14"
+                  ClipToBounds="True" RenderTransformOrigin="0.5,0.5">
+            <Border.Styles>
+              <Style Selector="Border:pointerover">
+                <Setter Property="RenderTransform" Value="translateY(-3px) scale(1.01)"/>
+              </Style>
+            </Border.Styles>
+            <Border.Transitions>
+              <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" Easing="CubicEaseOut"/>
+              </Transitions>
+            </Border.Transitions>
+            <Button Command="{Binding OpenCommand}" Padding="0" Background="Transparent"
+                    BorderThickness="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+              <Grid RowDefinitions="160,*,Auto">
+                <!-- Thumbnail -->
+                <Border Background="{DynamicResource TanaHubSurfaceRaisedBrush}">
+                  <controls:RemoteImage SourceUri="{Binding ThumbnailUri}"/>
+                </Border>
+                <!-- Title -->
+                <StackPanel Grid.Row="1" Margin="11,9,11,0" Spacing="3">
+                  <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold"
+                             Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
+                             TextWrapping="Wrap" MaxLines="2"/>
+                  <TextBlock Text="{Binding EpisodeLabel}" FontSize="11"
+                             Foreground="{DynamicResource TanaHubTextMutedBrush}"
+                             IsVisible="{Binding EpisodeLabel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                </StackPanel>
+                <!-- Similarity badge -->
+                <Border Grid.Row="2" Margin="11,4,11,11" Padding="8,3"
+                        Background="{DynamicResource TanaHubAccentBrush}"
+                        CornerRadius="4" HorizontalAlignment="Left">
+                  <TextBlock Text="{Binding SimilarityLabel}" FontSize="11" FontWeight="SemiBold"
+                             Foreground="White"/>
+                </Border>
+              </Grid>
+            </Button>
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+  </StackPanel>
+</UserControl>

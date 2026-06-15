@@ -92,6 +92,8 @@ internal sealed class OfflineCatalogCache
         // Manga
         [JsonPropertyName("chapters")]     public int? Chapters { get; set; }
         [JsonPropertyName("volumes")]      public int? Volumes { get; set; }
+        // Characters
+        [JsonPropertyName("chars")]        public List<CachedCharDto>? Characters { get; set; }
 
         public static CachedItemDto From(MediaItem item)
         {
@@ -111,6 +113,9 @@ internal sealed class OfflineCatalogCache
                 Poster       = item.Images.PosterUri?.ToString(),
                 Banner       = item.Images.BannerUri?.ToString(),
                 Thumbnail    = item.Images.ThumbnailUri?.ToString(),
+                Characters   = item.Characters.Count > 0
+                    ? item.Characters.Select(c => new CachedCharDto { N = c.Name, I = c.ImageUri?.ToString(), R = c.Role }).ToList()
+                    : null,
             };
             if (item is Anime anime)
             {
@@ -135,12 +140,17 @@ internal sealed class OfflineCatalogCache
             var images = new MediaImages(ToUri(Poster), ToUri(Banner), ToUri(Thumbnail));
             IReadOnlyList<string> genres = Genres ?? [];
 
+            IReadOnlyList<CharacterInfo> characters = Characters?
+                .Where(c => c.N is not null)
+                .Select(c => new CharacterInfo(c.N!, ToUri(c.I), c.R ?? "Background"))
+                .ToList() ?? [];
+
             if (MediaType == nameof(TanaHub.Domain.Enums.MediaType.Anime))
             {
                 return new Anime(Id, title, format, status)
                 {
                     StartYear = StartYear, AverageScore = AverageScore,
-                    Description = Description, Genres = genres, Images = images,
+                    Description = Description, Genres = genres, Characters = characters, Images = images,
                     EpisodeCount = Episodes, DurationMinutes = Duration, Studio = Studio,
                 };
             }
@@ -149,7 +159,7 @@ internal sealed class OfflineCatalogCache
                 return new Manga(Id, title, format, status)
                 {
                     StartYear = StartYear, AverageScore = AverageScore,
-                    Description = Description, Genres = genres, Images = images,
+                    Description = Description, Genres = genres, Characters = characters, Images = images,
                     ChapterCount = Chapters, VolumeCount = Volumes,
                 };
             }
@@ -158,5 +168,12 @@ internal sealed class OfflineCatalogCache
 
         private static Uri? ToUri(string? value)
             => Uri.TryCreate(value, UriKind.Absolute, out var uri) ? uri : null;
+    }
+
+    private sealed class CachedCharDto
+    {
+        [JsonPropertyName("n")] public string? N { get; set; }
+        [JsonPropertyName("i")] public string? I { get; set; }
+        [JsonPropertyName("r")] public string? R { get; set; }
     }
 }

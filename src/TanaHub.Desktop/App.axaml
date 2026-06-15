@@ -82,6 +82,7 @@
 
   <Application.Styles>
     <FluentTheme />
+    <material:MaterialIconStyles />
 
     <!-- ── Base text ─────────────────────────────────────────── -->
     <Style Selector="TextBlock">

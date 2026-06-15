@@ -1,0 +1,80 @@
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
+using Avalonia.Platform.Storage;
+using TanaHub.UI.Services;
+
+namespace TanaHub.Desktop.Services;
+
+public sealed class AvaloniaFileOpenService : IFileOpenService
+{
+    private static readonly FilePickerFileType ImageType = new("Image files")
+    {
+        Patterns = ["*.png", "*.jpg", "*.jpeg", "*.webp", "*.gif", "*.bmp"],
+        MimeTypes = ["image/png", "image/jpeg", "image/webp", "image/gif", "image/bmp"],
+    };
+
+    public async Task<(Stream? Stream, string MimeType)> PickImageAsync(CancellationToken cancellationToken = default)
+    {
+        if (GetWindow() is not { } window || !window.StorageProvider.CanOpen)
+            return (null, string.Empty);
+
+        var files = await window.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Choose an image to recognise",
+            AllowMultiple = false,
+            FileTypeFilter = [ImageType],
+        });
+
+        if (files is not { Count: > 0 })
+            return (null, string.Empty);
+
+        var stream = await files[0].OpenReadAsync();
+        var mime   = GuessMime(files[0].Name);
+        return (stream, mime);
+    }
+
+    public async Task<(Stream? Stream, string MimeType)> PasteImageAsync(CancellationToken cancellationToken = default)
+    {
+        if (GetWindow()?.Clipboard is not { } clipboard)
+            return (null, string.Empty);
+
+        // Avalonia 12: TryGetDataAsync → IAsyncDataTransfer; use TryGetBitmapAsync extension
+        var transfer = await clipboard.TryGetDataAsync();
+        if (transfer is null) return (null, string.Empty);
+
+        var bitmap = await transfer.TryGetBitmapAsync();
+        if (bitmap is null) return (null, string.Empty);
+
+        // Save bitmap to a temp PNG file and hand back an open read stream
+        var tmp = Path.Combine(Path.GetTempPath(), $"tanahub_paste_{Guid.NewGuid():N}.png");
+        bitmap.Save(tmp);
+        return (new DeleteOnCloseStream(tmp), "image/png");
+    }
+
+    private static Avalonia.Controls.Window? GetWindow()
+        => Avalonia.Application.Current?.ApplicationLifetime
+               is IClassicDesktopStyleApplicationLifetime { MainWindow: { } w } ? w : null;
+
+    private static string GuessMime(string fileName)
+    {
+        var ext = Path.GetExtension(fileName).ToLowerInvariant();
+        return ext switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".webp"           => "image/webp",
+            ".gif"            => "image/gif",
+            ".bmp"            => "image/bmp",
+            _                 => "image/png",
+        };
+    }
+
+    // Deletes the underlying temp file when the stream is disposed.
+    private sealed class DeleteOnCloseStream(string path) : FileStream(path, FileMode.Open, FileAccess.Read)
+    {
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            try { File.Delete(path); } catch { /* best-effort */ }
+        }
+    }
+}

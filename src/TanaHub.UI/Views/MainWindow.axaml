@@ -317,6 +317,7 @@
             <pages:DiscoverView IsVisible="{Binding IsDiscoverVisible}"/>
             <pages:LibraryView IsVisible="{Binding IsLibraryVisible}"/>
             <pages:ScheduleView IsVisible="{Binding IsScheduleVisible}"/>
+            <pages:RecognizeView IsVisible="{Binding IsRecognizeVisible}"/>
             <pages:SettingsView IsVisible="{Binding IsSettingsVisible}"/>
 
             <ContentControl

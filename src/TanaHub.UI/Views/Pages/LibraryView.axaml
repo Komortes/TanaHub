@@ -5,12 +5,78 @@
     xmlns:vm="clr-namespace:TanaHub.UI.ViewModels"
     xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     xmlns:controls="clr-namespace:TanaHub.UI.Views.Controls"
+    xmlns:conv="clr-namespace:TanaHub.UI.Views.Converters"
     x:DataType="vm:MainWindowViewModel">
 
+  <UserControl.Resources>
+    <conv:LibraryFilterIconConverter x:Key="FilterIcon"/>
+  </UserControl.Resources>
+
+  <UserControl.Styles>
+
+    <!-- ── Shared sidebar filter list ──────────────────────────── -->
+    <Style Selector="ListBox.filter-list">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="0"/>
+    </Style>
+    <Style Selector="ListBox.filter-list ListBoxItem">
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="Margin" Value="0,0,0,1"/>
+      <Setter Property="CornerRadius" Value="8"/>
+    </Style>
+    <Style Selector="ListBox.filter-list ListBoxItem /template/ ContentPresenter">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Padding" Value="10,8"/>
+    </Style>
+    <Style Selector="ListBox.filter-list ListBoxItem:pointerover:not(:selected) /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceRaisedBrush}"/>
+    </Style>
+    <Style Selector="ListBox.filter-list ListBoxItem TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource TanaHubTextSecondaryBrush}"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="ListBox.filter-list ListBoxItem material|MaterialIcon">
+      <Setter Property="Foreground" Value="{DynamicResource TanaHubTextMutedBrush}"/>
+    </Style>
+
+    <!-- Accent (purple) selected state — LISTS -->
+    <Style Selector="ListBox.accent-sel ListBoxItem:selected /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource TanaHubAccentGlowBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource TanaHubAccentBrush}"/>
+      <Setter Property="BorderThickness" Value="2,0,0,0"/>
+      <Setter Property="CornerRadius" Value="0,8,8,0"/>
+    </Style>
+    <Style Selector="ListBox.accent-sel ListBoxItem:selected TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource TanaHubAccentLightBrush}"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <Style Selector="ListBox.accent-sel ListBoxItem:selected material|MaterialIcon">
+      <Setter Property="Foreground" Value="{DynamicResource TanaHubAccentLightBrush}"/>
+    </Style>
+
+    <!-- Cyan selected state — SORT -->
+    <Style Selector="ListBox.cyan-sel ListBoxItem:selected /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource TanaHubCyanGlowBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource TanaHubCyanBrush}"/>
+      <Setter Property="BorderThickness" Value="2,0,0,0"/>
+      <Setter Property="CornerRadius" Value="0,8,8,0"/>
+    </Style>
+    <Style Selector="ListBox.cyan-sel ListBoxItem:selected TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource TanaHubCyanBrush}"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <Style Selector="ListBox.cyan-sel ListBoxItem:selected material|MaterialIcon">
+      <Setter Property="Foreground" Value="{DynamicResource TanaHubCyanBrush}"/>
+    </Style>
+
+  </UserControl.Styles>
 
   <Grid ColumnDefinitions="220,*" ColumnSpacing="20">
 
-    <!-- ── Sidebar — unified panel ──────────────────────────────── -->
+    <!-- ── Sidebar ───────────────────────────────────────────────── -->
     <Border Classes="panel">
       <StackPanel Spacing="20">
 
@@ -22,44 +88,18 @@
             <TextBlock Text="LISTS" FontSize="10" FontWeight="Bold"
                        Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
           </StackPanel>
-          <ListBox
-              ItemsSource="{Binding LibraryStatusFilters}"
-              SelectedItem="{Binding SelectedLibraryStatus, Mode=TwoWay}"
-              Background="Transparent" BorderThickness="0" Padding="0">
+          <ListBox Classes="filter-list accent-sel"
+                   ItemsSource="{Binding LibraryStatusFilters}"
+                   SelectedItem="{Binding SelectedLibraryStatus, Mode=TwoWay}">
             <ListBox.ItemTemplate>
               <DataTemplate>
-                <TextBlock Text="{Binding}"/>
+                <StackPanel Orientation="Horizontal" Spacing="9">
+                  <material:MaterialIcon Width="15" Height="15"
+                      Kind="{Binding ., Converter={StaticResource FilterIcon}}"/>
+                  <TextBlock Text="{Binding}"/>
+                </StackPanel>
               </DataTemplate>
             </ListBox.ItemTemplate>
-            <ListBox.Styles>
-              <Style Selector="ListBoxItem">
-                <Setter Property="Padding" Value="0"/>
-                <Setter Property="Margin" Value="0,0,0,1"/>
-                <Setter Property="CornerRadius" Value="8"/>
-              </Style>
-              <Style Selector="ListBoxItem /template/ ContentPresenter">
-                <Setter Property="Background" Value="Transparent"/>
-                <Setter Property="CornerRadius" Value="8"/>
-                <Setter Property="Padding" Value="10,9"/>
-              </Style>
-              <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-                <Setter Property="Background" Value="{DynamicResource TanaHubAccentGlowBrush}"/>
-                <Setter Property="BorderBrush" Value="{DynamicResource TanaHubAccentBrush}"/>
-                <Setter Property="BorderThickness" Value="3,0,0,0"/>
-                <Setter Property="CornerRadius" Value="0,8,8,0"/>
-              </Style>
-              <Style Selector="ListBoxItem:pointerover:not(:selected) /template/ ContentPresenter">
-                <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceRaisedBrush}"/>
-              </Style>
-              <Style Selector="ListBoxItem TextBlock">
-                <Setter Property="Foreground" Value="{DynamicResource TanaHubTextSecondaryBrush}"/>
-                <Setter Property="FontSize" Value="13"/>
-              </Style>
-              <Style Selector="ListBoxItem:selected TextBlock">
-                <Setter Property="Foreground" Value="{DynamicResource TanaHubAccentLightBrush}"/>
-                <Setter Property="FontWeight" Value="SemiBold"/>
-              </Style>
-            </ListBox.Styles>
           </ListBox>
         </StackPanel>
 
@@ -74,44 +114,18 @@
             <TextBlock Text="SORT" FontSize="10" FontWeight="Bold"
                        Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
           </StackPanel>
-          <ListBox
-              ItemsSource="{Binding LibrarySortOptions}"
-              SelectedItem="{Binding SelectedLibrarySort, Mode=TwoWay}"
-              Background="Transparent" BorderThickness="0" Padding="0">
+          <ListBox Classes="filter-list cyan-sel"
+                   ItemsSource="{Binding LibrarySortOptions}"
+                   SelectedItem="{Binding SelectedLibrarySort, Mode=TwoWay}">
             <ListBox.ItemTemplate>
               <DataTemplate>
-                <TextBlock Text="{Binding}"/>
+                <StackPanel Orientation="Horizontal" Spacing="9">
+                  <material:MaterialIcon Width="15" Height="15"
+                      Kind="{Binding ., Converter={StaticResource FilterIcon}}"/>
+                  <TextBlock Text="{Binding}"/>
+                </StackPanel>
               </DataTemplate>
             </ListBox.ItemTemplate>
-            <ListBox.Styles>
-              <Style Selector="ListBoxItem">
-                <Setter Property="Padding" Value="0"/>
-                <Setter Property="Margin" Value="0,0,0,1"/>
-                <Setter Property="CornerRadius" Value="8"/>
-              </Style>
-              <Style Selector="ListBoxItem /template/ ContentPresenter">
-                <Setter Property="Background" Value="Transparent"/>
-                <Setter Property="CornerRadius" Value="8"/>
-                <Setter Property="Padding" Value="10,9"/>
-              </Style>
-              <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-                <Setter Property="Background" Value="{DynamicResource TanaHubCyanGlowBrush}"/>
-                <Setter Property="BorderBrush" Value="{DynamicResource TanaHubCyanBrush}"/>
-                <Setter Property="BorderThickness" Value="3,0,0,0"/>
-                <Setter Property="CornerRadius" Value="0,8,8,0"/>
-              </Style>
-              <Style Selector="ListBoxItem:pointerover:not(:selected) /template/ ContentPresenter">
-                <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceRaisedBrush}"/>
-              </Style>
-              <Style Selector="ListBoxItem TextBlock">
-                <Setter Property="Foreground" Value="{DynamicResource TanaHubTextSecondaryBrush}"/>
-                <Setter Property="FontSize" Value="13"/>
-              </Style>
-              <Style Selector="ListBoxItem:selected TextBlock">
-                <Setter Property="Foreground" Value="{DynamicResource TanaHubCyanBrush}"/>
-                <Setter Property="FontWeight" Value="SemiBold"/>
-              </Style>
-            </ListBox.Styles>
           </ListBox>
         </StackPanel>
 
@@ -143,10 +157,8 @@
         </Button>
       </Grid>
 
-      <!-- Type tabs + view mode toggle + refresh -->
+      <!-- Type tabs + view mode + refresh -->
       <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-
-        <!-- Type tabs -->
         <StackPanel Orientation="Horizontal" Spacing="4">
           <StackPanel Spacing="2">
             <Button Classes="ghost" Command="{Binding SelectLibraryTypeCommand}" CommandParameter="All">
@@ -180,7 +192,6 @@
           </StackPanel>
         </StackPanel>
 
-        <!-- View mode toggle with active underline indicator -->
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
           <StackPanel Spacing="2">
             <Button Classes="ghost" Width="34" Height="30" Padding="0"
@@ -225,7 +236,7 @@
           </StackPanel>
           <Button HorizontalAlignment="Center" Command="{Binding NavigateToDiscoverCommand}">
             <StackPanel Orientation="Horizontal" Spacing="7">
-              <material:MaterialIcon Width="15" Height="15" Kind="Magnify"/>
+              <material:MaterialIcon Width="15" Height="15" Kind="CompassOutline"/>
               <TextBlock Text="Discover titles"/>
             </StackPanel>
           </Button>
@@ -236,32 +247,28 @@
       <StackPanel IsVisible="{Binding IsLibraryListVisible}" Spacing="4">
 
         <!-- Column headers -->
-        <Border
-            IsVisible="{Binding !IsLibraryEmpty}"
-            Padding="12,8"
-            CornerRadius="8">
-          <Border.Background>
-            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
-              <GradientStop Color="#9B6EF814" Offset="0"/>
-              <GradientStop Color="#22D3EE0A" Offset="1"/>
-            </LinearGradientBrush>
-          </Border.Background>
+        <Border IsVisible="{Binding !IsLibraryEmpty}" Padding="12,7"
+                CornerRadius="8" Background="{DynamicResource TanaHubSurfaceRaisedBrush}">
           <Grid ColumnDefinitions="48,*,96,78,60,128" ColumnSpacing="10">
             <TextBlock Grid.Column="1" Text="TITLE" FontSize="10" FontWeight="SemiBold"
-                       Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+                       VerticalAlignment="Center"
+                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
             <TextBlock Grid.Column="2" Text="STATUS" FontSize="10" FontWeight="SemiBold"
-                       Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+                       VerticalAlignment="Center"
+                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
             <TextBlock Grid.Column="3" Text="PROGRESS" FontSize="10" FontWeight="SemiBold"
-                       Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+                       VerticalAlignment="Center"
+                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
             <TextBlock Grid.Column="4" Text="SCORE" FontSize="10" FontWeight="SemiBold"
-                       Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+                       VerticalAlignment="Center"
+                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
             <TextBlock Grid.Column="5" Text="ACTIONS" FontSize="10" FontWeight="SemiBold"
-                       HorizontalAlignment="Left"
-                       Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+                       VerticalAlignment="Center"
+                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
           </Grid>
         </Border>
 
-        <!-- Rows — individual glass cards, each clickable -->
+        <!-- List rows -->
         <ItemsControl IsVisible="{Binding !IsLibraryEmpty}" ItemsSource="{Binding LibraryEntries}">
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:LibraryEntryViewModel">
@@ -296,16 +303,20 @@
                              FontSize="13" FontWeight="Bold" VerticalAlignment="Center"
                              Foreground="{Binding ScoreForeground}"/>
                   <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
-                    <Button Classes="ghost" Width="30" Height="30" Padding="0" Command="{Binding IncrementCommand}" ToolTip.Tip="Increment progress">
+                    <Button Classes="ghost" Width="30" Height="30" Padding="0"
+                            Command="{Binding IncrementCommand}" ToolTip.Tip="Increment progress">
                       <material:MaterialIcon Width="16" Height="16" Kind="Plus"/>
                     </Button>
-                    <Button Classes="ghost" Width="30" Height="30" Padding="0" Command="{Binding IncreaseScoreCommand}" ToolTip.Tip="Increase score">
+                    <Button Classes="ghost" Width="30" Height="30" Padding="0"
+                            Command="{Binding IncreaseScoreCommand}" ToolTip.Tip="Increase score">
                       <material:MaterialIcon Width="16" Height="16" Kind="StarPlus"/>
                     </Button>
-                    <Button Classes="ghost" Width="30" Height="30" Padding="0" Command="{Binding MarkCompletedCommand}" ToolTip.Tip="Mark completed">
+                    <Button Classes="ghost" Width="30" Height="30" Padding="0"
+                            Command="{Binding MarkCompletedCommand}" ToolTip.Tip="Mark completed">
                       <material:MaterialIcon Width="16" Height="16" Kind="CheckCircleOutline"/>
                     </Button>
-                    <Button Classes="danger" Width="30" Height="30" Padding="0" Command="{Binding RemoveCommand}" ToolTip.Tip="Remove from library">
+                    <Button Classes="danger" Width="30" Height="30" Padding="0"
+                            Command="{Binding RemoveCommand}" ToolTip.Tip="Remove from library">
                       <material:MaterialIcon Width="16" Height="16" Kind="TrashCanOutline"/>
                     </Button>
                   </StackPanel>
@@ -354,13 +365,16 @@
                                Foreground="{DynamicResource TanaHubCyanBrush}"/>
                   </StackPanel>
                   <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="5" Margin="12,0,12,12">
-                    <Button Classes="ghost" Width="30" Height="30" Padding="0" Command="{Binding IncrementCommand}" ToolTip.Tip="Increment progress">
+                    <Button Classes="ghost" Width="30" Height="30" Padding="0"
+                            Command="{Binding IncrementCommand}" ToolTip.Tip="Increment progress">
                       <material:MaterialIcon Width="15" Height="15" Kind="Plus"/>
                     </Button>
-                    <Button Classes="ghost" Width="30" Height="30" Padding="0" Command="{Binding IncreaseScoreCommand}" ToolTip.Tip="Increase score">
+                    <Button Classes="ghost" Width="30" Height="30" Padding="0"
+                            Command="{Binding IncreaseScoreCommand}" ToolTip.Tip="Increase score">
                       <material:MaterialIcon Width="15" Height="15" Kind="StarPlus"/>
                     </Button>
-                    <Button Classes="danger" Width="30" Height="30" Padding="0" Command="{Binding RemoveCommand}" ToolTip.Tip="Remove from library">
+                    <Button Classes="danger" Width="30" Height="30" Padding="0"
+                            Command="{Binding RemoveCommand}" ToolTip.Tip="Remove from library">
                       <material:MaterialIcon Width="15" Height="15" Kind="TrashCanOutline"/>
                     </Button>
                   </StackPanel>

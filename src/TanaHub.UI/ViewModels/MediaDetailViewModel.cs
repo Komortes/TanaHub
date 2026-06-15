@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using Material.Icons;
+using TanaHub.Domain.Models;
 
 namespace TanaHub.UI.ViewModels;
 
@@ -41,6 +42,7 @@ public sealed class MediaDetailViewModel
         IAsyncRelayCommand<string?> setScoreCommand,
         IAsyncRelayCommand removeCommand,
         string? notes,
+        IReadOnlyList<CharacterInfo> characters,
         IAsyncRelayCommand<string?> saveNotesCommand)
     {
         Id = id;
@@ -76,6 +78,7 @@ public sealed class MediaDetailViewModel
         SetScoreCommand = setScoreCommand;
         RemoveCommand = removeCommand;
         Notes = notes;
+        Characters = characters;
         SaveNotesCommand = saveNotesCommand;
     }
 
@@ -115,6 +118,27 @@ public sealed class MediaDetailViewModel
         ? MaterialIconKind.Television
         : MaterialIconKind.BookOpenPageVariant;
 
+    public int UserScoreInt => int.TryParse(LibraryScore, out var v) ? v : 0;
+
+    // Score-dot active state — each button binds to its own bool
+    public bool IsScore1  => UserScoreInt == 1;
+    public bool IsScore2  => UserScoreInt == 2;
+    public bool IsScore3  => UserScoreInt == 3;
+    public bool IsScore4  => UserScoreInt == 4;
+    public bool IsScore5  => UserScoreInt == 5;
+    public bool IsScore6  => UserScoreInt == 6;
+    public bool IsScore7  => UserScoreInt == 7;
+    public bool IsScore8  => UserScoreInt == 8;
+    public bool IsScore9  => UserScoreInt == 9;
+    public bool IsScore10 => UserScoreInt == 10;
+
+    // Status-pill active state
+    public bool IsStatusCurrent   => LibraryStatus == "Current";
+    public bool IsStatusPlanning  => LibraryStatus == "Planning";
+    public bool IsStatusPaused    => LibraryStatus == "Paused";
+    public bool IsStatusCompleted => LibraryStatus == "Completed";
+    public bool IsStatusDropped   => LibraryStatus == "Dropped";
+
     public IBrush StatusForeground => LibraryStatus switch
     {
         "Current"   => new SolidColorBrush(Color.Parse("#4DD0E1")),
@@ -136,6 +160,8 @@ public sealed class MediaDetailViewModel
     public IAsyncRelayCommand<string?> SetScoreCommand { get; }
     public IAsyncRelayCommand RemoveCommand { get; }
     public string? Notes { get; }
+    public IReadOnlyList<CharacterInfo> Characters { get; }
+    public bool HasCharacters => Characters.Count > 0;
     public IAsyncRelayCommand<string?> SaveNotesCommand { get; }
 
     private static string StripHtml(string html)
