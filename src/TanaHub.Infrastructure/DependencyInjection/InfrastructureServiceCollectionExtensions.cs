@@ -6,6 +6,7 @@ using TanaHub.Infrastructure.Catalog;
 using TanaHub.Infrastructure.Library;
 using TanaHub.Infrastructure.Schedule;
 using TanaHub.Infrastructure.Settings;
+using TanaHub.Infrastructure.Sync;
 
 namespace TanaHub.Infrastructure.DependencyInjection;
 
@@ -42,6 +43,12 @@ public static class InfrastructureServiceCollectionExtensions
             httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("TanaHub/0.1");
             return new AniListAiringScheduleService(httpClient);
         });
+
+        services.AddSingleton<IAniListAuthService>(_ => new AniListOAuthService(
+            new HttpClient { Timeout = TimeSpan.FromSeconds(15) }));
+
+        services.AddSingleton<IAniListSyncService>(_ => new AniListSyncService(
+            new HttpClient { Timeout = TimeSpan.FromSeconds(30) }));
 
         return services;
     }

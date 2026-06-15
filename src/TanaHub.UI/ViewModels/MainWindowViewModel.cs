@@ -22,6 +22,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IAiringScheduleService airingScheduleService;
     private readonly IAppThemeService appThemeService;
     private readonly IFileSaveService fileSaveService;
+    private readonly IAniListAuthService aniListAuthService;
+    private readonly IAniListSyncService aniListSyncService;
     private AppSettings appSettings = new();
 
     public MainWindowViewModel(
@@ -30,7 +32,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IAppSettingsService appSettingsService,
         IAiringScheduleService airingScheduleService,
         IAppThemeService appThemeService,
-        IFileSaveService fileSaveService)
+        IFileSaveService fileSaveService,
+        IAniListAuthService aniListAuthService,
+        IAniListSyncService aniListSyncService)
     {
         this.mediaCatalogService = mediaCatalogService;
         this.userLibraryService = userLibraryService;
@@ -38,6 +42,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         this.airingScheduleService = airingScheduleService;
         this.appThemeService = appThemeService;
         this.fileSaveService = fileSaveService;
+        this.aniListAuthService = aniListAuthService;
+        this.aniListSyncService = aniListSyncService;
 
         NavigationItems =
         [
@@ -308,6 +314,21 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private string libraryExportStatus = "Export a portable CSV copy of your local library.";
 
+    [ObservableProperty]
+    private string aniListClientId = string.Empty;
+
+    [ObservableProperty]
+    private string aniListClientSecret = string.Empty;
+
+    [ObservableProperty]
+    private string aniListConnectionStatus = "Not connected";
+
+    [ObservableProperty]
+    private bool isAniListConnected;
+
+    [ObservableProperty]
+    private string aniListSyncStatus = string.Empty;
+
     private string previousPageKey = "home";
     private int currentDiscoverPage = 1;
     private int? discoverYearFilter;
@@ -411,7 +432,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
             new AsyncRelayCommand(() => UpdateLibraryStatusAsync(mediaId, MediaListStatus.Completed)),
             new AsyncRelayCommand(() => UpdateLibraryStatusAsync(mediaId, MediaListStatus.Dropped)),
             new AsyncRelayCommand(() => IncreaseScoreAsync(mediaId, ParseLibraryScore(libraryVm?.Score))),
-            new AsyncRelayCommand(() => RemoveFromLibraryAsync(mediaId)));
+            new AsyncRelayCommand<string?>(s => SetScoreDirectAsync(mediaId, int.TryParse(s, out var v) ? v : 0)),
+            new AsyncRelayCommand(() => RemoveFromLibraryAsync(mediaId)),
+            libraryVm?.Notes,
+            new AsyncRelayCommand<string?>(notes => SaveNotesAsync(mediaId, notes)));
 
         CurrentPageTitle = item.Title.DisplayTitle;
         CurrentPageSummary = $"{item.Format} · {item.ReleaseStatus}";
@@ -683,6 +707,69 @@ public sealed partial class MainWindowViewModel : ObservableObject
         PreferredSyncSource = appSettings.PreferredSyncSource;
         NotifySyncSourceSelectionChanged();
         SettingsStorageDetail = $"Settings saved {appSettings.UpdatedAt:yyyy-MM-dd HH:mm}";
+        AniListClientId = appSettings.AniListClientId;
+        AniListClientSecret = appSettings.AniListClientSecret;
+        IsAniListConnected = !string.IsNullOrWhiteSpace(appSettings.AniListAccessToken);
+        AniListConnectionStatus = IsAniListConnected
+            ? $"Connected as {appSettings.AniListUsername}"
+            : "Not connected";
+        AniListSyncStatus = appSettings.AniListLastSyncAt.HasValue
+            ? $"Last sync: {appSettings.AniListLastSyncAt:yyyy-MM-dd HH:mm}"
+            : string.Empty;
+    }
+
+    [RelayCommand]
+    private async Task ConnectAniListAsync()
+    {
+        AniListConnectionStatus = "Opening browser…";
+        var result = await aniListAuthService.AuthorizeAsync(AniListClientId, AniListClientSecret);
+        if (result.IsFailure)
+        {
+            AniListConnectionStatus = result.Error.Message;
+            return;
+        }
+
+        await SaveSettingsAsync(appSettings with
+        {
+            AniListClientId = AniListClientId,
+            AniListClientSecret = AniListClientSecret,
+            AniListAccessToken = result.Value!.AccessToken,
+            AniListUsername = result.Value.Username,
+            AniListUserId = result.Value.UserId,
+        });
+    }
+
+    [RelayCommand]
+    private async Task SyncFromAniListAsync()
+    {
+        if (!IsAniListConnected) return;
+        AniListSyncStatus = "Syncing…";
+        var result = await aniListSyncService.SyncAsync(
+            appSettings.AniListAccessToken,
+            appSettings.AniListUserId,
+            userLibraryService);
+
+        if (result.IsFailure)
+        {
+            AniListSyncStatus = result.Error.Message;
+            return;
+        }
+
+        await SaveSettingsAsync(appSettings with { AniListLastSyncAt = DateTimeOffset.UtcNow });
+        await LoadLibraryAsync();
+        AniListSyncStatus = $"Imported {result.Value} entries · {DateTimeOffset.Now:HH:mm}";
+    }
+
+    [RelayCommand]
+    private async Task DisconnectAniListAsync()
+    {
+        await SaveSettingsAsync(appSettings with
+        {
+            AniListAccessToken = string.Empty,
+            AniListUsername = string.Empty,
+            AniListUserId = 0,
+            AniListLastSyncAt = null,
+        });
     }
 
     [RelayCommand]
@@ -788,6 +875,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
         PreferredSyncSource = appSettings.PreferredSyncSource;
         NotifySyncSourceSelectionChanged();
         SettingsStorageDetail = $"Settings saved {appSettings.UpdatedAt:yyyy-MM-dd HH:mm}";
+        IsAniListConnected = !string.IsNullOrWhiteSpace(appSettings.AniListAccessToken);
+        AniListConnectionStatus = IsAniListConnected
+            ? $"Connected as {appSettings.AniListUsername}"
+            : "Not connected";
+        AniListSyncStatus = appSettings.AniListLastSyncAt.HasValue
+            ? $"Last sync: {appSettings.AniListLastSyncAt:yyyy-MM-dd HH:mm}"
+            : string.Empty;
         SearchStatus = "Settings saved.";
     }
 
@@ -917,7 +1011,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
             new AsyncRelayCommand(() => UpdateLibraryStatusAsync(entry.MediaId, MediaListStatus.Completed)),
             new AsyncRelayCommand(() => IncreaseScoreAsync(entry.MediaId, entry.Score)),
             new AsyncRelayCommand(() => RemoveFromLibraryAsync(entry.MediaId)),
-            new AsyncRelayCommand(() => OpenDetailAsync(entry.MediaId)));
+            new AsyncRelayCommand(() => OpenDetailAsync(entry.MediaId)),
+            entry.Notes);
     }
 
     private async Task AddToLibraryAsync(string mediaId)
@@ -973,6 +1068,26 @@ public sealed partial class MainWindowViewModel : ObservableObject
         var result = await userLibraryService.UpdateScoreAsync(mediaId, nextScore);
         SearchStatus = result.IsSuccess
             ? $"Updated score for {mediaId}."
+            : result.Error.Message;
+
+        await LoadLibraryAsync();
+        await RefreshDetailIfOpenAsync(mediaId);
+    }
+
+    private async Task SaveNotesAsync(string mediaId, string? notes)
+    {
+        var result = await userLibraryService.UpdateNotesAsync(mediaId, notes);
+        if (result.IsFailure)
+        {
+            SearchStatus = result.Error.Message;
+        }
+    }
+
+    private async Task SetScoreDirectAsync(string mediaId, int score)
+    {
+        var result = await userLibraryService.UpdateScoreAsync(mediaId, score);
+        SearchStatus = result.IsSuccess
+            ? $"Score set to {score} for {mediaId}."
             : result.Error.Message;
 
         await LoadLibraryAsync();

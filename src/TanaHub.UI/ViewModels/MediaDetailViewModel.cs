@@ -38,7 +38,10 @@ public sealed class MediaDetailViewModel
         IAsyncRelayCommand markCompletedCommand,
         IAsyncRelayCommand markDroppedCommand,
         IAsyncRelayCommand increaseScoreCommand,
-        IAsyncRelayCommand removeCommand)
+        IAsyncRelayCommand<string?> setScoreCommand,
+        IAsyncRelayCommand removeCommand,
+        string? notes,
+        IAsyncRelayCommand<string?> saveNotesCommand)
     {
         Id = id;
         Title = title;
@@ -70,7 +73,10 @@ public sealed class MediaDetailViewModel
         MarkCompletedCommand = markCompletedCommand;
         MarkDroppedCommand = markDroppedCommand;
         IncreaseScoreCommand = increaseScoreCommand;
+        SetScoreCommand = setScoreCommand;
         RemoveCommand = removeCommand;
+        Notes = notes;
+        SaveNotesCommand = saveNotesCommand;
     }
 
     public string Id { get; }
@@ -127,7 +133,10 @@ public sealed class MediaDetailViewModel
     public IAsyncRelayCommand MarkCompletedCommand { get; }
     public IAsyncRelayCommand MarkDroppedCommand { get; }
     public IAsyncRelayCommand IncreaseScoreCommand { get; }
+    public IAsyncRelayCommand<string?> SetScoreCommand { get; }
     public IAsyncRelayCommand RemoveCommand { get; }
+    public string? Notes { get; }
+    public IAsyncRelayCommand<string?> SaveNotesCommand { get; }
 
     private static string StripHtml(string html)
     {

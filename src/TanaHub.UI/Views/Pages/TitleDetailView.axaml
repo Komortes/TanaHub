@@ -139,12 +139,29 @@
               </StackPanel>
             </Button>
 
-            <Button IsVisible="{Binding IsInLibrary}" Command="{Binding IncreaseScoreCommand}">
-              <StackPanel Orientation="Horizontal" Spacing="7">
-                <material:MaterialIcon Width="15" Height="15" Kind="StarPlus"/>
-                <TextBlock Text="Score"/>
-              </StackPanel>
-            </Button>
+            <!-- Score picker: 1–10 buttons, visible only when in library -->
+            <StackPanel IsVisible="{Binding IsInLibrary}" Orientation="Horizontal" Spacing="4">
+              <Button Classes="ghost" Width="30" Height="34" Padding="0" FontSize="11"
+                      Command="{Binding SetScoreCommand}" CommandParameter="1">1</Button>
+              <Button Classes="ghost" Width="30" Height="34" Padding="0" FontSize="11"
+                      Command="{Binding SetScoreCommand}" CommandParameter="2">2</Button>
+              <Button Classes="ghost" Width="30" Height="34" Padding="0" FontSize="11"
+                      Command="{Binding SetScoreCommand}" CommandParameter="3">3</Button>
+              <Button Classes="ghost" Width="30" Height="34" Padding="0" FontSize="11"
+                      Command="{Binding SetScoreCommand}" CommandParameter="4">4</Button>
+              <Button Classes="ghost" Width="30" Height="34" Padding="0" FontSize="11"
+                      Command="{Binding SetScoreCommand}" CommandParameter="5">5</Button>
+              <Button Classes="ghost" Width="30" Height="34" Padding="0" FontSize="11"
+                      Command="{Binding SetScoreCommand}" CommandParameter="6">6</Button>
+              <Button Classes="ghost" Width="30" Height="34" Padding="0" FontSize="11"
+                      Command="{Binding SetScoreCommand}" CommandParameter="7">7</Button>
+              <Button Classes="ghost" Width="30" Height="34" Padding="0" FontSize="11"
+                      Command="{Binding SetScoreCommand}" CommandParameter="8">8</Button>
+              <Button Classes="ghost" Width="30" Height="34" Padding="0" FontSize="11"
+                      Command="{Binding SetScoreCommand}" CommandParameter="9">9</Button>
+              <Button Width="34" Height="34" Padding="0" FontSize="11"
+                      Command="{Binding SetScoreCommand}" CommandParameter="10">10</Button>
+            </StackPanel>
 
             <Button
                 Classes="danger"
@@ -323,6 +340,36 @@
             <TextBlock Classes="mono" Grid.Row="2" Grid.Column="1" Text="{Binding LibraryScore}"
                        FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TanaHubAmberBrush}"/>
           </Grid>
+
+          <!-- Notes -->
+          <StackPanel IsVisible="{Binding IsInLibrary}" Spacing="8" Margin="0,4,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Border Width="3" Height="11" CornerRadius="2" VerticalAlignment="Center"
+                      Background="{DynamicResource TanaHubTextMutedBrush}"/>
+              <TextBlock Text="NOTES" FontSize="10" FontWeight="SemiBold"
+                         Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            </StackPanel>
+            <TextBox
+                x:Name="NotesBox"
+                Text="{Binding Notes}"
+                PlaceholderText="Add personal notes..."
+                AcceptsReturn="True"
+                TextWrapping="Wrap"
+                MinHeight="72"
+                MaxHeight="160"
+                FontSize="12">
+              <TextBox.KeyBindings>
+                <KeyBinding Gesture="Ctrl+Enter"
+                            Command="{Binding SaveNotesCommand}"
+                            CommandParameter="{Binding #NotesBox.Text}"/>
+              </TextBox.KeyBindings>
+            </TextBox>
+            <Button Classes="ghost" HorizontalAlignment="Right" Height="28" Padding="10,0" FontSize="11"
+                    Command="{Binding SaveNotesCommand}"
+                    CommandParameter="{Binding #NotesBox.Text}">
+              Save notes
+            </Button>
+          </StackPanel>
         </StackPanel>
       </Border>
     </Grid>

@@ -16,7 +16,8 @@ public sealed record LibraryEntryViewModel(
     IAsyncRelayCommand MarkCompletedCommand,
     IAsyncRelayCommand IncreaseScoreCommand,
     IAsyncRelayCommand RemoveCommand,
-    IAsyncRelayCommand OpenDetailCommand)
+    IAsyncRelayCommand OpenDetailCommand,
+    string? Notes = null)
 {
     public IBrush StatusForeground => Status switch
     {

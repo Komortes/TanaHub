@@ -152,6 +152,7 @@ public sealed class FileUserLibraryService : IUserLibraryService
             var updated = entry with
             {
                 Status = status,
+                StartedAt = status == MediaListStatus.Current && entry.StartedAt is null ? DateTimeOffset.UtcNow : entry.StartedAt,
                 CompletedAt = status == MediaListStatus.Completed ? DateTimeOffset.UtcNow : entry.CompletedAt,
                 UpdatedAt = DateTimeOffset.UtcNow
             };
@@ -191,6 +192,31 @@ public sealed class FileUserLibraryService : IUserLibraryService
                 UpdatedAt = DateTimeOffset.UtcNow
             };
 
+            entries[mediaId] = updated;
+            await SaveAsync(cancellationToken);
+            return Result<UserMediaEntry>.Success(updated);
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
+    public async Task<Result<UserMediaEntry>> UpdateNotesAsync(
+        string mediaId,
+        string? notes,
+        CancellationToken cancellationToken = default)
+    {
+        await gate.WaitAsync(cancellationToken);
+        try
+        {
+            if (!entries.TryGetValue(mediaId, out var entry))
+            {
+                return Result<UserMediaEntry>.Failure(
+                    ApplicationError.NotFound($"Library entry '{mediaId}' was not found."));
+            }
+
+            var updated = entry with { Notes = notes, UpdatedAt = DateTimeOffset.UtcNow };
             entries[mediaId] = updated;
             await SaveAsync(cancellationToken);
             return Result<UserMediaEntry>.Success(updated);

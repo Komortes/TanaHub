@@ -30,6 +30,11 @@ public interface IUserLibraryService
         int? score,
         CancellationToken cancellationToken = default);
 
+    Task<Result<UserMediaEntry>> UpdateNotesAsync(
+        string mediaId,
+        string? notes,
+        CancellationToken cancellationToken = default);
+
     Task<Result<bool>> RemoveEntryAsync(
         string mediaId,
         CancellationToken cancellationToken = default);
