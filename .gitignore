@@ -59,3 +59,9 @@ docs/superpowers/
 ANITRACK_SPEC.md
 PRODUCT.md
 DESIGN.md
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Impeccable design tool
+.impeccable/
