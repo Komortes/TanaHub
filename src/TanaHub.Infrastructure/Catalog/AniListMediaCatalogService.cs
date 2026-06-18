@@ -94,7 +94,7 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
             return Failure<MediaItem>("Media id is required.");
         }
 
-        if (fetchedItems.TryGetValue(mediaId, out var fetched))
+        if (fetchedItems.TryGetValue(mediaId, out var fetched) && fetched.Characters.Count > 0)
         {
             return Result<MediaItem>.Success(fetched);
         }

@@ -237,18 +237,22 @@
               </Button>
             </StackPanel>
 
+            <!-- Progress badge -->
+            <Border Classes="chip" HorizontalAlignment="Left" Padding="10,6">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <material:MaterialIcon Width="12" Height="12" Kind="PlayBoxOutline"
+                                       Foreground="{DynamicResource TanaHubCyanBrush}"/>
+                <TextBlock Classes="mono" Text="{Binding LibraryProgress}" FontSize="13"
+                           FontWeight="SemiBold" Foreground="{DynamicResource TanaHubCyanBrush}"/>
+              </StackPanel>
+            </Border>
+
             <!-- Quick actions -->
             <StackPanel Orientation="Horizontal" Spacing="8">
               <Button Classes="ghost" Command="{Binding IncrementProgressCommand}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                   <material:MaterialIcon Width="14" Height="14" Kind="Plus"/>
                   <TextBlock Text="{Binding IncrementLabel}" FontSize="12"/>
-                </StackPanel>
-              </Button>
-              <Button Classes="ghost" Command="{Binding MarkCompletedCommand}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <material:MaterialIcon Width="14" Height="14" Kind="CheckCircleOutline"/>
-                  <TextBlock Text="Complete" FontSize="12"/>
                 </StackPanel>
               </Button>
               <Button Classes="danger" Width="34" Height="34" Padding="0"
