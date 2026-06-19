@@ -87,24 +87,45 @@
           </Button>
         </Grid>
 
-        <!-- Status chip -->
+        <!-- Offline/cache status chip -->
         <Border
             Grid.Column="2"
             Margin="18,0,0,0"
-            Padding="10,6"
+            Padding="10,7"
             VerticalAlignment="Center"
             Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-            CornerRadius="9">
-          <StackPanel Orientation="Horizontal" Spacing="7">
-            <Border
-                Width="6" Height="6"
-                CornerRadius="3"
-                VerticalAlignment="Center"
-                Background="{DynamicResource TanaHubAmberBrush}"/>
-            <TextBlock
-                Text="Local"
-                FontSize="11"
-                Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            BorderBrush="{DynamicResource TanaHubBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="9"
+            ToolTip.Tip="{Binding AppConnectionStatusDetail}">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Grid Width="7" Height="7" VerticalAlignment="Center">
+              <Border
+                  CornerRadius="4"
+                  Background="{DynamicResource TanaHubGreenBrush}"
+                  IsVisible="{Binding IsConnectionStatusOnline}"/>
+              <Border
+                  CornerRadius="4"
+                  Background="{DynamicResource TanaHubAmberBrush}"
+                  IsVisible="{Binding IsConnectionStatusCached}"/>
+              <Border
+                  CornerRadius="4"
+                  Background="{DynamicResource TanaHubRedBrush}"
+                  IsVisible="{Binding IsConnectionStatusOffline}"/>
+            </Grid>
+            <StackPanel Spacing="0">
+              <TextBlock
+                  Text="{Binding AppConnectionStatusText}"
+                  FontSize="11"
+                  FontWeight="SemiBold"
+                  Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+              <TextBlock
+                  Text="{Binding AppConnectionStatusDetail}"
+                  FontSize="10"
+                  MaxWidth="150"
+                  TextTrimming="CharacterEllipsis"
+                  Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            </StackPanel>
           </StackPanel>
         </Border>
 

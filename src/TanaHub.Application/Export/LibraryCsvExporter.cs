@@ -7,7 +7,7 @@ public static class LibraryCsvExporter
     public static string Export(IEnumerable<LibraryExportItem> items)
     {
         var csv = new StringBuilder();
-        csv.AppendLine("MediaId,Title,Type,Status,Progress,Score");
+        csv.AppendLine("MediaId,Title,Type,Status,Progress,Score,Tags,CustomLists");
 
         foreach (var item in items)
         {
@@ -16,7 +16,9 @@ public static class LibraryCsvExporter
                 .Append(Escape(item.Type)).Append(',')
                 .Append(Escape(item.Status)).Append(',')
                 .Append(item.Progress).Append(',')
-                .Append(item.Score?.ToString() ?? string.Empty)
+                .Append(item.Score?.ToString() ?? string.Empty).Append(',')
+                .Append(Escape(string.Join("; ", item.Tags))).Append(',')
+                .Append(Escape(string.Join("; ", item.CustomLists)))
                 .AppendLine();
         }
 

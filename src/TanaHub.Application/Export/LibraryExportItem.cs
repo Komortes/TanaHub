@@ -6,4 +6,9 @@ public sealed record LibraryExportItem(
     string Type,
     string Status,
     int Progress,
-    int? Score);
+    int? Score)
+{
+    public IReadOnlyList<string> Tags { get; init; } = [];
+
+    public IReadOnlyList<string> CustomLists { get; init; } = [];
+}

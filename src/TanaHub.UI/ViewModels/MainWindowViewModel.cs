@@ -4,7 +4,9 @@ using CommunityToolkit.Mvvm.Input;
 using Material.Icons;
 using TanaHub.Application.Common;
 using TanaHub.Application.Export;
+using TanaHub.Application.Insights;
 using TanaHub.Application.Queries;
+using TanaHub.Application.Recognition;
 using TanaHub.Application.Services;
 using TanaHub.Domain.Enums;
 using TanaHub.Domain.Models;
@@ -27,6 +29,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly INotificationService notificationService;
     private readonly ICatalogSourceSelector catalogSourceSelector;
     private readonly IRecognitionService recognitionService;
+    private readonly IRecognitionInboxService recognitionInboxService;
     private readonly IFileOpenService fileOpenService;
     private readonly HashSet<string> notifiedThisSession = new(StringComparer.OrdinalIgnoreCase);
     private AppSettings appSettings = new();
@@ -43,6 +46,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         INotificationService notificationService,
         ICatalogSourceSelector catalogSourceSelector,
         IRecognitionService recognitionService,
+        IRecognitionInboxService recognitionInboxService,
         IFileOpenService fileOpenService)
     {
         this.mediaCatalogService = mediaCatalogService;
@@ -56,6 +60,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         this.notificationService = notificationService;
         this.catalogSourceSelector = catalogSourceSelector;
         this.recognitionService = recognitionService;
+        this.recognitionInboxService = recognitionInboxService;
         this.fileOpenService = fileOpenService;
 
         NavigationItems =
@@ -143,6 +148,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public IReadOnlyList<string> LibraryTypeOptions { get; } = ["All", "Anime", "Manga"];
     public IReadOnlyList<string> LibrarySortOptions { get; } = ["Updated", "Title", "Score", "Progress"];
 
+    public ObservableCollection<string> LibraryTagFilters { get; } = ["All tags"];
+
+    public ObservableCollection<string> LibraryCustomListFilters { get; } = ["All lists"];
+
     public IReadOnlyList<string> LibraryStatusFilters { get; } =
     [
         "All",
@@ -178,6 +187,26 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private string searchStatus = "Search uses AniList with local fallback.";
 
     [ObservableProperty]
+    private string appConnectionStatusText = "Cached";
+
+    [ObservableProperty]
+    private string appConnectionStatusDetail = "Loading cache status...";
+
+    [ObservableProperty]
+    private string appConnectionStatusKind = "Cached";
+
+    public bool IsConnectionStatusOnline => AppConnectionStatusKind == "Online";
+    public bool IsConnectionStatusCached => AppConnectionStatusKind == "Cached";
+    public bool IsConnectionStatusOffline => AppConnectionStatusKind == "Offline";
+
+    partial void OnAppConnectionStatusKindChanged(string value)
+    {
+        OnPropertyChanged(nameof(IsConnectionStatusOnline));
+        OnPropertyChanged(nameof(IsConnectionStatusCached));
+        OnPropertyChanged(nameof(IsConnectionStatusOffline));
+    }
+
+    [ObservableProperty]
     private string selectedDiscoverType = "All";
 
     [ObservableProperty]
@@ -206,6 +235,22 @@ public sealed partial class MainWindowViewModel : ObservableObject
     }
 
     partial void OnSelectedLibraryStatusChanged(string value) => _ = LoadLibraryAsync();
+    partial void OnSelectedLibraryTagChanged(string value)
+    {
+        if (!suppressLibraryFilterRefresh)
+        {
+            _ = LoadLibraryAsync();
+        }
+    }
+
+    partial void OnSelectedLibraryCustomListChanged(string value)
+    {
+        if (!suppressLibraryFilterRefresh)
+        {
+            _ = LoadLibraryAsync();
+        }
+    }
+
     partial void OnSelectedLibraryTypeChanged(string value)
     {
         OnPropertyChanged(nameof(IsLibraryAllSelected));
@@ -239,6 +284,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     private string selectedLibraryStatus = "All";
+
+    [ObservableProperty]
+    private string selectedLibraryTag = "All tags";
+
+    [ObservableProperty]
+    private string selectedLibraryCustomList = "All lists";
 
     [ObservableProperty]
     private string librarySearchText = string.Empty;
@@ -285,7 +336,43 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private string recognitionStatus = string.Empty;
 
+    [ObservableProperty]
+    private string recognitionEmptyMessage = string.Empty;
+
+    [ObservableProperty]
+    private Uri? recognitionSourcePreviewUri;
+
+    [ObservableProperty]
+    private RecognitionResultViewModel? currentRecognitionResult;
+
+    [ObservableProperty]
+    private bool isRecognitionHistoryExpanded;
+
     public ObservableCollection<RecognitionResultViewModel> RecognitionResults { get; } = [];
+
+    public ObservableCollection<RecognitionResultViewModel> RecognitionVariantResults { get; } = [];
+
+    public ObservableCollection<RecognitionInboxItemViewModel> RecognitionInboxItems { get; } = [];
+
+    public bool HasRecognitionInboxItems => RecognitionInboxItems.Count > 0;
+    public bool HasRecognitionSourcePreview => RecognitionSourcePreviewUri is not null;
+    public bool HasCurrentRecognitionResult => CurrentRecognitionResult is not null;
+    public bool HasRecognitionVariantResults => RecognitionVariantResults.Count > 0;
+    public bool IsRecognitionHistoryVisible => HasRecognitionInboxItems && IsRecognitionHistoryExpanded;
+    public bool IsRecognitionHistoryEmptyVisible => !HasRecognitionInboxItems && IsRecognitionHistoryExpanded;
+    public bool HasRecognitionEmptyMessage => !string.IsNullOrWhiteSpace(RecognitionEmptyMessage);
+
+    partial void OnRecognitionEmptyMessageChanged(string value) =>
+        OnPropertyChanged(nameof(HasRecognitionEmptyMessage));
+
+    partial void OnRecognitionSourcePreviewUriChanged(Uri? value) =>
+        OnPropertyChanged(nameof(HasRecognitionSourcePreview));
+
+    partial void OnCurrentRecognitionResultChanged(RecognitionResultViewModel? value) =>
+        OnPropertyChanged(nameof(HasCurrentRecognitionResult));
+
+    partial void OnIsRecognitionHistoryExpandedChanged(bool value) =>
+        NotifyRecognitionHistoryVisibilityChanged();
 
     [ObservableProperty]
     private bool isDetailVisible;
@@ -365,6 +452,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private MediaReleaseStatus? discoverReleaseStatusFilter;
     private string? discoverCountryFilter;
     private bool suppressDiscoverFilterRefresh;
+    private bool suppressLibraryFilterRefresh;
 
     partial void OnSelectedScheduleRangeChanged(string value)
     {
@@ -410,7 +498,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         }
 
         var item = mediaResult.Value!;
-        var libraryVm = LibraryEntries.FirstOrDefault(e => e.MediaId == mediaId);
+        var libraryEntry = await GetLibraryEntryAsync(mediaId);
 
         var episodes = "—";
         var duration = "—";
@@ -429,6 +517,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
             chapters = manga.ChapterCount?.ToString() ?? "?";
             volumes = manga.VolumeCount?.ToString() ?? "?";
         }
+
+        var libraryProgress = libraryEntry is null
+            ? string.Empty
+            : $"{libraryEntry.Progress}/{(item is Anime ? episodes : chapters)}";
+        var libraryScore = libraryEntry?.Score?.ToString() ?? string.Empty;
 
         SelectedMedia = new MediaDetailViewModel(
             item.Id,
@@ -449,10 +542,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
             studio,
             chapters,
             volumes,
-            libraryVm?.Status ?? string.Empty,
-            libraryVm?.Progress ?? string.Empty,
-            libraryVm?.Score ?? string.Empty,
-            libraryVm is not null,
+            libraryEntry?.Status.ToString() ?? string.Empty,
+            libraryProgress,
+            libraryScore,
+            libraryEntry is not null,
             new AsyncRelayCommand(() => AddToLibraryAsync(mediaId)),
             new AsyncRelayCommand(() => IncrementProgressAsync(mediaId)),
             new AsyncRelayCommand(() => UpdateLibraryStatusAsync(mediaId, MediaListStatus.Current)),
@@ -460,10 +553,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
             new AsyncRelayCommand(() => UpdateLibraryStatusAsync(mediaId, MediaListStatus.Paused)),
             new AsyncRelayCommand(() => UpdateLibraryStatusAsync(mediaId, MediaListStatus.Completed)),
             new AsyncRelayCommand(() => UpdateLibraryStatusAsync(mediaId, MediaListStatus.Dropped)),
-            new AsyncRelayCommand(() => IncreaseScoreAsync(mediaId, ParseLibraryScore(libraryVm?.Score))),
+            new AsyncRelayCommand(() => IncreaseScoreAsync(mediaId, libraryEntry?.Score)),
             new AsyncRelayCommand<string?>(s => SetScoreDirectAsync(mediaId, int.TryParse(s, out var v) ? v : 0)),
             new AsyncRelayCommand(() => RemoveFromLibraryAsync(mediaId)),
-            libraryVm?.Notes,
+            libraryEntry?.Notes,
             item.Characters,
             new AsyncRelayCommand<string?>(notes => SaveNotesAsync(mediaId, notes)));
 
@@ -475,6 +568,20 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IsLibraryVisible = false;
         IsScheduleVisible = false;
         IsSettingsVisible = false;
+        IsRecognizeVisible = false;
+    }
+
+    private async Task<UserMediaEntry?> GetLibraryEntryAsync(string mediaId)
+    {
+        var result = await userLibraryService.GetEntriesAsync(new UserLibraryQuery
+        {
+            PageSize = 500
+        });
+
+        return result.IsSuccess
+            ? result.Value!.Items.FirstOrDefault(entry =>
+                entry.MediaId.Equals(mediaId, StringComparison.OrdinalIgnoreCase))
+            : null;
     }
 
     private async Task RefreshDetailIfOpenAsync(string mediaId)
@@ -715,6 +822,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         await LoadSearchResultsAsync();
         await LoadLibraryAsync();
         await LoadScheduleAsync();
+        await LoadRecognitionInboxAsync();
     }
 
     private async Task LoadSettingsAsync()
@@ -723,6 +831,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         if (result.IsFailure)
         {
             SettingsStorageDetail = result.Error.Message;
+            SetAppConnectionStatus("Offline", "Settings unavailable");
             return;
         }
 
@@ -747,6 +856,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         AniListSyncStatus = appSettings.AniListLastSyncAt.HasValue
             ? $"Last sync: {appSettings.AniListLastSyncAt:yyyy-MM-dd HH:mm}"
             : string.Empty;
+        RefreshAppConnectionStatus();
     }
 
     [RelayCommand]
@@ -775,6 +885,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         if (!IsAniListConnected) return;
         AniListSyncStatus = "Syncing…";
+        SetAppConnectionStatus("Online", "Syncing AniList...");
         var result = await aniListSyncService.SyncAsync(
             appSettings.AniListAccessToken,
             appSettings.AniListUserId,
@@ -783,6 +894,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         if (result.IsFailure)
         {
             AniListSyncStatus = result.Error.Message;
+            SetAppConnectionStatus("Offline", "AniList sync failed");
             return;
         }
 
@@ -871,7 +983,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 entry.MediaType.ToString(),
                 entry.Status.ToString(),
                 entry.Progress,
-                entry.Score));
+                entry.Score)
+            {
+                Tags = entry.Tags,
+                CustomLists = entry.CustomLists
+            });
         }
 
         var saved = await fileSaveService.SaveTextAsync(
@@ -891,6 +1007,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         if (result.IsFailure)
         {
             SettingsStorageDetail = result.Error.Message;
+            SetAppConnectionStatus("Offline", "Settings save failed");
             return;
         }
 
@@ -913,7 +1030,39 @@ public sealed partial class MainWindowViewModel : ObservableObject
         AniListSyncStatus = appSettings.AniListLastSyncAt.HasValue
             ? $"Last sync: {appSettings.AniListLastSyncAt:yyyy-MM-dd HH:mm}"
             : string.Empty;
+        RefreshAppConnectionStatus();
         SearchStatus = "Settings saved.";
+    }
+
+    private void RefreshAppConnectionStatus()
+    {
+        if (!OfflineCacheEnabled)
+        {
+            SetAppConnectionStatus("Online", $"{PreferredSyncSource} live mode");
+            return;
+        }
+
+        if (appSettings.AniListLastSyncAt is { } lastSyncAt)
+        {
+            SetAppConnectionStatus("Cached", $"Last sync {lastSyncAt.ToLocalTime():MMM d, HH:mm}");
+            return;
+        }
+
+        SetAppConnectionStatus("Cached", "Local cache ready");
+    }
+
+    private void SetAppConnectionStatus(string kind, string detail)
+    {
+        var normalizedKind = kind switch
+        {
+            "Online" => "Online",
+            "Offline" => "Offline",
+            _ => "Cached"
+        };
+
+        AppConnectionStatusKind = normalizedKind;
+        AppConnectionStatusText = normalizedKind;
+        AppConnectionStatusDetail = detail;
     }
 
     private void NotifySyncSourceSelectionChanged()
@@ -942,7 +1091,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
         var hydratedEntries = new List<LibraryEntryViewModel>();
 
-        foreach (var entry in result.Value!.Items)
+        var entries = result.Value!.Items.ToArray();
+
+        foreach (var entry in entries)
         {
             var viewModel = await CreateLibraryEntryViewModelAsync(entry);
             hydratedEntries.Add(viewModel);
@@ -953,19 +1104,53 @@ public sealed partial class MainWindowViewModel : ObservableObject
             }
         }
 
+        RefreshLibraryOrganizationFilters(hydratedEntries);
+
         foreach (var viewModel in SortLibraryEntries(FilterLibraryEntries(hydratedEntries)))
         {
             LibraryEntries.Add(viewModel);
         }
 
-        DashboardMetrics.Clear();
-        DashboardMetrics.Add(new("Library", LibraryEntries.Count.ToString(), "seeded local entries", MaterialIconKind.Bookshelf));
-        DashboardMetrics.Add(new("Watching", ContinueItems.Count.ToString(), "current or paused", MaterialIconKind.PlayCircle));
-        DashboardMetrics.Add(new("Search", SearchResults.Count.ToString(), "local catalog results", MaterialIconKind.Magnify));
+        RefreshDashboardMetrics(LibraryInsightsCalculator.Calculate(entries));
 
         OnPropertyChanged(nameof(IsLibraryEmpty));
         OnPropertyChanged(nameof(LibraryEmptyMessage));
         OnPropertyChanged(nameof(HasContinueItems));
+    }
+
+    private void RefreshDashboardMetrics(LibraryInsightsSummary insights)
+    {
+        DashboardMetrics.Clear();
+        DashboardMetrics.Add(new(
+            "Completion",
+            FormatRatio(insights.CompletionRate),
+            $"{insights.CompletedEntries}/{insights.TotalEntries} titles completed",
+            MaterialIconKind.CheckCircleOutline));
+        DashboardMetrics.Add(new(
+            "Backlog",
+            insights.BacklogEntries.ToString(),
+            "planned titles waiting",
+            MaterialIconKind.BookmarkPlusOutline));
+        DashboardMetrics.Add(new(
+            "Dropped",
+            FormatRatio(insights.DroppedRatio),
+            $"{insights.DroppedEntries} title(s) dropped",
+            MaterialIconKind.CloseCircleOutline));
+        DashboardMetrics.Add(new(
+            "Avg score",
+            insights.AverageScore is null ? "n/a" : insights.AverageScore.Value.ToString("F1"),
+            "scored local entries",
+            MaterialIconKind.StarOutline));
+        DashboardMetrics.Add(new(
+            "Watch time",
+            FormatMinutes(insights.EstimatedWatchMinutes),
+            $"{insights.EpisodesWatched} episode(s) tracked",
+            MaterialIconKind.ClockOutline));
+        DashboardMetrics.Add(new(
+            "Chapters",
+            insights.ChaptersRead.ToString(),
+            "manga progress tracked",
+            MaterialIconKind.BookOpenPageVariant));
     }
 
     private async Task LoadScheduleAsync()
@@ -1063,7 +1248,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
             new AsyncRelayCommand(() => IncreaseScoreAsync(entry.MediaId, entry.Score)),
             new AsyncRelayCommand(() => RemoveFromLibraryAsync(entry.MediaId)),
             new AsyncRelayCommand(() => OpenDetailAsync(entry.MediaId)),
-            entry.Notes);
+            entry.Notes,
+            entry.Tags,
+            entry.CustomLists);
     }
 
     private async Task AddToLibraryAsync(string mediaId)
@@ -1162,18 +1349,32 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private Task PasteAndRecognizeAsync() => RunRecognitionAsync(fileOpenService.PasteImageAsync);
 
-    private async Task RunRecognitionAsync(Func<CancellationToken, Task<(Stream? Stream, string MimeType)>> getImage)
+    [RelayCommand]
+    private void ToggleRecognitionHistory()
     {
-        var (stream, mime) = await getImage(CancellationToken.None);
+        IsRecognitionHistoryExpanded = !IsRecognitionHistoryExpanded;
+    }
+
+    private async Task RunRecognitionAsync(
+        Func<CancellationToken, Task<(Stream? Stream, string MimeType, string SourceName, string? SourcePath)>> getImage)
+    {
+        var (stream, mime, sourceName, sourcePath) = await getImage(CancellationToken.None);
         if (stream is null)
         {
-            RecognitionStatus = "No image selected.";
+            RecognitionStatus = sourceName == "Clipboard image"
+                ? "Clipboard does not contain a supported image."
+                : "No image selected.";
             return;
         }
 
         IsRecognizing = true;
         RecognitionStatus = "Searching…";
         RecognitionResults.Clear();
+        RecognitionVariantResults.Clear();
+        CurrentRecognitionResult = null;
+        RecognitionEmptyMessage = string.Empty;
+        RecognitionSourcePreviewUri = CreateLocalFileUri(sourcePath);
+        OnPropertyChanged(nameof(HasRecognitionVariantResults));
 
         try
         {
@@ -1186,27 +1387,43 @@ public sealed partial class MainWindowViewModel : ObservableObject
                     return;
                 }
 
-                var matches = result.Value!;
+                var matches = RecognitionMatchSelector.RankAndDedupe(result.Value!);
                 if (matches.Count == 0)
                 {
                     RecognitionStatus = "No matches found.";
+                    RecognitionEmptyMessage = "No anime match found for this screenshot.";
                     return;
                 }
 
-                foreach (var match in matches)
+                for (var index = 0; index < matches.Count; index++)
                 {
+                    var match = matches[index];
                     var mediaId = $"anilist:{match.AniListId}";
+                    var preview = await GetRecognitionTitlePreviewAsync(mediaId, match);
                     var ep = match.Episode is not null ? $"EP {match.Episode}" : string.Empty;
                     var pct = $"{match.Similarity * 100:F1}%";
-                    RecognitionResults.Add(new RecognitionResultViewModel(
+                    var viewModel = new RecognitionResultViewModel(
                         MediaId: mediaId,
-                        Title: match.EnglishTitle ?? match.RomajiTitle,
+                        Title: preview.Title,
                         EpisodeLabel: ep,
                         SimilarityLabel: pct,
-                        ThumbnailUri: match.ThumbnailUri,
-                        OpenCommand: new AsyncRelayCommand(() => OpenDetailAsync(mediaId))));
+                        ThumbnailUri: preview.PosterUri,
+                        OpenCommand: new AsyncRelayCommand(() => OpenDetailAsync(mediaId)));
+
+                    RecognitionResults.Add(viewModel);
+
+                    if (index == 0)
+                    {
+                        CurrentRecognitionResult = viewModel;
+                    }
+                    else
+                    {
+                        RecognitionVariantResults.Add(viewModel);
+                    }
                 }
 
+                OnPropertyChanged(nameof(HasRecognitionVariantResults));
+                await SaveBestRecognitionAttemptAsync(matches[0], sourceName, sourcePath);
                 RecognitionStatus = $"{matches.Count} match{(matches.Count == 1 ? string.Empty : "es")} · powered by trace.moe";
             }
         }
@@ -1214,6 +1431,109 @@ public sealed partial class MainWindowViewModel : ObservableObject
         {
             IsRecognizing = false;
         }
+    }
+
+    private async Task SaveBestRecognitionAttemptAsync(
+        RecognitionMatch match,
+        string sourceName,
+        string? sourcePath)
+    {
+        var mediaId = $"anilist:{match.AniListId}";
+        var preview = await GetRecognitionTitlePreviewAsync(mediaId, match);
+        var attempt = new RecognitionAttempt
+        {
+            SourceName = string.IsNullOrWhiteSpace(sourceName) ? "Selected image" : sourceName,
+            SourcePath = sourcePath,
+            AniListId = match.AniListId,
+            RomajiTitle = preview.Title,
+            EnglishTitle = preview.Title,
+            NativeTitle = match.NativeTitle,
+            Episode = match.Episode,
+            Similarity = match.Similarity,
+            ThumbnailUri = preview.PosterUri
+        };
+
+        var saved = await recognitionInboxService.SaveAsync(attempt);
+        if (saved.IsSuccess)
+        {
+            RecognitionInboxItems.Insert(0, CreateRecognitionInboxItemViewModel(saved.Value!));
+            OnPropertyChanged(nameof(HasRecognitionInboxItems));
+            NotifyRecognitionHistoryVisibilityChanged();
+        }
+    }
+
+    private async Task<(string Title, Uri? PosterUri)> GetRecognitionTitlePreviewAsync(
+        string mediaId,
+        RecognitionMatch match)
+    {
+        var media = await mediaCatalogService.GetByIdAsync(mediaId);
+        if (media.IsSuccess)
+        {
+            return (media.Value!.Title.DisplayTitle, media.Value.Images.PosterUri);
+        }
+
+        return (match.EnglishTitle ?? match.RomajiTitle, null);
+    }
+
+    private async Task LoadRecognitionInboxAsync()
+    {
+        var result = await recognitionInboxService.GetRecentAsync();
+        if (result.IsFailure)
+        {
+            RecognitionStatus = result.Error.Message;
+            return;
+        }
+
+        RecognitionInboxItems.Clear();
+        foreach (var attempt in result.Value!)
+        {
+            RecognitionInboxItems.Add(CreateRecognitionInboxItemViewModel(attempt));
+        }
+
+        OnPropertyChanged(nameof(HasRecognitionInboxItems));
+        NotifyRecognitionHistoryVisibilityChanged();
+    }
+
+    private RecognitionInboxItemViewModel CreateRecognitionInboxItemViewModel(RecognitionAttempt attempt)
+    {
+        var mediaId = attempt.MediaId ?? string.Empty;
+        return new RecognitionInboxItemViewModel(
+            attempt.Id,
+            mediaId,
+            attempt.EnglishTitle ?? attempt.RomajiTitle ?? attempt.NativeTitle ?? "Unknown title",
+            string.IsNullOrWhiteSpace(attempt.SourceName) ? "Selected image" : attempt.SourceName,
+            attempt.CreatedAt.ToLocalTime().ToString("MMM d, HH:mm"),
+            attempt.Provider,
+            attempt.Episode is not null ? $"EP {attempt.Episode}" : string.Empty,
+            attempt.Similarity is not null ? $"{attempt.Similarity.Value * 100:F1}%" : "n/a",
+            attempt.ThumbnailUri,
+            new AsyncRelayCommand(() => OpenDetailAsync(mediaId)),
+            new AsyncRelayCommand(() => AddToLibraryAsync(mediaId)),
+            new AsyncRelayCommand(() => RemoveRecognitionAttemptAsync(attempt.Id)));
+    }
+
+    private async Task RemoveRecognitionAttemptAsync(string attemptId)
+    {
+        var result = await recognitionInboxService.RemoveAsync(attemptId);
+        if (result.IsFailure)
+        {
+            RecognitionStatus = result.Error.Message;
+            return;
+        }
+
+        var item = RecognitionInboxItems.FirstOrDefault(item => item.AttemptId == attemptId);
+        if (item is not null)
+        {
+            RecognitionInboxItems.Remove(item);
+            OnPropertyChanged(nameof(HasRecognitionInboxItems));
+            NotifyRecognitionHistoryVisibilityChanged();
+        }
+    }
+
+    private void NotifyRecognitionHistoryVisibilityChanged()
+    {
+        OnPropertyChanged(nameof(IsRecognitionHistoryVisible));
+        OnPropertyChanged(nameof(IsRecognitionHistoryEmptyVisible));
     }
 
     private void SetVisiblePage(string pageKey)
@@ -1277,14 +1597,81 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     private IEnumerable<LibraryEntryViewModel> FilterLibraryEntries(IEnumerable<LibraryEntryViewModel> entries)
     {
-        if (string.IsNullOrWhiteSpace(LibrarySearchText))
+        var filtered = entries;
+
+        if (!string.IsNullOrWhiteSpace(LibrarySearchText))
         {
-            return entries;
+            filtered = filtered.Where(entry =>
+                entry.Title.Contains(LibrarySearchText, StringComparison.OrdinalIgnoreCase)
+                || entry.MediaId.Contains(LibrarySearchText, StringComparison.OrdinalIgnoreCase)
+                || entry.Tags.Any(tag => tag.Contains(LibrarySearchText, StringComparison.OrdinalIgnoreCase))
+                || entry.CustomLists.Any(list => list.Contains(LibrarySearchText, StringComparison.OrdinalIgnoreCase)));
         }
 
-        return entries.Where(entry =>
-            entry.Title.Contains(LibrarySearchText, StringComparison.OrdinalIgnoreCase)
-            || entry.MediaId.Contains(LibrarySearchText, StringComparison.OrdinalIgnoreCase));
+        if (SelectedLibraryTag != "All tags")
+        {
+            filtered = filtered.Where(entry => entry.Tags.Any(tag =>
+                tag.Equals(SelectedLibraryTag, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        if (SelectedLibraryCustomList != "All lists")
+        {
+            filtered = filtered.Where(entry => entry.CustomLists.Any(list =>
+                list.Equals(SelectedLibraryCustomList, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        return filtered;
+    }
+
+    private void RefreshLibraryOrganizationFilters(IReadOnlyList<LibraryEntryViewModel> entries)
+    {
+        suppressLibraryFilterRefresh = true;
+        try
+        {
+            RefreshFilterOptions(
+                LibraryTagFilters,
+                "All tags",
+                entries.SelectMany(entry => entry.Tags),
+                SelectedLibraryTag,
+                selected => SelectedLibraryTag = selected);
+
+            RefreshFilterOptions(
+                LibraryCustomListFilters,
+                "All lists",
+                entries.SelectMany(entry => entry.CustomLists),
+                SelectedLibraryCustomList,
+                selected => SelectedLibraryCustomList = selected);
+        }
+        finally
+        {
+            suppressLibraryFilterRefresh = false;
+        }
+    }
+
+    private static void RefreshFilterOptions(
+        ObservableCollection<string> target,
+        string allLabel,
+        IEnumerable<string> values,
+        string selectedValue,
+        Action<string> setSelectedValue)
+    {
+        var nextValues = values
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        target.Clear();
+        target.Add(allLabel);
+        foreach (var value in nextValues)
+        {
+            target.Add(value);
+        }
+
+        if (!target.Contains(selectedValue))
+        {
+            setSelectedValue(allLabel);
+        }
     }
 
     private IEnumerable<LibraryEntryViewModel> SortLibraryEntries(IEnumerable<LibraryEntryViewModel> entries)
@@ -1303,6 +1690,35 @@ public sealed partial class MainWindowViewModel : ObservableObject
         var separatorIndex = progress.IndexOf('/', StringComparison.Ordinal);
         var value = separatorIndex >= 0 ? progress[..separatorIndex] : progress;
         return int.TryParse(value, out var parsed) ? parsed : 0;
+    }
+
+    private static string FormatRatio(double value)
+    {
+        return $"{value * 100:F0}%";
+    }
+
+    private static string FormatMinutes(int minutes)
+    {
+        if (minutes <= 0)
+        {
+            return "0h";
+        }
+
+        var hours = minutes / 60;
+        var remainingMinutes = minutes % 60;
+        return remainingMinutes == 0
+            ? $"{hours}h"
+            : $"{hours}h {remainingMinutes}m";
+    }
+
+    private static Uri? CreateLocalFileUri(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !Path.IsPathFullyQualified(path))
+        {
+            return null;
+        }
+
+        return new Uri(path);
     }
 
     private async Task LoadDiscoverBrowseAsync()

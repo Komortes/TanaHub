@@ -65,9 +65,17 @@ public sealed class RemoteImage : Image
 
         try
         {
-            var bytes = await HttpClient.GetByteArrayAsync(uri);
-            await using var stream = new MemoryStream(bytes);
-            bitmap = new Bitmap(stream);
+            if (uri.IsFile)
+            {
+                await using var stream = File.OpenRead(uri.LocalPath);
+                bitmap = new Bitmap(stream);
+            }
+            else
+            {
+                var bytes = await HttpClient.GetByteArrayAsync(uri);
+                await using var stream = new MemoryStream(bytes);
+                bitmap = new Bitmap(stream);
+            }
         }
         catch
         {

@@ -79,9 +79,124 @@
       </StackPanel>
     </Border>
 
-    <!-- Results -->
-    <ItemsControl ItemsSource="{Binding RecognitionResults}"
-                  IsVisible="{Binding RecognitionResults.Count, Converter={x:Static ObjectConverters.IsNotNull}}">
+    <!-- Empty recognition result -->
+    <Border Classes="panel" IsVisible="{Binding HasRecognitionEmptyMessage}">
+      <Grid ColumnDefinitions="220,*" ColumnSpacing="18">
+        <Border Height="146" CornerRadius="12" ClipToBounds="True"
+                Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
+                BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
+          <Grid>
+            <controls:RemoteImage SourceUri="{Binding RecognitionSourcePreviewUri}"
+                                  IsVisible="{Binding HasRecognitionSourcePreview}"/>
+            <material:MaterialIcon Width="34" Height="34" Kind="ImageOffOutline"
+                                   Foreground="{DynamicResource TanaHubTextMutedBrush}"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   IsVisible="{Binding !HasRecognitionSourcePreview}"/>
+          </Grid>
+        </Border>
+        <StackPanel Grid.Column="1" Spacing="8" VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center"
+                    Background="{DynamicResource TanaHubAmberBrush}"/>
+            <TextBlock Text="NO MATCH" FontSize="10" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TanaHubAmberBrush}"/>
+          </StackPanel>
+          <TextBlock Text="{Binding RecognitionEmptyMessage}" FontSize="18" FontWeight="SemiBold"
+                     Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
+                     TextWrapping="Wrap"/>
+          <TextBlock Text="Try a clearer frame with a visible character, scene, or full screenshot."
+                     FontSize="12"
+                     Foreground="{DynamicResource TanaHubTextMutedBrush}"
+                     TextWrapping="Wrap"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- Current result -->
+    <Border Classes="panel" IsVisible="{Binding HasCurrentRecognitionResult}">
+      <Grid ColumnDefinitions="260,*" ColumnSpacing="18">
+        <StackPanel Spacing="8">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center"
+                    Background="{DynamicResource TanaHubCyanBrush}"/>
+            <TextBlock Text="SOURCE IMAGE" FontSize="10" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TanaHubCyanBrush}"/>
+          </StackPanel>
+          <Border Height="178" CornerRadius="12" ClipToBounds="True"
+                  Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
+                  BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
+            <Grid>
+              <controls:RemoteImage SourceUri="{Binding RecognitionSourcePreviewUri}"
+                                    IsVisible="{Binding HasRecognitionSourcePreview}"/>
+              <StackPanel IsVisible="{Binding !HasRecognitionSourcePreview}"
+                          HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                <material:MaterialIcon Width="28" Height="28" Kind="ImageOutline"
+                                       Foreground="{DynamicResource TanaHubTextMutedBrush}"
+                                       HorizontalAlignment="Center"/>
+                <TextBlock Text="Preview unavailable" FontSize="11"
+                           Foreground="{DynamicResource TanaHubTextMutedBrush}"
+                           HorizontalAlignment="Center"/>
+              </StackPanel>
+            </Grid>
+          </Border>
+        </StackPanel>
+
+        <ContentControl Grid.Column="1" Content="{Binding CurrentRecognitionResult}">
+          <ContentControl.ContentTemplate>
+            <DataTemplate x:DataType="vm:RecognitionResultViewModel">
+              <Grid RowDefinitions="Auto,*,Auto" RowSpacing="12">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center"
+                          Background="{DynamicResource TanaHubAccentLightBrush}"/>
+                  <TextBlock Text="BEST MATCH" FontSize="10" FontWeight="SemiBold"
+                             Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
+                </StackPanel>
+                <Grid Grid.Row="1" ColumnDefinitions="118,*" ColumnSpacing="14">
+                  <Border Width="118" Height="166" CornerRadius="10" ClipToBounds="True"
+                          Background="{DynamicResource TanaHubAccentGlowBrush}">
+                    <controls:RemoteImage SourceUri="{Binding ThumbnailUri}"/>
+                  </Border>
+                  <StackPanel Grid.Column="1" Spacing="9" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Title}" FontSize="22" FontWeight="Bold"
+                               Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
+                               TextWrapping="Wrap" MaxLines="2"/>
+                    <StackPanel Orientation="Horizontal" Spacing="9">
+                      <Border Padding="9,4" CornerRadius="6" Background="{DynamicResource TanaHubAccentBrush}">
+                        <TextBlock Text="{Binding SimilarityLabel}" Classes="mono"
+                                   FontSize="13" FontWeight="Bold" Foreground="White"/>
+                      </Border>
+                      <Border Padding="9,4" CornerRadius="6"
+                              Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
+                              IsVisible="{Binding EpisodeLabel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <TextBlock Text="{Binding EpisodeLabel}" Classes="mono" FontSize="12"
+                                   Foreground="{DynamicResource TanaHubCyanBrush}"/>
+                      </Border>
+                    </StackPanel>
+                  </StackPanel>
+                </Grid>
+                <Button Grid.Row="2" HorizontalAlignment="Left" Command="{Binding OpenCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="7">
+                    <material:MaterialIcon Width="15" Height="15" Kind="OpenInNew"/>
+                    <TextBlock Text="Open title"/>
+                  </StackPanel>
+                </Button>
+              </Grid>
+            </DataTemplate>
+          </ContentControl.ContentTemplate>
+        </ContentControl>
+      </Grid>
+    </Border>
+
+    <!-- Other variants -->
+    <StackPanel Spacing="12" IsVisible="{Binding HasRecognitionVariantResults}">
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center"
+                Background="{DynamicResource TanaHubTextMutedBrush}"/>
+        <TextBlock Text="OTHER POSSIBLE MATCHES" FontSize="10" FontWeight="SemiBold"
+                   Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+      </StackPanel>
+      <ItemsControl ItemsSource="{Binding RecognitionVariantResults}">
       <ItemsControl.ItemsPanel>
         <ItemsPanelTemplate>
           <WrapPanel Orientation="Horizontal"/>
@@ -131,6 +246,96 @@
         </DataTemplate>
       </ItemsControl.ItemTemplate>
     </ItemsControl>
+    </StackPanel>
+
+    <!-- Recognition Inbox -->
+    <Border Classes="panel">
+      <StackPanel Spacing="13">
+        <Button Classes="ghost" Padding="0" Command="{Binding ToggleRecognitionHistoryCommand}"
+                HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+          <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="9">
+            <Border Width="3" Height="13" CornerRadius="2" VerticalAlignment="Center"
+                    Background="{DynamicResource TanaHubAccentLightBrush}"/>
+            <TextBlock Grid.Column="1" Text="RECOGNITION HISTORY" FontSize="10" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TanaHubAccentLightBrush}" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="2" Text="{Binding RecognitionInboxItems.Count, StringFormat='{}{0} saved'}"
+                       FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"
+                       VerticalAlignment="Center"/>
+            <material:MaterialIcon Grid.Column="3" Width="16" Height="16"
+                                   Kind="ChevronDown"
+                                   Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+          </Grid>
+        </Button>
+
+        <Border IsVisible="{Binding IsRecognitionHistoryEmptyVisible}"
+                Padding="16,14"
+                CornerRadius="9"
+                Background="{DynamicResource TanaHubSurfaceRaisedBrush}">
+          <StackPanel Orientation="Horizontal" Spacing="9">
+            <material:MaterialIcon Width="16" Height="16" Kind="InboxOutline"
+                                   Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            <TextBlock Text="No saved recognitions yet" FontSize="12"
+                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+          </StackPanel>
+        </Border>
+
+        <ItemsControl ItemsSource="{Binding RecognitionInboxItems}"
+                      IsVisible="{Binding IsRecognitionHistoryVisible}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:RecognitionInboxItemViewModel">
+              <Border Padding="10" Margin="0,0,0,8" CornerRadius="10"
+                      Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
+                      BorderBrush="{DynamicResource TanaHubBorderBrush}"
+                      BorderThickness="1">
+                <Grid ColumnDefinitions="54,*,Auto" ColumnSpacing="11">
+                  <Border Width="42" Height="54" CornerRadius="7" ClipToBounds="True"
+                          Background="{DynamicResource TanaHubAccentGlowBrush}">
+                    <controls:RemoteImage SourceUri="{Binding ThumbnailUri}"/>
+                  </Border>
+
+                  <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
+                               TextTrimming="CharacterEllipsis"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <TextBlock Text="{Binding TimestampLabel}" Classes="mono" FontSize="11"
+                                 Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+                      <TextBlock Text="{Binding SourceLabel}" FontSize="11"
+                                 Foreground="{DynamicResource TanaHubTextMutedBrush}"
+                                 TextTrimming="CharacterEllipsis" MaxWidth="220"/>
+                      <TextBlock Text="{Binding ProviderLabel}" FontSize="11"
+                                 Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <TextBlock Text="{Binding EpisodeLabel}" Classes="mono" FontSize="11"
+                                 Foreground="{DynamicResource TanaHubCyanBrush}"
+                                 IsVisible="{Binding EpisodeLabel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                      <TextBlock Text="{Binding SimilarityLabel}" Classes="mono" FontSize="11" FontWeight="SemiBold"
+                                 Foreground="{DynamicResource TanaHubAmberBrush}"/>
+                    </StackPanel>
+                  </StackPanel>
+
+                  <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Button Classes="ghost" Width="34" Height="32" Padding="0"
+                            Command="{Binding OpenCommand}" ToolTip.Tip="Open detail">
+                      <material:MaterialIcon Width="15" Height="15" Kind="OpenInNew"/>
+                    </Button>
+                    <Button Classes="ghost" Width="34" Height="32" Padding="0"
+                            Command="{Binding AddToLibraryCommand}" ToolTip.Tip="Add to library">
+                      <material:MaterialIcon Width="15" Height="15" Kind="BookPlusOutline"/>
+                    </Button>
+                    <Button Classes="danger" Width="34" Height="32" Padding="0"
+                            Command="{Binding RemoveCommand}" ToolTip.Tip="Remove from history">
+                      <material:MaterialIcon Width="15" Height="15" Kind="TrashCanOutline"/>
+                    </Button>
+                  </StackPanel>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </Border>
 
   </StackPanel>
 </UserControl>

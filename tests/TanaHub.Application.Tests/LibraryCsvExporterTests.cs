@@ -15,11 +15,15 @@ public sealed class LibraryCsvExporterTests
                 "Completed",
                 26,
                 10)
+            {
+                Tags = ["rewatch", "comfort"],
+                CustomLists = ["Friday queue"]
+            }
         ]);
 
-        Assert.Contains("MediaId,Title,Type,Status,Progress,Score", csv);
+        Assert.Contains("MediaId,Title,Type,Status,Progress,Score,Tags,CustomLists", csv);
         Assert.Contains("\"Title, \"\"Special\"\"\"", csv);
         Assert.Contains("anilist:1", csv);
-        Assert.Contains(",26,10", csv);
+        Assert.Contains(",26,10,rewatch; comfort,Friday queue", csv);
     }
 }

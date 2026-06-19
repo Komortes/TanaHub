@@ -64,6 +64,18 @@ public sealed class FileUserLibraryService : IUserLibraryService
                 filtered = filtered.Where(entry => entry.MediaId.Contains(query.SearchText, StringComparison.OrdinalIgnoreCase));
             }
 
+            if (!string.IsNullOrWhiteSpace(query.Tag))
+            {
+                filtered = filtered.Where(entry => entry.Tags.Any(tag =>
+                    tag.Equals(query.Tag, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(query.CustomList))
+            {
+                filtered = filtered.Where(entry => entry.CustomLists.Any(list =>
+                    list.Equals(query.CustomList, StringComparison.OrdinalIgnoreCase)));
+            }
+
             var totalCount = filtered.Count();
             var pageItems = filtered
                 .OrderByDescending(entry => entry.UpdatedAt)
@@ -297,6 +309,8 @@ public sealed class FileUserLibraryService : IUserLibraryService
             Score = dto.Score,
             PosterUri = Uri.TryCreate(dto.PosterUri, UriKind.Absolute, out var posterUri) ? posterUri : null,
             Notes = dto.Notes,
+            Tags = dto.Tags ?? [],
+            CustomLists = dto.CustomLists ?? [],
             StartedAt = dto.StartedAt,
             CompletedAt = dto.CompletedAt,
             UpdatedAt = dto.UpdatedAt
@@ -316,6 +330,8 @@ public sealed class FileUserLibraryService : IUserLibraryService
         int? Score,
         string? PosterUri,
         string? Notes,
+        IReadOnlyList<string>? Tags,
+        IReadOnlyList<string>? CustomLists,
         DateTimeOffset? StartedAt,
         DateTimeOffset? CompletedAt,
         DateTimeOffset UpdatedAt)
@@ -330,6 +346,8 @@ public sealed class FileUserLibraryService : IUserLibraryService
                 entry.Score,
                 entry.PosterUri?.ToString(),
                 entry.Notes,
+                entry.Tags,
+                entry.CustomLists,
                 entry.StartedAt,
                 entry.CompletedAt,
                 entry.UpdatedAt);

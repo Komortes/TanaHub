@@ -63,6 +63,8 @@ public static class InfrastructureServiceCollectionExtensions
         });
 
         services.AddSingleton<INotificationService, OsNotificationService>();
+        services.AddSingleton<IRecognitionInboxService>(_ => new FileRecognitionInboxService(
+            GetDefaultRecognitionInboxPath()));
         services.AddSingleton<IRecognitionService>(_ => new TraceMoeService(
             new HttpClient { Timeout = TimeSpan.FromSeconds(30) }));
 
@@ -87,6 +89,12 @@ public static class InfrastructureServiceCollectionExtensions
         return Path.Combine(appData, "TanaHub", "settings.json");
     }
 
+    private static string GetDefaultRecognitionInboxPath()
+    {
+        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        return Path.Combine(appData, "TanaHub", "recognition_inbox.json");
+    }
+
     private static IReadOnlyList<UserMediaEntry> CreateSeedLibraryEntries()
     {
         return
@@ -94,17 +102,23 @@ public static class InfrastructureServiceCollectionExtensions
             new UserMediaEntry("anilist:154587", MediaType.Anime, MediaListStatus.Current)
             {
                 Progress = 9,
-                Score = 9
+                Score = 9,
+                Tags = ["seasonal", "action"],
+                CustomLists = ["Current cour"]
             },
             new UserMediaEntry("anilist:1", MediaType.Anime, MediaListStatus.Completed)
             {
                 Progress = 26,
-                Score = 10
+                Score = 10,
+                Tags = ["classic", "rewatch"],
+                CustomLists = ["Favorites"]
             },
             new UserMediaEntry("mangadex:berserk", MediaType.Manga, MediaListStatus.Paused)
             {
                 Progress = 373,
-                Score = 10
+                Score = 10,
+                Tags = ["dark fantasy"],
+                CustomLists = ["Long reads"]
             }
         ];
     }

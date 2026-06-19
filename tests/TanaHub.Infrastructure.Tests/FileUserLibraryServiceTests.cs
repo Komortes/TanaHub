@@ -49,6 +49,53 @@ public sealed class FileUserLibraryServiceTests
         Assert.Empty(result.Value!.Items);
     }
 
+    [Fact]
+    public async Task UpsertEntryAsync_PersistsTagsAndCustomLists()
+    {
+        var storagePath = CreateStoragePath();
+        var service = new FileUserLibraryService(storagePath);
+
+        await service.UpsertEntryAsync(new UserMediaEntry("anilist:20", MediaType.Anime, MediaListStatus.Current)
+        {
+            Tags = ["rewatch", "comfort"],
+            CustomLists = ["Friday queue", "Short episodes"]
+        });
+
+        var reloaded = new FileUserLibraryService(storagePath);
+        var result = await reloaded.GetEntriesAsync(new UserLibraryQuery());
+
+        Assert.True(result.IsSuccess);
+        var entry = Assert.Single(result.Value!.Items);
+        Assert.Equal(["rewatch", "comfort"], entry.Tags);
+        Assert.Equal(["Friday queue", "Short episodes"], entry.CustomLists);
+    }
+
+    [Fact]
+    public async Task GetEntriesAsync_FiltersByTagAndCustomList()
+    {
+        var storagePath = CreateStoragePath();
+        var service = new FileUserLibraryService(storagePath, [
+            new UserMediaEntry("anilist:1", MediaType.Anime, MediaListStatus.Current)
+            {
+                Tags = ["rewatch"],
+                CustomLists = ["Friday queue"]
+            },
+            new UserMediaEntry("anilist:2", MediaType.Anime, MediaListStatus.Current)
+            {
+                Tags = ["seasonal"],
+                CustomLists = ["Backlog"]
+            }
+        ]);
+
+        var byTag = await service.GetEntriesAsync(new UserLibraryQuery { Tag = "REWATCH" });
+        var byList = await service.GetEntriesAsync(new UserLibraryQuery { CustomList = "friday queue" });
+
+        Assert.True(byTag.IsSuccess);
+        Assert.Equal("anilist:1", Assert.Single(byTag.Value!.Items).MediaId);
+        Assert.True(byList.IsSuccess);
+        Assert.Equal("anilist:1", Assert.Single(byList.Value!.Items).MediaId);
+    }
+
     private static string CreateStoragePath()
     {
         return Path.Combine(Path.GetTempPath(), "TanaHub.Tests", $"{Guid.NewGuid():N}", "library.json");

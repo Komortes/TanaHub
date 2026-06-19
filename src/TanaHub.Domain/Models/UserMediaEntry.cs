@@ -30,6 +30,10 @@ public sealed record UserMediaEntry
 
     public string? Notes { get; init; }
 
+    public IReadOnlyList<string> Tags { get; init; } = [];
+
+    public IReadOnlyList<string> CustomLists { get; init; } = [];
+
     public DateTimeOffset? StartedAt { get; init; }
 
     public DateTimeOffset? CompletedAt { get; init; }

@@ -10,6 +10,10 @@ public sealed record UserLibraryQuery
 
     public string SearchText { get; init; } = string.Empty;
 
+    public string? Tag { get; init; }
+
+    public string? CustomList { get; init; }
+
     public int Page { get; init; } = 1;
 
     public int PageSize { get; init; } = 50;

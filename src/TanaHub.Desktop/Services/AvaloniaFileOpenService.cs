@@ -13,10 +13,11 @@ public sealed class AvaloniaFileOpenService : IFileOpenService
         MimeTypes = ["image/png", "image/jpeg", "image/webp", "image/gif", "image/bmp"],
     };
 
-    public async Task<(Stream? Stream, string MimeType)> PickImageAsync(CancellationToken cancellationToken = default)
+    public async Task<(Stream? Stream, string MimeType, string SourceName, string? SourcePath)> PickImageAsync(
+        CancellationToken cancellationToken = default)
     {
         if (GetWindow() is not { } window || !window.StorageProvider.CanOpen)
-            return (null, string.Empty);
+            return (null, string.Empty, string.Empty, null);
 
         var files = await window.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
@@ -26,29 +27,31 @@ public sealed class AvaloniaFileOpenService : IFileOpenService
         });
 
         if (files is not { Count: > 0 })
-            return (null, string.Empty);
+            return (null, string.Empty, string.Empty, null);
 
         var stream = await files[0].OpenReadAsync();
         var mime   = GuessMime(files[0].Name);
-        return (stream, mime);
+        var path   = files[0].Path.IsFile ? files[0].Path.LocalPath : null;
+        return (stream, mime, files[0].Name, path);
     }
 
-    public async Task<(Stream? Stream, string MimeType)> PasteImageAsync(CancellationToken cancellationToken = default)
+    public async Task<(Stream? Stream, string MimeType, string SourceName, string? SourcePath)> PasteImageAsync(
+        CancellationToken cancellationToken = default)
     {
         if (GetWindow()?.Clipboard is not { } clipboard)
-            return (null, string.Empty);
+            return (null, string.Empty, "Clipboard image", null);
 
         // Avalonia 12: TryGetDataAsync → IAsyncDataTransfer; use TryGetBitmapAsync extension
         var transfer = await clipboard.TryGetDataAsync();
-        if (transfer is null) return (null, string.Empty);
+        if (transfer is null) return (null, string.Empty, "Clipboard image", null);
 
         var bitmap = await transfer.TryGetBitmapAsync();
-        if (bitmap is null) return (null, string.Empty);
+        if (bitmap is null) return (null, string.Empty, "Clipboard image", null);
 
         // Save bitmap to a temp PNG file and hand back an open read stream
         var tmp = Path.Combine(Path.GetTempPath(), $"tanahub_paste_{Guid.NewGuid():N}.png");
         bitmap.Save(tmp);
-        return (new DeleteOnCloseStream(tmp), "image/png");
+        return (File.OpenRead(tmp), "image/png", "Clipboard image", tmp);
     }
 
     private static Avalonia.Controls.Window? GetWindow()
@@ -68,13 +71,4 @@ public sealed class AvaloniaFileOpenService : IFileOpenService
         };
     }
 
-    // Deletes the underlying temp file when the stream is disposed.
-    private sealed class DeleteOnCloseStream(string path) : FileStream(path, FileMode.Open, FileAccess.Read)
-    {
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-            try { File.Delete(path); } catch { /* best-effort */ }
-        }
-    }
 }

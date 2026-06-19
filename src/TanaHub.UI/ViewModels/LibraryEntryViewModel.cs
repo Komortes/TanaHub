@@ -17,8 +17,18 @@ public sealed record LibraryEntryViewModel(
     IAsyncRelayCommand IncreaseScoreCommand,
     IAsyncRelayCommand RemoveCommand,
     IAsyncRelayCommand OpenDetailCommand,
-    string? Notes = null)
+    string? Notes = null,
+    IReadOnlyList<string>? TagValues = null,
+    IReadOnlyList<string>? CustomListValues = null)
 {
+    public IReadOnlyList<string> Tags { get; } = TagValues ?? [];
+
+    public IReadOnlyList<string> CustomLists { get; } = CustomListValues ?? [];
+
+    public string TagsLabel => Tags.Count == 0 ? string.Empty : string.Join(" · ", Tags);
+
+    public string CustomListsLabel => CustomLists.Count == 0 ? string.Empty : string.Join(" · ", CustomLists);
+
     public IBrush StatusForeground => Status switch
     {
         "Current"   => new SolidColorBrush(Color.Parse("#4DD0E1")),
