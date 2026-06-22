@@ -33,6 +33,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IFileOpenService fileOpenService;
     private readonly HashSet<string> notifiedThisSession = new(StringComparer.OrdinalIgnoreCase);
     private AppSettings appSettings = new();
+    private CancellationTokenSource? searchDebounce;
 
     public MainWindowViewModel(
         IMediaCatalogService mediaCatalogService,
@@ -108,6 +109,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         ContinueItems = [];
         LibraryEntries = [];
         ScheduleItems = [];
+        allLibraryEntries = [];
         SetVisiblePage(selectedNavigationItem.Key);
 
         _ = LoadPageDataAsync();
@@ -125,6 +127,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     public ObservableCollection<LibraryEntryViewModel> LibraryEntries { get; }
 
+    private List<LibraryEntryViewModel> allLibraryEntries;
+
     public ObservableCollection<ScheduleItemViewModel> ScheduleItems { get; }
 
     public ObservableCollection<MediaSearchResultViewModel> TrendingItems { get; } = [];
@@ -132,6 +136,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ObservableCollection<MediaSearchResultViewModel> TopRatedItems { get; } = [];
     public ObservableCollection<MediaSearchResultViewModel> UpcomingItems { get; } = [];
     public ObservableCollection<MediaSearchResultViewModel> ManhwaItems { get; } = [];
+    public ObservableCollection<MediaSearchResultViewModel> SearchDropdownResults { get; } = [];
 
     public IReadOnlyList<string> DiscoverGenres { get; } =
     [
@@ -184,6 +189,27 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private string searchText = string.Empty;
 
     [ObservableProperty]
+    private bool isSearchDropdownOpen;
+
+    partial void OnSearchTextChanged(string value)
+    {
+        searchDebounce?.Cancel();
+        searchDebounce?.Dispose();
+        searchDebounce = null;
+
+        if (IsDiscoverVisible || string.IsNullOrWhiteSpace(value))
+        {
+            IsSearchDropdownOpen = false;
+            SearchDropdownResults.Clear();
+            return;
+        }
+
+        var cts = new CancellationTokenSource();
+        searchDebounce = cts;
+        _ = DebounceDropdownAsync(value, cts.Token);
+    }
+
+    [ObservableProperty]
     private string searchStatus = "Search uses AniList with local fallback.";
 
     [ObservableProperty]
@@ -234,21 +260,17 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _ = ApplyDiscoverFiltersAsync();
     }
 
-    partial void OnSelectedLibraryStatusChanged(string value) => _ = LoadLibraryAsync();
+    partial void OnSelectedLibraryStatusChanged(string value) => ApplyLibraryFilters();
     partial void OnSelectedLibraryTagChanged(string value)
     {
         if (!suppressLibraryFilterRefresh)
-        {
-            _ = LoadLibraryAsync();
-        }
+            ApplyLibraryFilters();
     }
 
     partial void OnSelectedLibraryCustomListChanged(string value)
     {
         if (!suppressLibraryFilterRefresh)
-        {
-            _ = LoadLibraryAsync();
-        }
+            ApplyLibraryFilters();
     }
 
     partial void OnSelectedLibraryTypeChanged(string value)
@@ -269,7 +291,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public bool IsDiscoverScoreSelected => SelectedDiscoverSort == "Score";
     public bool IsDiscoverTrendingSelected => SelectedDiscoverSort == "Trending";
     public bool IsDiscoverNewSelected => SelectedDiscoverSort == "New";
-    partial void OnSelectedLibrarySortChanged(string value) => _ = LoadLibraryAsync();
+    partial void OnSelectedLibrarySortChanged(string value) => ApplyLibraryFilters();
 
     partial void OnSelectedLibraryViewModeChanged(string value)
     {
@@ -466,11 +488,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     partial void OnSelectedNavigationItemChanged(NavigationItemViewModel? value)
     {
+        IsSearchDropdownOpen = false;
         CurrentPageTitle = value?.Title ?? AppName;
         CurrentPageSummary = value?.Summary ?? string.Empty;
         CurrentEmptyState = value?.EmptyState ?? string.Empty;
         SelectedNavigationIndex = value is null ? 0 : NavigationItems.IndexOf(value);
-        SelectedNavigationOffset = Math.Max(0, SelectedNavigationIndex) * 58;
+        SelectedNavigationOffset = Math.Max(0, SelectedNavigationIndex) * 48;
         IsDetailVisible = false;
         SelectedMedia = null;
         SetVisiblePage(value?.Key ?? "home");
@@ -488,6 +511,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     private async Task OpenDetailAsync(string mediaId)
     {
+        IsSearchDropdownOpen = false;
         previousPageKey = SelectedNavigationItem?.Key ?? "home";
 
         var mediaResult = await mediaCatalogService.GetByIdAsync(mediaId);
@@ -555,6 +579,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
             new AsyncRelayCommand(() => UpdateLibraryStatusAsync(mediaId, MediaListStatus.Dropped)),
             new AsyncRelayCommand(() => IncreaseScoreAsync(mediaId, libraryEntry?.Score)),
             new AsyncRelayCommand<string?>(s => SetScoreDirectAsync(mediaId, int.TryParse(s, out var v) ? v : 0)),
+            new AsyncRelayCommand<string?>(s => SetProgressAsync(mediaId, int.TryParse(s, out var v) ? v : 0)),
+            new AsyncRelayCommand(() => SetProgressAsync(mediaId, int.TryParse(item is Anime a ? a.EpisodeCount?.ToString() : item is Manga m ? m.ChapterCount?.ToString() : null, out var total) ? total : 0)),
+            new AsyncRelayCommand(() => SetProgressAsync(mediaId, 0)),
             new AsyncRelayCommand(() => RemoveFromLibraryAsync(mediaId)),
             libraryEntry?.Notes,
             string.Join(", ", libraryEntry?.Tags ?? []),
@@ -590,11 +617,51 @@ public sealed partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void CloseSearchDropdown()
+    {
+        IsSearchDropdownOpen = false;
+    }
+
+    [RelayCommand]
     private async Task SearchAsync()
     {
+        IsSearchDropdownOpen = false;
         SelectNavigationItem("discover");
         await LoadSearchResultsAsync(page: 1, append: false);
         IsDiscoverSearchActive = HasSearchResults || !string.IsNullOrWhiteSpace(SearchText);
+    }
+
+    private async Task DebounceDropdownAsync(string query, CancellationToken ct)
+    {
+        try
+        {
+            await Task.Delay(350, ct);
+            var result = await mediaCatalogService.SearchAsync(new MediaSearchQuery
+            {
+                SearchText = query,
+                Page = 1,
+                PageSize = 6
+            });
+
+            if (ct.IsCancellationRequested) return;
+
+            SearchDropdownResults.Clear();
+            if (result.IsSuccess)
+            {
+                foreach (var item in result.Value!.Items)
+                {
+                    if (ct.IsCancellationRequested) break;
+                    SearchDropdownResults.Add(
+                        MediaSearchResultViewModel.FromMediaItem(item, AddToLibraryAsync, OpenDetailAsync));
+                }
+            }
+
+            IsSearchDropdownOpen = SearchDropdownResults.Count > 0;
+        }
+        catch (OperationCanceledException)
+        {
+            // Debounced — newer keystroke superseded this search
+        }
     }
 
     private async Task LoadSearchResultsAsync(int page = 1, bool append = false)
@@ -765,23 +832,20 @@ public sealed partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task SearchLibraryAsync()
-    {
-        await LoadLibraryAsync();
-    }
+    private void SearchLibrary() => ApplyLibraryFilters();
 
     [RelayCommand]
     private async Task SelectLibraryTypeAsync(string type)
     {
         SelectedLibraryType = string.IsNullOrWhiteSpace(type) ? "All" : type;
-        await LoadLibraryAsync();
+        // OnSelectedLibraryTypeChanged fires LoadLibraryAsync
     }
 
     [RelayCommand]
-    private async Task SelectLibrarySortAsync(string sort)
+    private void SelectLibrarySort(string sort)
     {
         SelectedLibrarySort = string.IsNullOrWhiteSpace(sort) ? "Updated" : sort;
-        await LoadLibraryAsync();
+        // OnSelectedLibrarySortChanged fires ApplyLibraryFilters
     }
 
     [RelayCommand]
@@ -793,10 +857,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task SelectLibraryStatusAsync(string status)
+    private void SelectLibraryStatus(string status)
     {
         SelectedLibraryStatus = string.IsNullOrWhiteSpace(status) ? "All" : status;
-        await LoadLibraryAsync();
+        // OnSelectedLibraryStatusChanged fires ApplyLibraryFilters
     }
 
     [RelayCommand]
@@ -1074,45 +1138,39 @@ public sealed partial class MainWindowViewModel : ObservableObject
         var result = await userLibraryService.GetEntriesAsync(new UserLibraryQuery
         {
             Type = ParseMediaTypeFilter(SelectedLibraryType),
-            Status = ParseStatusFilter(SelectedLibraryStatus),
             PageSize = 500
         });
 
-        if (result.IsFailure)
-        {
-            return;
-        }
+        if (result.IsFailure) return;
 
-        LibraryEntries.Clear();
         ContinueItems.Clear();
-
-        var hydratedEntries = new List<LibraryEntryViewModel>();
-
+        var hydrated = new List<LibraryEntryViewModel>();
         var entries = result.Value!.Items.ToArray();
 
         foreach (var entry in entries)
         {
-            var viewModel = await CreateLibraryEntryViewModelAsync(entry);
-            hydratedEntries.Add(viewModel);
-
+            var vm = await CreateLibraryEntryViewModelAsync(entry);
+            hydrated.Add(vm);
             if (entry.Status is MediaListStatus.Current or MediaListStatus.Paused)
-            {
-                ContinueItems.Add(viewModel);
-            }
+                ContinueItems.Add(vm);
         }
 
-        RefreshLibraryOrganizationFilters(hydratedEntries);
-
-        foreach (var viewModel in SortLibraryEntries(FilterLibraryEntries(hydratedEntries)))
-        {
-            LibraryEntries.Add(viewModel);
-        }
-
+        allLibraryEntries = hydrated;
         RefreshDashboardMetrics(LibraryInsightsCalculator.Calculate(entries));
+        OnPropertyChanged(nameof(HasContinueItems));
+        ApplyLibraryFilters();
+    }
+
+    private void ApplyLibraryFilters()
+    {
+        RefreshLibraryOrganizationFilters(allLibraryEntries);
+
+        LibraryEntries.Clear();
+        foreach (var vm in SortLibraryEntries(FilterLibraryEntries(allLibraryEntries)))
+            LibraryEntries.Add(vm);
 
         OnPropertyChanged(nameof(IsLibraryEmpty));
         OnPropertyChanged(nameof(LibraryEmptyMessage));
-        OnPropertyChanged(nameof(HasContinueItems));
     }
 
     private void RefreshDashboardMetrics(LibraryInsightsSummary insights)
@@ -1280,6 +1338,25 @@ public sealed partial class MainWindowViewModel : ObservableObject
         var result = await userLibraryService.IncrementProgressAsync(mediaId);
         SearchStatus = result.IsSuccess
             ? $"Updated progress for {mediaId}."
+            : result.Error.Message;
+
+        await LoadLibraryAsync();
+        await RefreshDetailIfOpenAsync(mediaId);
+    }
+
+    private async Task SetProgressAsync(string mediaId, int progress)
+    {
+        var entryResult = await userLibraryService.GetEntryAsync(mediaId);
+        if (entryResult.IsFailure) return;
+
+        var updated = entryResult.Value! with
+        {
+            Progress = Math.Max(0, progress),
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        var result = await userLibraryService.UpsertEntryAsync(updated);
+        SearchStatus = result.IsSuccess
+            ? $"Progress set to {progress}."
             : result.Error.Message;
 
         await LoadLibraryAsync();
@@ -1647,6 +1724,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         var filtered = entries;
 
+        if (SelectedLibraryStatus != "All")
+        {
+            filtered = filtered.Where(e =>
+                e.Status.Equals(SelectedLibraryStatus, StringComparison.OrdinalIgnoreCase));
+        }
+
         if (!string.IsNullOrWhiteSpace(LibrarySearchText))
         {
             filtered = filtered.Where(entry =>
@@ -1709,14 +1792,18 @@ public sealed partial class MainWindowViewModel : ObservableObject
             .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
-        target.Clear();
-        target.Add(allLabel);
-        foreach (var value in nextValues)
+        var expected = new string[nextValues.Length + 1];
+        expected[0] = allLabel;
+        nextValues.CopyTo(expected, 1);
+
+        if (!target.SequenceEqual(expected, StringComparer.OrdinalIgnoreCase))
         {
-            target.Add(value);
+            target.Clear();
+            foreach (var v in expected)
+                target.Add(v);
         }
 
-        if (!target.Contains(selectedValue))
+        if (!target.Contains(selectedValue, StringComparer.OrdinalIgnoreCase))
         {
             setSelectedValue(allLabel);
         }

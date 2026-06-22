@@ -352,6 +352,7 @@
                       <material:MaterialIcon Width="16" Height="16" Kind="StarPlus"/>
                     </Button>
                     <Button Classes="ghost" Width="30" Height="30" Padding="0"
+                            IsVisible="{Binding !IsCompleted}"
                             Command="{Binding MarkCompletedCommand}" ToolTip.Tip="Mark completed">
                       <material:MaterialIcon Width="16" Height="16" Kind="CheckCircleOutline"/>
                     </Button>

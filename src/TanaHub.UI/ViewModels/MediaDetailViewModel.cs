@@ -40,6 +40,9 @@ public sealed class MediaDetailViewModel
         IAsyncRelayCommand markDroppedCommand,
         IAsyncRelayCommand increaseScoreCommand,
         IAsyncRelayCommand<string?> setScoreCommand,
+        IAsyncRelayCommand<string?> setProgressCommand,
+        IAsyncRelayCommand setProgressMaxCommand,
+        IAsyncRelayCommand setProgressZeroCommand,
         IAsyncRelayCommand removeCommand,
         string? notes,
         string tagsText,
@@ -80,6 +83,9 @@ public sealed class MediaDetailViewModel
         MarkDroppedCommand = markDroppedCommand;
         IncreaseScoreCommand = increaseScoreCommand;
         SetScoreCommand = setScoreCommand;
+        SetProgressCommand = setProgressCommand;
+        SetProgressMaxCommand = setProgressMaxCommand;
+        SetProgressZeroCommand = setProgressZeroCommand;
         RemoveCommand = removeCommand;
         Notes = notes;
         TagsText = tagsText;
@@ -121,6 +127,9 @@ public sealed class MediaDetailViewModel
     public string IncrementLabel => IsAnime ? "+1 Episode" : "+1 Chapter";
     public string ProgressLabel => IsAnime ? "Episodes" : "Chapters";
     public string ProgressValue => IsAnime ? Episodes : Chapters;
+    public string LibraryCurrentProgress =>
+        LibraryProgress.Contains('/') ? LibraryProgress.Split('/')[0].Trim() : LibraryProgress;
+    public bool CanSetToMax => int.TryParse(ProgressValue, out _);
 
     public MaterialIconKind TypeIcon => IsAnime
         ? MaterialIconKind.Television
@@ -128,17 +137,18 @@ public sealed class MediaDetailViewModel
 
     public int UserScoreInt => int.TryParse(LibraryScore, out var v) ? v : 0;
 
-    // Score-dot active state — each button binds to its own bool
-    public bool IsScore1  => UserScoreInt == 1;
-    public bool IsScore2  => UserScoreInt == 2;
-    public bool IsScore3  => UserScoreInt == 3;
-    public bool IsScore4  => UserScoreInt == 4;
-    public bool IsScore5  => UserScoreInt == 5;
-    public bool IsScore6  => UserScoreInt == 6;
-    public bool IsScore7  => UserScoreInt == 7;
-    public bool IsScore8  => UserScoreInt == 8;
-    public bool IsScore9  => UserScoreInt == 9;
-    public bool IsScore10 => UserScoreInt == 10;
+    // Score-bar fill state — bar N is active when score >= N
+    public bool IsScoreAtLeast1  => UserScoreInt >= 1;
+    public bool IsScoreAtLeast2  => UserScoreInt >= 2;
+    public bool IsScoreAtLeast3  => UserScoreInt >= 3;
+    public bool IsScoreAtLeast4  => UserScoreInt >= 4;
+    public bool IsScoreAtLeast5  => UserScoreInt >= 5;
+    public bool IsScoreAtLeast6  => UserScoreInt >= 6;
+    public bool IsScoreAtLeast7  => UserScoreInt >= 7;
+    public bool IsScoreAtLeast8  => UserScoreInt >= 8;
+    public bool IsScoreAtLeast9  => UserScoreInt >= 9;
+    public bool IsScoreAtLeast10 => UserScoreInt >= 10;
+    public string UserScoreDisplay => UserScoreInt == 0 ? "—" : UserScoreInt.ToString();
 
     // Status-pill active state
     public bool IsStatusCurrent   => LibraryStatus == "Current";
@@ -166,6 +176,9 @@ public sealed class MediaDetailViewModel
     public IAsyncRelayCommand MarkDroppedCommand { get; }
     public IAsyncRelayCommand IncreaseScoreCommand { get; }
     public IAsyncRelayCommand<string?> SetScoreCommand { get; }
+    public IAsyncRelayCommand<string?> SetProgressCommand { get; }
+    public IAsyncRelayCommand SetProgressMaxCommand { get; }
+    public IAsyncRelayCommand SetProgressZeroCommand { get; }
     public IAsyncRelayCommand RemoveCommand { get; }
     public string? Notes { get; }
     public string TagsText { get; }

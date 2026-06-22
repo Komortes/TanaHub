@@ -10,54 +10,36 @@
 
   <UserControl.Styles>
 
-    <!-- Score dot: 28×28 circle with number -->
-    <Style Selector="Button.score-dot">
-      <Setter Property="Width" Value="28"/>
-      <Setter Property="Height" Value="28"/>
+    <!-- Score bar: 8×22 thin fill bar, colour-coded by band -->
+    <Style Selector="Button.score-bar">
+      <Setter Property="Width" Value="8"/>
+      <Setter Property="Height" Value="22"/>
       <Setter Property="Padding" Value="0"/>
-      <Setter Property="CornerRadius" Value="14"/>
-      <Setter Property="FontSize" Value="11"/>
-      <Setter Property="FontWeight" Value="SemiBold"/>
-      <Setter Property="Background" Value="Transparent"/>
-      <Setter Property="Foreground" Value="{DynamicResource TanaHubTextMutedBrush}"/>
-      <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="BorderBrush" Value="{DynamicResource TanaHubBorderBrush}"/>
-      <Setter Property="HorizontalContentAlignment" Value="Center"/>
-      <Setter Property="VerticalContentAlignment" Value="Center"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceRaisedBrush}"/>
+      <Setter Property="BorderThickness" Value="0"/>
       <Setter Property="Transitions">
         <Setter.Value>
           <Transitions>
-            <BrushTransition Property="Background" Duration="0:0:0.14"/>
-            <BrushTransition Property="BorderBrush" Duration="0:0:0.14"/>
+            <BrushTransition Property="Background" Duration="0:0:0.1"/>
           </Transitions>
         </Setter.Value>
       </Setter>
     </Style>
-    <!-- Score color bands: active state -->
-    <Style Selector="Button.score-dot.s1.active, Button.score-dot.s2.active, Button.score-dot.s3.active">
+    <Style Selector="Button.score-bar.b1.active, Button.score-bar.b2.active, Button.score-bar.b3.active">
       <Setter Property="Background" Value="#EF4444"/>
-      <Setter Property="Foreground" Value="White"/>
-      <Setter Property="BorderThickness" Value="0"/>
     </Style>
-    <Style Selector="Button.score-dot.s4.active, Button.score-dot.s5.active, Button.score-dot.s6.active">
+    <Style Selector="Button.score-bar.b4.active, Button.score-bar.b5.active, Button.score-bar.b6.active">
       <Setter Property="Background" Value="#F59E0B"/>
-      <Setter Property="Foreground" Value="#111018"/>
-      <Setter Property="BorderThickness" Value="0"/>
     </Style>
-    <Style Selector="Button.score-dot.s7.active, Button.score-dot.s8.active">
+    <Style Selector="Button.score-bar.b7.active, Button.score-bar.b8.active">
       <Setter Property="Background" Value="#84CC16"/>
-      <Setter Property="Foreground" Value="#111018"/>
-      <Setter Property="BorderThickness" Value="0"/>
     </Style>
-    <Style Selector="Button.score-dot.s9.active, Button.score-dot.s10.active">
+    <Style Selector="Button.score-bar.b9.active, Button.score-bar.b10.active">
       <Setter Property="Background" Value="#10B981"/>
-      <Setter Property="Foreground" Value="#111018"/>
-      <Setter Property="BorderThickness" Value="0"/>
     </Style>
-    <Style Selector="Button.score-dot:pointerover">
-      <Setter Property="Background" Value="{DynamicResource TanaHubAccentBrush}"/>
-      <Setter Property="Foreground" Value="White"/>
-      <Setter Property="BorderThickness" Value="0"/>
+    <Style Selector="Button.score-bar:pointerover">
+      <Setter Property="Opacity" Value="0.7"/>
     </Style>
 
     <!-- Status pills — each status has its own active color -->
@@ -211,57 +193,105 @@
             </StackPanel>
           </Button>
 
-          <!-- In library: status pills row -->
+          <!-- In library: status pills + score on same row -->
           <StackPanel IsVisible="{Binding IsInLibrary}" Spacing="8" Margin="0,4,0,0">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <Button Classes="status-pill current"
-                      Classes.active="{Binding IsStatusCurrent}"
-                      Command="{Binding MarkCurrentCommand}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <material:MaterialIcon Width="13" Height="13" Kind="PlayCircleOutline"/>
-                  <TextBlock Text="Watching"/>
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+              <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <Button Classes="status-pill current"
+                        Classes.active="{Binding IsStatusCurrent}"
+                        Command="{Binding MarkCurrentCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <material:MaterialIcon Width="13" Height="13" Kind="PlayCircleOutline"/>
+                    <TextBlock Text="Watching"/>
+                  </StackPanel>
+                </Button>
+                <Button Classes="status-pill planning"
+                        Classes.active="{Binding IsStatusPlanning}"
+                        Command="{Binding MarkPlanningCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <material:MaterialIcon Width="13" Height="13" Kind="BookmarkPlusOutline"/>
+                    <TextBlock Text="Planning"/>
+                  </StackPanel>
+                </Button>
+                <Button Classes="status-pill paused"
+                        Classes.active="{Binding IsStatusPaused}"
+                        Command="{Binding MarkPausedCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <material:MaterialIcon Width="13" Height="13" Kind="PauseCircleOutline"/>
+                    <TextBlock Text="Paused"/>
+                  </StackPanel>
+                </Button>
+                <Button Classes="status-pill completed"
+                        Classes.active="{Binding IsStatusCompleted}"
+                        Command="{Binding MarkCompletedCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <material:MaterialIcon Width="13" Height="13" Kind="CheckCircleOutline"/>
+                    <TextBlock Text="Completed"/>
+                  </StackPanel>
+                </Button>
+                <Button Classes="status-pill dropped"
+                        Classes.active="{Binding IsStatusDropped}"
+                        Command="{Binding MarkDroppedCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <material:MaterialIcon Width="13" Height="13" Kind="CloseCircleOutline"/>
+                    <TextBlock Text="Dropped"/>
+                  </StackPanel>
+                </Button>
+              </StackPanel>
+              <!-- Score: chip showing current value + fill bars -->
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <Border Width="28" Height="24" CornerRadius="4"
+                        Background="{DynamicResource TanaHubAccentGlowBrush}">
+                  <TextBlock Classes="mono" Text="{Binding UserScoreDisplay}" FontSize="11" FontWeight="Bold"
+                             HorizontalAlignment="Center" VerticalAlignment="Center"
+                             Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
+                </Border>
+                <StackPanel Orientation="Horizontal" Spacing="3">
+                  <Button Classes="score-bar b1" Classes.active="{Binding IsScoreAtLeast1}"
+                          Command="{Binding SetScoreCommand}" CommandParameter="1"/>
+                  <Button Classes="score-bar b2" Classes.active="{Binding IsScoreAtLeast2}"
+                          Command="{Binding SetScoreCommand}" CommandParameter="2"/>
+                  <Button Classes="score-bar b3" Classes.active="{Binding IsScoreAtLeast3}"
+                          Command="{Binding SetScoreCommand}" CommandParameter="3"/>
+                  <Button Classes="score-bar b4" Classes.active="{Binding IsScoreAtLeast4}"
+                          Command="{Binding SetScoreCommand}" CommandParameter="4"/>
+                  <Button Classes="score-bar b5" Classes.active="{Binding IsScoreAtLeast5}"
+                          Command="{Binding SetScoreCommand}" CommandParameter="5"/>
+                  <Button Classes="score-bar b6" Classes.active="{Binding IsScoreAtLeast6}"
+                          Command="{Binding SetScoreCommand}" CommandParameter="6"/>
+                  <Button Classes="score-bar b7" Classes.active="{Binding IsScoreAtLeast7}"
+                          Command="{Binding SetScoreCommand}" CommandParameter="7"/>
+                  <Button Classes="score-bar b8" Classes.active="{Binding IsScoreAtLeast8}"
+                          Command="{Binding SetScoreCommand}" CommandParameter="8"/>
+                  <Button Classes="score-bar b9" Classes.active="{Binding IsScoreAtLeast9}"
+                          Command="{Binding SetScoreCommand}" CommandParameter="9"/>
+                  <Button Classes="score-bar b10" Classes.active="{Binding IsScoreAtLeast10}"
+                          Command="{Binding SetScoreCommand}" CommandParameter="10"/>
                 </StackPanel>
-              </Button>
-              <Button Classes="status-pill planning"
-                      Classes.active="{Binding IsStatusPlanning}"
-                      Command="{Binding MarkPlanningCommand}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <material:MaterialIcon Width="13" Height="13" Kind="BookmarkPlusOutline"/>
-                  <TextBlock Text="Planning"/>
-                </StackPanel>
-              </Button>
-              <Button Classes="status-pill paused"
-                      Classes.active="{Binding IsStatusPaused}"
-                      Command="{Binding MarkPausedCommand}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <material:MaterialIcon Width="13" Height="13" Kind="PauseCircleOutline"/>
-                  <TextBlock Text="Paused"/>
-                </StackPanel>
-              </Button>
-              <Button Classes="status-pill completed"
-                      Classes.active="{Binding IsStatusCompleted}"
-                      Command="{Binding MarkCompletedCommand}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <material:MaterialIcon Width="13" Height="13" Kind="CheckCircleOutline"/>
-                  <TextBlock Text="Completed"/>
-                </StackPanel>
-              </Button>
-              <Button Classes="status-pill dropped"
-                      Classes.active="{Binding IsStatusDropped}"
-                      Command="{Binding MarkDroppedCommand}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <material:MaterialIcon Width="13" Height="13" Kind="CloseCircleOutline"/>
-                  <TextBlock Text="Dropped"/>
-                </StackPanel>
-              </Button>
-            </StackPanel>
+              </StackPanel>
+            </Grid>
 
             <!-- Quick actions -->
             <StackPanel Orientation="Horizontal" Spacing="8">
-              <Button Classes="ghost" Command="{Binding IncrementProgressCommand}">
+              <Button Classes="ghost" Height="34" Padding="10,0"
+                      Command="{Binding SetProgressZeroCommand}"
+                      ToolTip.Tip="Reset to 0">
+                <material:MaterialIcon Width="15" Height="15" Kind="SkipPreviousOutline"/>
+              </Button>
+              <Button Classes="ghost" Height="34" Padding="10,0"
+                      Command="{Binding IncrementProgressCommand}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                   <material:MaterialIcon Width="14" Height="14" Kind="Plus"/>
                   <TextBlock Text="{Binding IncrementLabel}" FontSize="12"/>
+                </StackPanel>
+              </Button>
+              <Button Classes="ghost" Height="34" Padding="10,0"
+                      IsVisible="{Binding CanSetToMax}"
+                      Command="{Binding SetProgressMaxCommand}"
+                      ToolTip.Tip="Set to max">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <material:MaterialIcon Width="14" Height="14" Kind="SkipNextOutline"/>
+                  <TextBlock Text="{Binding ProgressValue}" FontSize="12"/>
                 </StackPanel>
               </Button>
               <Button Classes="danger" Width="34" Height="34" Padding="0"
@@ -274,6 +304,163 @@
         </StackPanel>
       </Grid>
     </StackPanel>
+
+    <!-- ── Details + Genres / Organize ──────────────────────────── -->
+    <Grid ColumnDefinitions="*,*" ColumnSpacing="18">
+
+      <!-- Left: Details and Genres combined -->
+      <Border Classes="panel">
+        <StackPanel Spacing="14">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Border Classes="eyebrow-bar" Background="{DynamicResource TanaHubTextMutedBrush}"/>
+            <TextBlock Classes="eyebrow" Text="DETAILS" LetterSpacing="1"
+                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+          </StackPanel>
+          <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                ColumnDefinitions="Auto,*" RowSpacing="10" ColumnSpacing="16">
+            <Border Grid.Row="0" Classes="chip" Padding="7,3" HorizontalAlignment="Left">
+              <TextBlock Text="Format" FontSize="11"
+                         Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            </Border>
+            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Format}" FontSize="12"
+                       FontWeight="SemiBold" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+            <Border Grid.Row="1" Classes="chip" Padding="7,3" HorizontalAlignment="Left">
+              <TextBlock Text="Year" FontSize="11"
+                         Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            </Border>
+            <TextBlock Classes="mono" Grid.Row="1" Grid.Column="1" Text="{Binding Year}"
+                       FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+            <Border Grid.Row="2" Classes="chip" Padding="7,3" HorizontalAlignment="Left">
+              <TextBlock Text="Status" FontSize="11"
+                         Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            </Border>
+            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ReleaseStatus}"
+                       FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+            <Border Grid.Row="3" Classes="chip" Padding="7,3" HorizontalAlignment="Left">
+              <TextBlock Text="{Binding ProgressLabel}" FontSize="11"
+                         Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            </Border>
+            <TextBlock Classes="mono" Grid.Row="3" Grid.Column="1" Text="{Binding ProgressValue}"
+                       FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TanaHubCyanBrush}"/>
+            <Border Grid.Row="4" Classes="chip" Padding="7,3" HorizontalAlignment="Left"
+                    IsVisible="{Binding HasStudio}">
+              <TextBlock Text="Studio" FontSize="11"
+                         Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            </Border>
+            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Studio}" FontSize="12"
+                       FontWeight="SemiBold" VerticalAlignment="Center" IsVisible="{Binding HasStudio}"
+                       Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+          </Grid>
+
+          <Border Classes="divider"/>
+
+          <ItemsControl ItemsSource="{Binding Genres}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Classes="chip" Margin="0,0,6,6" Padding="10,5">
+                  <TextBlock Text="{Binding}" FontSize="12"
+                             Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <!-- Right: Organize (library only) -->
+      <Border Grid.Column="1" Classes="panel" IsVisible="{Binding IsInLibrary}">
+        <StackPanel Spacing="14">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Border Classes="eyebrow-bar" Background="{DynamicResource TanaHubTextMutedBrush}"/>
+            <TextBlock Classes="eyebrow" Text="ORGANIZE" LetterSpacing="1"
+                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+          </StackPanel>
+
+          <StackPanel Spacing="6">
+            <TextBlock Text="Tags" FontSize="12"
+                       Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+              <TextBox x:Name="TagsBox"
+                       Text="{Binding TagsText, Mode=OneWay}"
+                       PlaceholderText="rewatch, comfort, seasonal"
+                       FontSize="12">
+                <TextBox.KeyBindings>
+                  <KeyBinding Gesture="Ctrl+Enter"
+                              Command="{Binding SaveTagsCommand}"
+                              CommandParameter="{Binding #TagsBox.Text}"/>
+                </TextBox.KeyBindings>
+              </TextBox>
+              <Button Grid.Column="1" Classes="ghost" Width="34" Height="34" Padding="0"
+                      Command="{Binding SaveTagsCommand}"
+                      CommandParameter="{Binding #TagsBox.Text}"
+                      ToolTip.Tip="Save tags">
+                <material:MaterialIcon Width="14" Height="14" Kind="TagPlusOutline"/>
+              </Button>
+            </Grid>
+          </StackPanel>
+
+          <StackPanel Spacing="6">
+            <TextBlock Text="Custom lists" FontSize="12"
+                       Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+              <TextBox x:Name="CustomListsBox"
+                       Text="{Binding CustomListsText, Mode=OneWay}"
+                       PlaceholderText="Friday queue, favorites"
+                       FontSize="12">
+                <TextBox.KeyBindings>
+                  <KeyBinding Gesture="Ctrl+Enter"
+                              Command="{Binding SaveCustomListsCommand}"
+                              CommandParameter="{Binding #CustomListsBox.Text}"/>
+                </TextBox.KeyBindings>
+              </TextBox>
+              <Button Grid.Column="1" Classes="ghost" Width="34" Height="34" Padding="0"
+                      Command="{Binding SaveCustomListsCommand}"
+                      CommandParameter="{Binding #CustomListsBox.Text}"
+                      ToolTip.Tip="Save custom lists">
+                <material:MaterialIcon Width="14" Height="14" Kind="PlaylistPlus"/>
+              </Button>
+            </Grid>
+          </StackPanel>
+
+          <Border Classes="divider"/>
+
+          <StackPanel Spacing="8">
+            <TextBox x:Name="NotesBox"
+                     Text="{Binding Notes}"
+                     PlaceholderText="Personal notes…"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     MinHeight="68"
+                     MaxHeight="140"
+                     FontSize="12">
+              <TextBox.KeyBindings>
+                <KeyBinding Gesture="Ctrl+Enter"
+                            Command="{Binding SaveNotesCommand}"
+                            CommandParameter="{Binding #NotesBox.Text}"/>
+              </TextBox.KeyBindings>
+            </TextBox>
+            <Button Classes="ghost" HorizontalAlignment="Right" Height="28"
+                    Padding="12,0" FontSize="11"
+                    Command="{Binding SaveNotesCommand}"
+                    CommandParameter="{Binding #NotesBox.Text}">
+              <StackPanel Orientation="Horizontal" Spacing="5">
+                <material:MaterialIcon Width="12" Height="12" Kind="ContentSave"/>
+                <TextBlock Text="Save notes"/>
+              </StackPanel>
+            </Button>
+          </StackPanel>
+
+        </StackPanel>
+      </Border>
+
+    </Grid>
 
     <!-- ── Synopsis ────────────────────────────────────────────────── -->
     <Border Classes="panel" IsVisible="{Binding HasDescription}">
@@ -332,221 +519,5 @@
       </ItemsControl>
     </StackPanel>
 
-    <!-- ── Genres ──────────────────────────────────────────────────── -->
-    <StackPanel Spacing="10">
-      <StackPanel Orientation="Horizontal" Spacing="8">
-        <Border Classes="eyebrow-bar" Background="{DynamicResource TanaHubTextMutedBrush}"/>
-        <TextBlock Classes="eyebrow" Text="GENRES" LetterSpacing="1"
-                   Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
-      </StackPanel>
-      <ItemsControl ItemsSource="{Binding Genres}">
-        <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
-        </ItemsControl.ItemsPanel>
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <Border Classes="chip" Margin="0,0,6,6" Padding="10,5">
-              <TextBlock Text="{Binding}" FontSize="12"
-                         Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-            </Border>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-    </StackPanel>
-
-    <!-- ── Details + Library ───────────────────────────────────────── -->
-    <Grid ColumnDefinitions="*,*" ColumnSpacing="18">
-
-      <!-- Media details -->
-      <Border Classes="panel">
-        <StackPanel Spacing="14">
-          <StackPanel Orientation="Horizontal" Spacing="8">
-            <Border Classes="eyebrow-bar" Background="{DynamicResource TanaHubTextMutedBrush}"/>
-            <TextBlock Classes="eyebrow" Text="DETAILS" LetterSpacing="1"
-                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
-          </StackPanel>
-          <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto"
-                ColumnDefinitions="*,Auto" RowSpacing="12">
-            <TextBlock Text="Format" FontSize="12" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-            <TextBlock Grid.Column="1" Text="{Binding Format}" FontSize="12" FontWeight="SemiBold"
-                       Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
-            <TextBlock Grid.Row="1" Text="Year" FontSize="12"
-                       Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-            <TextBlock Classes="mono" Grid.Row="1" Grid.Column="1" Text="{Binding Year}"
-                       FontSize="12" FontWeight="SemiBold"
-                       Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
-            <TextBlock Grid.Row="2" Text="Status" FontSize="12"
-                       Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ReleaseStatus}"
-                       FontSize="12" FontWeight="SemiBold"
-                       Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
-            <TextBlock Grid.Row="3" Text="{Binding ProgressLabel}" FontSize="12"
-                       Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-            <TextBlock Classes="mono" Grid.Row="3" Grid.Column="1" Text="{Binding ProgressValue}"
-                       FontSize="12" FontWeight="SemiBold"
-                       Foreground="{DynamicResource TanaHubCyanBrush}"/>
-            <TextBlock Grid.Row="4" Text="Studio" FontSize="12" IsVisible="{Binding HasStudio}"
-                       Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Studio}" FontSize="12"
-                       FontWeight="SemiBold" IsVisible="{Binding HasStudio}"
-                       Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
-          </Grid>
-        </StackPanel>
-      </Border>
-
-      <!-- Library panel -->
-      <Border Grid.Column="1" Classes="panel">
-        <StackPanel Spacing="16">
-          <StackPanel Orientation="Horizontal" Spacing="8">
-            <Border Classes="eyebrow-bar" Background="{DynamicResource TanaHubTextMutedBrush}"/>
-            <TextBlock Classes="eyebrow" Text="YOUR LIBRARY" LetterSpacing="1"
-                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
-          </StackPanel>
-
-          <!-- Empty state -->
-          <StackPanel IsVisible="{Binding !IsInLibrary}" Spacing="10"
-                      HorizontalAlignment="Center" Margin="0,10,0,10">
-            <material:MaterialIcon Width="34" Height="34" Kind="BookmarkOffOutline"
-                                   HorizontalAlignment="Center"
-                                   Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
-            <TextBlock Text="Not in your library" FontSize="12" HorizontalAlignment="Center"
-                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
-          </StackPanel>
-
-          <!-- Library data -->
-          <StackPanel IsVisible="{Binding IsInLibrary}" Spacing="14">
-
-            <!-- Status / Progress -->
-            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="80,*" RowSpacing="12">
-              <TextBlock Text="Status" FontSize="12" VerticalAlignment="Center"
-                         Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-              <Border Grid.Column="1" Classes="chip" HorizontalAlignment="Left">
-                <TextBlock Text="{Binding LibraryStatus}" FontSize="11" FontWeight="Bold"
-                           Foreground="{Binding StatusForeground}"/>
-              </Border>
-              <TextBlock Grid.Row="1" Text="Progress" FontSize="12" VerticalAlignment="Center"
-                         Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-              <TextBlock Classes="mono" Grid.Row="1" Grid.Column="1" Text="{Binding LibraryProgress}"
-                         FontSize="14" FontWeight="Bold" VerticalAlignment="Center"
-                         Foreground="{DynamicResource TanaHubCyanBrush}"/>
-            </Grid>
-
-            <Border Classes="divider"/>
-
-            <!-- Score dots 1–10 with colour gradient -->
-            <StackPanel Spacing="8">
-              <TextBlock Text="Score" FontSize="12"
-                         Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-              <StackPanel Orientation="Horizontal" Spacing="4">
-                <Button Classes="score-dot s1" Classes.active="{Binding IsScore1}"
-                        Command="{Binding SetScoreCommand}" CommandParameter="1">1</Button>
-                <Button Classes="score-dot s2" Classes.active="{Binding IsScore2}"
-                        Command="{Binding SetScoreCommand}" CommandParameter="2">2</Button>
-                <Button Classes="score-dot s3" Classes.active="{Binding IsScore3}"
-                        Command="{Binding SetScoreCommand}" CommandParameter="3">3</Button>
-                <Button Classes="score-dot s4" Classes.active="{Binding IsScore4}"
-                        Command="{Binding SetScoreCommand}" CommandParameter="4">4</Button>
-                <Button Classes="score-dot s5" Classes.active="{Binding IsScore5}"
-                        Command="{Binding SetScoreCommand}" CommandParameter="5">5</Button>
-                <Button Classes="score-dot s6" Classes.active="{Binding IsScore6}"
-                        Command="{Binding SetScoreCommand}" CommandParameter="6">6</Button>
-                <Button Classes="score-dot s7" Classes.active="{Binding IsScore7}"
-                        Command="{Binding SetScoreCommand}" CommandParameter="7">7</Button>
-                <Button Classes="score-dot s8" Classes.active="{Binding IsScore8}"
-                        Command="{Binding SetScoreCommand}" CommandParameter="8">8</Button>
-                <Button Classes="score-dot s9" Classes.active="{Binding IsScore9}"
-                        Command="{Binding SetScoreCommand}" CommandParameter="9">9</Button>
-                <Button Classes="score-dot s10" Classes.active="{Binding IsScore10}"
-                        Command="{Binding SetScoreCommand}" CommandParameter="10">10</Button>
-              </StackPanel>
-            </StackPanel>
-
-            <Border Classes="divider"/>
-
-            <!-- Local organization -->
-            <StackPanel Spacing="8">
-              <TextBlock Text="Tags" FontSize="12"
-                         Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                <TextBox x:Name="TagsBox"
-                         Text="{Binding TagsText, Mode=OneWay}"
-                         PlaceholderText="rewatch, comfort, seasonal"
-                         FontSize="12">
-                  <TextBox.KeyBindings>
-                    <KeyBinding Gesture="Ctrl+Enter"
-                                Command="{Binding SaveTagsCommand}"
-                                CommandParameter="{Binding #TagsBox.Text}"/>
-                  </TextBox.KeyBindings>
-                </TextBox>
-                <Button Grid.Column="1" Classes="ghost" Width="34" Height="34" Padding="0"
-                        Command="{Binding SaveTagsCommand}"
-                        CommandParameter="{Binding #TagsBox.Text}"
-                        ToolTip.Tip="Save tags">
-                  <material:MaterialIcon Width="14" Height="14" Kind="TagPlusOutline"/>
-                </Button>
-              </Grid>
-              <TextBlock Text="Comma-separated, local only" FontSize="10"
-                         Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
-            </StackPanel>
-
-            <StackPanel Spacing="8">
-              <TextBlock Text="Custom lists" FontSize="12"
-                         Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                <TextBox x:Name="CustomListsBox"
-                         Text="{Binding CustomListsText, Mode=OneWay}"
-                         PlaceholderText="Friday queue, favorites"
-                         FontSize="12">
-                  <TextBox.KeyBindings>
-                    <KeyBinding Gesture="Ctrl+Enter"
-                                Command="{Binding SaveCustomListsCommand}"
-                                CommandParameter="{Binding #CustomListsBox.Text}"/>
-                  </TextBox.KeyBindings>
-                </TextBox>
-                <Button Grid.Column="1" Classes="ghost" Width="34" Height="34" Padding="0"
-                        Command="{Binding SaveCustomListsCommand}"
-                        CommandParameter="{Binding #CustomListsBox.Text}"
-                        ToolTip.Tip="Save custom lists">
-                  <material:MaterialIcon Width="14" Height="14" Kind="PlaylistPlus"/>
-                </Button>
-              </Grid>
-              <TextBlock Text="Comma-separated, local only" FontSize="10"
-                         Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
-            </StackPanel>
-
-            <Border Classes="divider"/>
-
-            <!-- Notes -->
-            <StackPanel Spacing="8">
-              <TextBox x:Name="NotesBox"
-                       Text="{Binding Notes}"
-                       PlaceholderText="Personal notes…"
-                       AcceptsReturn="True"
-                       TextWrapping="Wrap"
-                       MinHeight="68"
-                       MaxHeight="140"
-                       FontSize="12">
-                <TextBox.KeyBindings>
-                  <KeyBinding Gesture="Ctrl+Enter"
-                              Command="{Binding SaveNotesCommand}"
-                              CommandParameter="{Binding #NotesBox.Text}"/>
-                </TextBox.KeyBindings>
-              </TextBox>
-              <Button Classes="ghost" HorizontalAlignment="Right" Height="28"
-                      Padding="12,0" FontSize="11"
-                      Command="{Binding SaveNotesCommand}"
-                      CommandParameter="{Binding #NotesBox.Text}">
-                <StackPanel Orientation="Horizontal" Spacing="5">
-                  <material:MaterialIcon Width="12" Height="12" Kind="ContentSave"/>
-                  <TextBlock Text="Save notes"/>
-                </StackPanel>
-              </Button>
-            </StackPanel>
-
-          </StackPanel>
-        </StackPanel>
-      </Border>
-
-    </Grid>
   </StackPanel>
 </UserControl>

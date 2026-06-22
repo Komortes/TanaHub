@@ -25,6 +25,7 @@ public sealed record LibraryEntryViewModel(
 
     public IReadOnlyList<string> CustomLists { get; } = CustomListValues ?? [];
 
+    public bool IsCompleted => Status == "Completed";
     public string TagsLabel => Tags.Count == 0 ? string.Empty : string.Join(" · ", Tags);
 
     public string CustomListsLabel => CustomLists.Count == 0 ? string.Empty : string.Join(" · ", CustomLists);

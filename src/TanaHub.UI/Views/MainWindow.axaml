@@ -6,6 +6,7 @@
     xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     xmlns:conv="clr-namespace:TanaHub.UI.Views.Converters"
     xmlns:pages="clr-namespace:TanaHub.UI.Views.Pages"
+    xmlns:controls="clr-namespace:TanaHub.UI.Views.Controls"
     x:DataType="vm:MainWindowViewModel"
     Title="{Binding AppName}"
     Width="1180"
@@ -58,13 +59,13 @@
         </StackPanel>
 
         <!-- Search -->
-        <Grid Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8" VerticalAlignment="Center">
+        <Grid Grid.Column="1" VerticalAlignment="Center">
           <TextBox
               x:Name="SearchBox"
               Height="34"
               PlaceholderText="Search anime, manga, genres..."
               Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-              KeyDown="SearchBox_OnKeyDown">
+              LostFocus="SearchBox_OnLostFocus">
             <TextBox.InnerLeftContent>
               <material:MaterialIcon
                   Width="15" Height="15"
@@ -72,19 +73,93 @@
                   Margin="8,0,4,0"
                   Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
             </TextBox.InnerLeftContent>
+            <TextBox.InnerRightContent>
+              <Button Width="28" Height="28" Margin="0,0,3,0" Padding="0"
+                      Command="{Binding SearchCommand}"
+                      ToolTip.Tip="Search (Enter)">
+                <material:MaterialIcon Width="14" Height="14" Kind="ArrowRight"/>
+              </Button>
+            </TextBox.InnerRightContent>
             <TextBox.KeyBindings>
               <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}"/>
+              <KeyBinding Gesture="Escape" Command="{Binding CloseSearchDropdownCommand}"/>
             </TextBox.KeyBindings>
           </TextBox>
-          <Button
-              Grid.Column="1"
-              Width="36"
-              Height="34"
-              Padding="0"
-              Command="{Binding SearchCommand}"
-              ToolTip.Tip="Search">
-            <material:MaterialIcon Width="17" Height="17" Kind="ArrowRight"/>
-          </Button>
+
+          <Popup
+              PlacementTarget="{Binding #SearchBox}"
+              Placement="BottomEdgeAlignedLeft"
+              IsOpen="{Binding IsSearchDropdownOpen, Mode=TwoWay}"
+              IsLightDismissEnabled="True"
+              MinWidth="{Binding #SearchBox.Bounds.Width}">
+            <Border
+                Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
+                CornerRadius="14"
+                BoxShadow="0 8 32 0 #50000000"
+                ClipToBounds="True">
+              <StackPanel>
+                <ScrollViewer MaxHeight="340" VerticalScrollBarVisibility="Auto">
+                  <ItemsControl ItemsSource="{Binding SearchDropdownResults}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:MediaSearchResultViewModel">
+                        <Button Classes="row" Padding="12,9" CornerRadius="0"
+                                Command="{Binding OpenDetailCommand}"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch">
+                          <Grid ColumnDefinitions="44,*" ColumnSpacing="12">
+                            <Border Width="34" Height="48" CornerRadius="7" ClipToBounds="True"
+                                    Background="{DynamicResource TanaHubAccentGlowBrush}">
+                              <controls:RemoteImage SourceUri="{Binding PosterUri}"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                              <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
+                                         Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
+                                         TextTrimming="CharacterEllipsis"/>
+                              <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Border Background="{DynamicResource TanaHubAccentGlowBrush}"
+                                        CornerRadius="4" Padding="5,2">
+                                  <TextBlock Text="{Binding Format}" FontSize="10" FontWeight="SemiBold"
+                                             Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
+                                </Border>
+                                <Border Background="{DynamicResource TanaHubSurfaceElevatedBrush}"
+                                        CornerRadius="4" Padding="5,2">
+                                  <TextBlock Text="{Binding Status}" FontSize="10"
+                                             Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+                                </Border>
+                                <TextBlock Text="{Binding Year}" FontSize="11"
+                                           Foreground="{DynamicResource TanaHubTextMutedBrush}"
+                                           VerticalAlignment="Center"/>
+                                <StackPanel Orientation="Horizontal" Spacing="3" VerticalAlignment="Center">
+                                  <material:MaterialIcon Width="11" Height="11" Kind="StarHalfFull"
+                                                         Foreground="{DynamicResource TanaHubAmberBrush}"/>
+                                  <TextBlock Classes="mono" Text="{Binding Score}" FontSize="11"
+                                             Foreground="{DynamicResource TanaHubAmberBrush}"/>
+                                </StackPanel>
+                              </StackPanel>
+                            </StackPanel>
+                          </Grid>
+                        </Button>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </ScrollViewer>
+                <Button Classes="ghost" Command="{Binding SearchCommand}"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Padding="14,10" CornerRadius="0">
+                  <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <TextBlock
+                        Text="{Binding SearchText, StringFormat='See all results for «{0}»'}"
+                        FontSize="12"
+                        Foreground="{DynamicResource TanaHubAccentLightBrush}"
+                        TextTrimming="CharacterEllipsis"/>
+                    <material:MaterialIcon Grid.Column="1" Width="13" Height="13" Kind="ArrowRight"
+                                           Foreground="{DynamicResource TanaHubAccentLightBrush}"
+                                           VerticalAlignment="Center"/>
+                  </Grid>
+                </Button>
+              </StackPanel>
+            </Border>
+          </Popup>
         </Grid>
 
         <!-- Offline/cache status chip -->
@@ -145,7 +220,7 @@
             <!-- Sliding selection highlight -->
             <Border
                 Width="196"
-                Height="50"
+                Height="40"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
                 Background="{DynamicResource TanaHubAccentGlowBrush}"
@@ -172,38 +247,33 @@
               <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="vm:NavigationItemViewModel">
                   <Grid
-                      Height="50"
+                      Height="40"
                       ColumnDefinitions="42,*"
-                      ColumnSpacing="10"
+                      ColumnSpacing="8"
                       ToolTip.Tip="{Binding Summary}">
                     <Border
                         Classes="nav-icon-border"
-                        Width="34"
-                        Height="34"
-                        CornerRadius="10"
+                        Width="30"
+                        Height="30"
+                        CornerRadius="9"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
                         Background="{DynamicResource TanaHubSurfaceRaisedBrush}">
                       <material:MaterialIcon
                           Classes="nav-icon"
-                          Width="19" Height="19"
+                          Width="16" Height="16"
                           HorizontalAlignment="Center"
                           VerticalAlignment="Center"
                           Foreground="{DynamicResource TanaHubTextSecondaryBrush}"
                           Kind="{Binding Key, Converter={x:Static conv:NavKeyToIconConverter.Instance}}"/>
                     </Border>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
-                      <TextBlock
-                          Text="{Binding Title}"
-                          FontSize="13"
-                          FontWeight="SemiBold"
-                          Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
-                      <TextBlock
-                          Text="{Binding Summary}"
-                          FontSize="10"
-                          Foreground="{DynamicResource TanaHubTextSecondaryBrush}"
-                          TextTrimming="CharacterEllipsis"/>
-                    </StackPanel>
+                    <TextBlock
+                        Grid.Column="1"
+                        Text="{Binding Title}"
+                        FontSize="13"
+                        FontWeight="SemiBold"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
                   </Grid>
                 </DataTemplate>
               </ListBox.ItemTemplate>

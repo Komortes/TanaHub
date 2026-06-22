@@ -1,5 +1,5 @@
 using Avalonia.Controls;
-using Avalonia.Input;
+using Avalonia.Interactivity;
 using TanaHub.UI.ViewModels;
 
 namespace TanaHub.UI.Views;
@@ -17,20 +17,11 @@ public sealed partial class MainWindow : Window
         DataContext = viewModel;
     }
 
-    private async void SearchBox_OnKeyDown(object? sender, KeyEventArgs e)
+    private async void SearchBox_OnLostFocus(object? sender, RoutedEventArgs e)
     {
-        if (e.Key != Key.Enter || DataContext is not MainWindowViewModel viewModel)
-        {
-            return;
-        }
-
-        viewModel.SearchText = SearchBox.Text ?? string.Empty;
-
-        if (viewModel.SearchCommand.CanExecute(null))
-        {
-            await viewModel.SearchCommand.ExecuteAsync(null);
-        }
-
-        e.Handled = true;
+        // Small delay lets a click on a dropdown item register before the popup closes.
+        await System.Threading.Tasks.Task.Delay(200);
+        if (DataContext is MainWindowViewModel vm)
+            vm.IsSearchDropdownOpen = false;
     }
 }
