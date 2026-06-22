@@ -95,6 +95,29 @@ public sealed class FileUserLibraryService : IUserLibraryService
         }
     }
 
+    public async Task<Result<UserMediaEntry>> GetEntryAsync(
+        string mediaId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(mediaId))
+        {
+            return Failure<UserMediaEntry>("Media id is required.");
+        }
+
+        await gate.WaitAsync(cancellationToken);
+        try
+        {
+            return entries.TryGetValue(mediaId, out var entry)
+                ? Result<UserMediaEntry>.Success(entry)
+                : Result<UserMediaEntry>.Failure(
+                    ApplicationError.NotFound($"Library entry '{mediaId}' was not found."));
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
     public async Task<Result<UserMediaEntry>> UpsertEntryAsync(
         UserMediaEntry entry,
         CancellationToken cancellationToken = default)
@@ -239,6 +262,38 @@ public sealed class FileUserLibraryService : IUserLibraryService
         }
     }
 
+    public async Task<Result<UserMediaEntry>> UpdateOrganizationAsync(
+        string mediaId,
+        IReadOnlyList<string> tags,
+        IReadOnlyList<string> customLists,
+        CancellationToken cancellationToken = default)
+    {
+        await gate.WaitAsync(cancellationToken);
+        try
+        {
+            if (!entries.TryGetValue(mediaId, out var entry))
+            {
+                return Result<UserMediaEntry>.Failure(
+                    ApplicationError.NotFound($"Library entry '{mediaId}' was not found."));
+            }
+
+            var updated = entry with
+            {
+                Tags = NormalizeValues(tags),
+                CustomLists = NormalizeValues(customLists),
+                UpdatedAt = DateTimeOffset.UtcNow
+            };
+
+            entries[mediaId] = updated;
+            await SaveAsync(cancellationToken);
+            return Result<UserMediaEntry>.Success(updated);
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
     public async Task<Result<bool>> RemoveEntryAsync(
         string mediaId,
         CancellationToken cancellationToken = default)
@@ -320,6 +375,15 @@ public sealed class FileUserLibraryService : IUserLibraryService
     private static Result<T> Failure<T>(string message)
     {
         return Result<T>.Failure(ApplicationError.Validation(message));
+    }
+
+    private static IReadOnlyList<string> NormalizeValues(IReadOnlyList<string> values)
+    {
+        return values
+            .Select(value => value.Trim())
+            .Where(value => value.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
     }
 
     private sealed record UserMediaEntryDto(

@@ -62,6 +62,21 @@ public sealed class InMemoryUserLibraryService : IUserLibraryService
         return Task.FromResult(Result<PagedResult<UserMediaEntry>>.Success(page));
     }
 
+    public Task<Result<UserMediaEntry>> GetEntryAsync(
+        string mediaId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(mediaId))
+        {
+            return Failure<UserMediaEntry>("Media id is required.");
+        }
+
+        return entries.TryGetValue(mediaId, out var entry)
+            ? Task.FromResult(Result<UserMediaEntry>.Success(entry))
+            : Task.FromResult(Result<UserMediaEntry>.Failure(
+                ApplicationError.NotFound($"Library entry '{mediaId}' was not found.")));
+    }
+
     public Task<Result<UserMediaEntry>> UpsertEntryAsync(
         UserMediaEntry entry,
         CancellationToken cancellationToken = default)
@@ -155,6 +170,28 @@ public sealed class InMemoryUserLibraryService : IUserLibraryService
         return Task.FromResult(Result<UserMediaEntry>.Success(updated));
     }
 
+    public Task<Result<UserMediaEntry>> UpdateOrganizationAsync(
+        string mediaId,
+        IReadOnlyList<string> tags,
+        IReadOnlyList<string> customLists,
+        CancellationToken cancellationToken = default)
+    {
+        if (!entries.TryGetValue(mediaId, out var entry))
+        {
+            return Task.FromResult(Result<UserMediaEntry>.Failure(
+                ApplicationError.NotFound($"Library entry '{mediaId}' was not found.")));
+        }
+
+        var updated = entry with
+        {
+            Tags = NormalizeValues(tags),
+            CustomLists = NormalizeValues(customLists),
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        entries[mediaId] = updated;
+        return Task.FromResult(Result<UserMediaEntry>.Success(updated));
+    }
+
     public Task<Result<bool>> RemoveEntryAsync(
         string mediaId,
         CancellationToken cancellationToken = default)
@@ -166,5 +203,14 @@ public sealed class InMemoryUserLibraryService : IUserLibraryService
     private static Task<Result<T>> Failure<T>(string message)
     {
         return Task.FromResult(Result<T>.Failure(ApplicationError.Validation(message)));
+    }
+
+    private static IReadOnlyList<string> NormalizeValues(IReadOnlyList<string> values)
+    {
+        return values
+            .Select(value => value.Trim())
+            .Where(value => value.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
     }
 }

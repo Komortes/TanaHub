@@ -11,6 +11,10 @@ public interface IUserLibraryService
         UserLibraryQuery query,
         CancellationToken cancellationToken = default);
 
+    Task<Result<UserMediaEntry>> GetEntryAsync(
+        string mediaId,
+        CancellationToken cancellationToken = default);
+
     Task<Result<UserMediaEntry>> UpsertEntryAsync(
         UserMediaEntry entry,
         CancellationToken cancellationToken = default);
@@ -33,6 +37,12 @@ public interface IUserLibraryService
     Task<Result<UserMediaEntry>> UpdateNotesAsync(
         string mediaId,
         string? notes,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<UserMediaEntry>> UpdateOrganizationAsync(
+        string mediaId,
+        IReadOnlyList<string> tags,
+        IReadOnlyList<string> customLists,
         CancellationToken cancellationToken = default);
 
     Task<Result<bool>> RemoveEntryAsync(

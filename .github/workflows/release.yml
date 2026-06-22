@@ -1,0 +1,42 @@
+name: Release Artifacts
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS arm64
+            os: macos-latest
+            rid: osx-arm64
+          - name: Windows x64
+            os: windows-latest
+            rid: win-x64
+          - name: Linux x64
+            os: ubuntu-latest
+            rid: linux-x64
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Publish self-contained app
+        run: >-
+          dotnet publish src/TanaHub.Desktop/TanaHub.Desktop.csproj
+          --configuration Release
+          --runtime ${{ matrix.rid }}
+          --self-contained true
+          --output artifacts/${{ matrix.rid }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TanaHub-${{ matrix.rid }}-${{ github.ref_name }}
+          path: artifacts/${{ matrix.rid }}
+          if-no-files-found: error

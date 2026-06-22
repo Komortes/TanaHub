@@ -2,6 +2,8 @@
 
 A native desktop app for tracking anime and manga. Built with .NET and Avalonia UI — no Electron, no web wrapper.
 
+[![CI](https://github.com/Komortes/TanaHub/actions/workflows/ci.yml/badge.svg)](https://github.com/Komortes/TanaHub/actions/workflows/ci.yml)
+
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-blue)
 ![.NET](https://img.shields.io/badge/.NET-10-purple)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -71,6 +73,10 @@ dotnet run --project src/TanaHub.Desktop/TanaHub.Desktop.csproj
 # Tests
 dotnet test TanaHub.sln
 ```
+
+Before creating a release artifact, run the [smoke test checklist](docs/smoke-test.md) on a clean local data profile.
+
+Release packaging instructions are available in [docs/release.md](docs/release.md).
 
 ---
 

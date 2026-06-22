@@ -42,6 +42,10 @@ public sealed class MediaDetailViewModel
         IAsyncRelayCommand<string?> setScoreCommand,
         IAsyncRelayCommand removeCommand,
         string? notes,
+        string tagsText,
+        string customListsText,
+        IAsyncRelayCommand<string?> saveTagsCommand,
+        IAsyncRelayCommand<string?> saveCustomListsCommand,
         IReadOnlyList<CharacterInfo> characters,
         IAsyncRelayCommand<string?> saveNotesCommand)
     {
@@ -78,6 +82,10 @@ public sealed class MediaDetailViewModel
         SetScoreCommand = setScoreCommand;
         RemoveCommand = removeCommand;
         Notes = notes;
+        TagsText = tagsText;
+        CustomListsText = customListsText;
+        SaveTagsCommand = saveTagsCommand;
+        SaveCustomListsCommand = saveCustomListsCommand;
         Characters = characters;
         SaveNotesCommand = saveNotesCommand;
     }
@@ -160,6 +168,10 @@ public sealed class MediaDetailViewModel
     public IAsyncRelayCommand<string?> SetScoreCommand { get; }
     public IAsyncRelayCommand RemoveCommand { get; }
     public string? Notes { get; }
+    public string TagsText { get; }
+    public string CustomListsText { get; }
+    public IAsyncRelayCommand<string?> SaveTagsCommand { get; }
+    public IAsyncRelayCommand<string?> SaveCustomListsCommand { get; }
     public IReadOnlyList<CharacterInfo> Characters { get; }
     public bool HasCharacters => Characters.Count > 0;
     public IAsyncRelayCommand<string?> SaveNotesCommand { get; }

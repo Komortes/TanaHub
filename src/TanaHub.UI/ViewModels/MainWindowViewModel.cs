@@ -557,6 +557,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
             new AsyncRelayCommand<string?>(s => SetScoreDirectAsync(mediaId, int.TryParse(s, out var v) ? v : 0)),
             new AsyncRelayCommand(() => RemoveFromLibraryAsync(mediaId)),
             libraryEntry?.Notes,
+            string.Join(", ", libraryEntry?.Tags ?? []),
+            string.Join(", ", libraryEntry?.CustomLists ?? []),
+            new AsyncRelayCommand<string?>(tags => SaveTagsAsync(mediaId, tags)),
+            new AsyncRelayCommand<string?>(lists => SaveCustomListsAsync(mediaId, lists)),
             item.Characters,
             new AsyncRelayCommand<string?>(notes => SaveNotesAsync(mediaId, notes)));
 
@@ -573,15 +577,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     private async Task<UserMediaEntry?> GetLibraryEntryAsync(string mediaId)
     {
-        var result = await userLibraryService.GetEntriesAsync(new UserLibraryQuery
-        {
-            PageSize = 500
-        });
-
-        return result.IsSuccess
-            ? result.Value!.Items.FirstOrDefault(entry =>
-                entry.MediaId.Equals(mediaId, StringComparison.OrdinalIgnoreCase))
-            : null;
+        var result = await userLibraryService.GetEntryAsync(mediaId);
+        return result.IsSuccess ? result.Value : null;
     }
 
     private async Task RefreshDetailIfOpenAsync(string mediaId)
@@ -1321,6 +1318,50 @@ public sealed partial class MainWindowViewModel : ObservableObject
         }
     }
 
+    private async Task SaveTagsAsync(string mediaId, string? tagsText)
+    {
+        var entry = await GetLibraryEntryAsync(mediaId);
+        if (entry is null)
+        {
+            SearchStatus = "Add this title to your library before editing tags.";
+            return;
+        }
+
+        var result = await userLibraryService.UpdateOrganizationAsync(
+            mediaId,
+            ParseOrganizationValues(tagsText),
+            entry.CustomLists);
+        SearchStatus = result.IsSuccess ? "Tags saved." : result.Error.Message;
+
+        if (result.IsSuccess)
+        {
+            await LoadLibraryAsync();
+            await RefreshDetailIfOpenAsync(mediaId);
+        }
+    }
+
+    private async Task SaveCustomListsAsync(string mediaId, string? customListsText)
+    {
+        var entry = await GetLibraryEntryAsync(mediaId);
+        if (entry is null)
+        {
+            SearchStatus = "Add this title to your library before editing custom lists.";
+            return;
+        }
+
+        var result = await userLibraryService.UpdateOrganizationAsync(
+            mediaId,
+            entry.Tags,
+            ParseOrganizationValues(customListsText));
+        SearchStatus = result.IsSuccess ? "Custom lists saved." : result.Error.Message;
+
+        if (result.IsSuccess)
+        {
+            await LoadLibraryAsync();
+            await RefreshDetailIfOpenAsync(mediaId);
+        }
+    }
+
     private async Task SetScoreDirectAsync(string mediaId, int score)
     {
         var result = await userLibraryService.UpdateScoreAsync(mediaId, score);
@@ -1575,6 +1616,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private static int? ParseLibraryScore(string? value)
     {
         return int.TryParse(value, out var score) ? score : null;
+    }
+
+    private static IReadOnlyList<string> ParseOrganizationValues(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? []
+            : value.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
     }
 
     private static string FormatScheduleDay(DateTimeOffset value)

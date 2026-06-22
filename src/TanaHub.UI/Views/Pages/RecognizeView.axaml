@@ -284,9 +284,8 @@
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:RecognitionInboxItemViewModel">
               <Border Padding="10" Margin="0,0,0,8" CornerRadius="10"
-                      Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-                      BorderBrush="{DynamicResource TanaHubBorderBrush}"
-                      BorderThickness="1">
+                      Background="{DynamicResource TanaHubSurfaceElevatedBrush}"
+                      BoxShadow="0 2 8 0 #20000000">
                 <Grid ColumnDefinitions="54,*,Auto" ColumnSpacing="11">
                   <Border Width="42" Height="54" CornerRadius="7" ClipToBounds="True"
                           Background="{DynamicResource TanaHubAccentGlowBrush}">

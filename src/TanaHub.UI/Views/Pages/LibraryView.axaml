@@ -211,57 +211,42 @@
       <!-- Type tabs + view mode + refresh -->
       <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
         <StackPanel Orientation="Horizontal" Spacing="4">
-          <StackPanel Spacing="2">
-            <Button Classes="ghost" Command="{Binding SelectLibraryTypeCommand}" CommandParameter="All">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <material:MaterialIcon Width="14" Height="14" Kind="ViewGrid"/>
-                <TextBlock Text="All"/>
-              </StackPanel>
-            </Button>
-            <Border Height="2" CornerRadius="1" Background="{DynamicResource TanaHubAccentBrush}"
-                    IsVisible="{Binding IsLibraryAllSelected}"/>
-          </StackPanel>
-          <StackPanel Spacing="2">
-            <Button Classes="ghost" Command="{Binding SelectLibraryTypeCommand}" CommandParameter="Anime">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <material:MaterialIcon Width="14" Height="14" Kind="MovieOpenPlay"/>
-                <TextBlock Text="Anime"/>
-              </StackPanel>
-            </Button>
-            <Border Height="2" CornerRadius="1" Background="{DynamicResource TanaHubAccentBrush}"
-                    IsVisible="{Binding IsLibraryAnimeSelected}"/>
-          </StackPanel>
-          <StackPanel Spacing="2">
-            <Button Classes="ghost" Command="{Binding SelectLibraryTypeCommand}" CommandParameter="Manga">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <material:MaterialIcon Width="14" Height="14" Kind="BookOpenPageVariant"/>
-                <TextBlock Text="Manga"/>
-              </StackPanel>
-            </Button>
-            <Border Height="2" CornerRadius="1" Background="{DynamicResource TanaHubAccentBrush}"
-                    IsVisible="{Binding IsLibraryMangaSelected}"/>
-          </StackPanel>
+          <Button Classes.ghost="{Binding !IsLibraryAllSelected}"
+                  Command="{Binding SelectLibraryTypeCommand}" CommandParameter="All">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <material:MaterialIcon Width="14" Height="14" Kind="ViewGrid"/>
+              <TextBlock Text="All"/>
+            </StackPanel>
+          </Button>
+          <Button Classes.ghost="{Binding !IsLibraryAnimeSelected}"
+                  Command="{Binding SelectLibraryTypeCommand}" CommandParameter="Anime">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <material:MaterialIcon Width="14" Height="14" Kind="MovieOpenPlay"/>
+              <TextBlock Text="Anime"/>
+            </StackPanel>
+          </Button>
+          <Button Classes.ghost="{Binding !IsLibraryMangaSelected}"
+                  Command="{Binding SelectLibraryTypeCommand}" CommandParameter="Manga">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <material:MaterialIcon Width="14" Height="14" Kind="BookOpenPageVariant"/>
+              <TextBlock Text="Manga"/>
+            </StackPanel>
+          </Button>
         </StackPanel>
 
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
-          <StackPanel Spacing="2">
-            <Button Classes="ghost" Width="34" Height="30" Padding="0"
-                    Command="{Binding SelectLibraryViewModeCommand}" CommandParameter="List"
-                    ToolTip.Tip="List view">
-              <material:MaterialIcon Width="15" Height="15" Kind="ViewList"/>
-            </Button>
-            <Border Height="2" CornerRadius="1" Background="{DynamicResource TanaHubAccentBrush}"
-                    IsVisible="{Binding IsLibraryListMode}"/>
-          </StackPanel>
-          <StackPanel Spacing="2">
-            <Button Classes="ghost" Width="34" Height="30" Padding="0"
-                    Command="{Binding SelectLibraryViewModeCommand}" CommandParameter="Grid"
-                    ToolTip.Tip="Grid view">
-              <material:MaterialIcon Width="15" Height="15" Kind="ViewGrid"/>
-            </Button>
-            <Border Height="2" CornerRadius="1" Background="{DynamicResource TanaHubAccentBrush}"
-                    IsVisible="{Binding IsLibraryGridMode}"/>
-          </StackPanel>
+          <Button Classes.ghost="{Binding !IsLibraryListMode}"
+                  Width="34" Height="34" Padding="0"
+                  Command="{Binding SelectLibraryViewModeCommand}" CommandParameter="List"
+                  ToolTip.Tip="List view">
+            <material:MaterialIcon Width="15" Height="15" Kind="ViewList"/>
+          </Button>
+          <Button Classes.ghost="{Binding !IsLibraryGridMode}"
+                  Width="34" Height="34" Padding="0"
+                  Command="{Binding SelectLibraryViewModeCommand}" CommandParameter="Grid"
+                  ToolTip.Tip="Grid view">
+            <material:MaterialIcon Width="15" Height="15" Kind="ViewGrid"/>
+          </Button>
         </StackPanel>
 
         <Button Classes="ghost" Grid.Column="2" Height="34" Command="{Binding RefreshLibraryCommand}">
@@ -326,7 +311,7 @@
               <Button Classes="row" Padding="12,10" CornerRadius="8"
                       Command="{Binding OpenDetailCommand}">
                 <Grid ColumnDefinitions="48,*,96,78,60,128" ColumnSpacing="10">
-                  <Border Width="36" Height="50" CornerRadius="7" ClipToBounds="True">
+                  <Border Width="36" Height="52" CornerRadius="7" ClipToBounds="True">
                     <Border.Background>
                       <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                         <GradientStop Color="#38215F" Offset="0"/>
@@ -396,47 +381,61 @@
                     Width="172" Height="262" Margin="0,0,12,12"
                     RenderTransformOrigin="0.5,0.5">
               <Border Classes="card" ClipToBounds="True">
-                <Grid RowDefinitions="154,*,Auto">
-                  <Border>
-                    <Border.Background>
-                      <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                        <GradientStop Color="#38215F" Offset="0"/>
-                        <GradientStop Color="#10131F" Offset="1"/>
-                      </LinearGradientBrush>
-                    </Border.Background>
-                    <controls:RemoteImage SourceUri="{Binding PosterUri}"/>
-                  </Border>
-                  <StackPanel Grid.Row="1" Margin="12,10,12,0" Spacing="4">
-                    <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
-                               Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
-                               TextTrimming="CharacterEllipsis"/>
-                    <TextBlock Text="{Binding TagsLabel}" FontSize="10"
-                               Foreground="{DynamicResource TanaHubTextMutedBrush}"
-                               TextTrimming="CharacterEllipsis"
-                               IsVisible="{Binding TagsLabel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-                    <Grid ColumnDefinitions="*,Auto">
-                      <TextBlock Text="{Binding Status}" FontSize="11"
-                                 Foreground="{Binding StatusForeground}" TextTrimming="CharacterEllipsis"/>
-                      <TextBlock Classes="mono" Grid.Column="1" Text="{Binding Score}"
-                                 FontSize="12" FontWeight="Bold" Foreground="{Binding ScoreForeground}"/>
-                    </Grid>
-                    <TextBlock Classes="mono" Text="{Binding Progress}" FontSize="11"
-                               Foreground="{DynamicResource TanaHubCyanBrush}"/>
-                  </StackPanel>
-                  <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="5" Margin="12,0,12,12">
-                    <Button Classes="ghost" Width="30" Height="30" Padding="0"
-                            Command="{Binding IncrementCommand}" ToolTip.Tip="Increment progress">
-                      <material:MaterialIcon Width="15" Height="15" Kind="Plus"/>
-                    </Button>
-                    <Button Classes="ghost" Width="30" Height="30" Padding="0"
-                            Command="{Binding IncreaseScoreCommand}" ToolTip.Tip="Increase score">
-                      <material:MaterialIcon Width="15" Height="15" Kind="StarPlus"/>
-                    </Button>
-                    <Button Classes="danger" Width="30" Height="30" Padding="0"
-                            Command="{Binding RemoveCommand}" ToolTip.Tip="Remove from library">
-                      <material:MaterialIcon Width="15" Height="15" Kind="TrashCanOutline"/>
-                    </Button>
-                  </StackPanel>
+                <Grid RowDefinitions="*,Auto">
+                  <!-- Full-height poster with info overlay -->
+                  <Grid>
+                    <Border>
+                      <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                          <GradientStop Color="#38215F" Offset="0"/>
+                          <GradientStop Color="#10131F" Offset="1"/>
+                        </LinearGradientBrush>
+                      </Border.Background>
+                      <controls:RemoteImage SourceUri="{Binding PosterUri}"/>
+                    </Border>
+                    <!-- Bottom vignette fade -->
+                    <Border VerticalAlignment="Bottom" Height="100">
+                      <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                          <GradientStop Color="#00000000" Offset="0"/>
+                          <GradientStop Color="#F207060E" Offset="1"/>
+                        </LinearGradientBrush>
+                      </Border.Background>
+                    </Border>
+                    <!-- Title + progress overlay -->
+                    <StackPanel VerticalAlignment="Bottom" Margin="12,0,12,10" Spacing="3">
+                      <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
+                                 Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
+                                 TextTrimming="CharacterEllipsis"/>
+                      <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Classes="mono" Text="{Binding Progress}" FontSize="11"
+                                   Foreground="{DynamicResource TanaHubCyanBrush}"/>
+                        <TextBlock Classes="mono" Grid.Column="1" Text="{Binding Score}"
+                                   FontSize="11" FontWeight="Bold" Foreground="{Binding ScoreForeground}"/>
+                      </Grid>
+                    </StackPanel>
+                  </Grid>
+                  <!-- Actions row: status chip on left, buttons on right -->
+                  <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="10,6,10,8" ColumnSpacing="6">
+                    <Border Classes="chip" Padding="6,3" VerticalAlignment="Center" HorizontalAlignment="Left">
+                      <TextBlock Text="{Binding Status}" FontSize="10"
+                                 Foreground="{Binding StatusForeground}"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                      <Button Classes="ghost" Width="28" Height="28" Padding="0"
+                              Command="{Binding IncrementCommand}" ToolTip.Tip="Increment progress">
+                        <material:MaterialIcon Width="14" Height="14" Kind="Plus"/>
+                      </Button>
+                      <Button Classes="ghost" Width="28" Height="28" Padding="0"
+                              Command="{Binding IncreaseScoreCommand}" ToolTip.Tip="Increase score">
+                        <material:MaterialIcon Width="14" Height="14" Kind="StarPlus"/>
+                      </Button>
+                      <Button Classes="danger" Width="28" Height="28" Padding="0"
+                              Command="{Binding RemoveCommand}" ToolTip.Tip="Remove from library">
+                        <material:MaterialIcon Width="14" Height="14" Kind="TrashCanOutline"/>
+                      </Button>
+                    </StackPanel>
+                  </Grid>
                 </Grid>
               </Border>
             </Button>

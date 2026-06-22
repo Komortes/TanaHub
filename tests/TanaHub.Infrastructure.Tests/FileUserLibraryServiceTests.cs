@@ -96,6 +96,50 @@ public sealed class FileUserLibraryServiceTests
         Assert.Equal("anilist:1", Assert.Single(byList.Value!.Items).MediaId);
     }
 
+    [Fact]
+    public async Task GetEntryAsync_ReturnsPersistedEntryWithoutApplyingListFilters()
+    {
+        var storagePath = CreateStoragePath();
+        var service = new FileUserLibraryService(storagePath);
+        await service.UpsertEntryAsync(new UserMediaEntry("anilist:20", MediaType.Anime, MediaListStatus.Completed)
+        {
+            Progress = 12,
+            Score = 9,
+            Notes = "Kept after status changes"
+        });
+
+        var entry = await service.GetEntryAsync("ANILIST:20");
+
+        Assert.True(entry.IsSuccess);
+        Assert.Equal(MediaListStatus.Completed, entry.Value!.Status);
+        Assert.Equal(12, entry.Value.Progress);
+        Assert.Equal(9, entry.Value.Score);
+        Assert.Equal("Kept after status changes", entry.Value.Notes);
+    }
+
+    [Fact]
+    public async Task UpdateOrganizationAsync_PersistsNormalizedTagsAndCustomLists()
+    {
+        var storagePath = CreateStoragePath();
+        var service = new FileUserLibraryService(storagePath);
+        await service.UpsertEntryAsync(new UserMediaEntry("anilist:20", MediaType.Anime, MediaListStatus.Current));
+
+        var updated = await service.UpdateOrganizationAsync(
+            "anilist:20",
+            [" rewatch ", "comfort", "REWATCH", ""],
+            ["Friday queue", " friday queue ", "Short episodes"]);
+
+        var reloaded = new FileUserLibraryService(storagePath);
+        var entry = await reloaded.GetEntryAsync("anilist:20");
+
+        Assert.True(updated.IsSuccess);
+        Assert.Equal(["rewatch", "comfort"], updated.Value!.Tags);
+        Assert.Equal(["Friday queue", "Short episodes"], updated.Value.CustomLists);
+        Assert.True(entry.IsSuccess);
+        Assert.Equal(updated.Value.Tags, entry.Value!.Tags);
+        Assert.Equal(updated.Value.CustomLists, entry.Value.CustomLists);
+    }
+
     private static string CreateStoragePath()
     {
         return Path.Combine(Path.GetTempPath(), "TanaHub.Tests", $"{Guid.NewGuid():N}", "library.json");

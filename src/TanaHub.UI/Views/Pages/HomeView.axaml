@@ -65,12 +65,10 @@
                     Width="144"
                     Height="210"
                     RenderTransformOrigin="0.5,0.5">
-                  <Border
-                      CornerRadius="12"
-                      ClipToBounds="True"
-                      Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-                      BoxShadow="0 4 16 0 #28000000">
-                    <Grid RowDefinitions="*,Auto">
+                  <Border CornerRadius="12" ClipToBounds="True"
+                          BoxShadow="0 4 16 0 #28000000">
+                    <Grid>
+                      <!-- Fallback gradient + poster image -->
                       <Border>
                         <Border.Background>
                           <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
@@ -79,25 +77,25 @@
                             <GradientStop Color="#0E0B15" Offset="1"/>
                           </LinearGradientBrush>
                         </Border.Background>
-                        <Grid>
-                          <controls:RemoteImage SourceUri="{Binding PosterUri}"/>
-                          <Button
-                              Width="30" Height="30" Padding="0"
-                              HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                              Margin="0,0,8,8"
-                              Command="{Binding IncrementCommand}"
-                              ToolTip.Tip="Increment progress">
-                            <material:MaterialIcon Width="15" Height="15" Kind="Plus"/>
-                          </Button>
-                        </Grid>
+                        <controls:RemoteImage SourceUri="{Binding PosterUri}"/>
                       </Border>
-                      <StackPanel Grid.Row="1" Margin="10,9,10,11" Spacing="4">
+                      <!-- Bottom vignette fade -->
+                      <Border VerticalAlignment="Bottom" Height="88">
+                        <Border.Background>
+                          <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                            <GradientStop Color="#00000000" Offset="0"/>
+                            <GradientStop Color="#F207060E" Offset="1"/>
+                          </LinearGradientBrush>
+                        </Border.Background>
+                      </Border>
+                      <!-- Title + progress overlay -->
+                      <StackPanel VerticalAlignment="Bottom" Margin="10,0,10,10" Spacing="3">
                         <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold"
                                    Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
                                    TextTrimming="CharacterEllipsis"/>
                         <Grid ColumnDefinitions="*,Auto">
                           <TextBlock Classes="mono" Text="{Binding Progress}" FontSize="11"
-                                     Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+                                     Foreground="{DynamicResource TanaHubCyanBrush}"/>
                           <TextBlock Classes="mono" Grid.Column="1" Text="{Binding Score}"
                                      FontSize="11" Foreground="{DynamicResource TanaHubAmberBrush}"/>
                         </Grid>
@@ -152,8 +150,8 @@
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:LibraryEntryViewModel">
               <Button Classes="row" Margin="0,0,0,5" Command="{Binding OpenDetailCommand}">
-                <Grid ColumnDefinitions="36,*,Auto" ColumnSpacing="10">
-                  <Border Width="28" Height="38" CornerRadius="6"
+                <Grid ColumnDefinitions="44,*,Auto" ColumnSpacing="10">
+                  <Border Width="34" Height="48" CornerRadius="7"
                           Background="{DynamicResource TanaHubAccentGlowBrush}"
                           ClipToBounds="True" VerticalAlignment="Center">
                     <controls:RemoteImage SourceUri="{Binding PosterUri}"/>
@@ -221,8 +219,8 @@
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:ScheduleItemViewModel">
               <Button Classes="row" Margin="0,0,0,6" Command="{Binding OpenDetailCommand}">
-                <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="10">
-                  <Border Width="32" Height="44" CornerRadius="7" ClipToBounds="True"
+                <Grid ColumnDefinitions="48,*,Auto" ColumnSpacing="10">
+                  <Border Width="38" Height="52" CornerRadius="8" ClipToBounds="True"
                           VerticalAlignment="Center">
                     <Border.Background>
                       <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
