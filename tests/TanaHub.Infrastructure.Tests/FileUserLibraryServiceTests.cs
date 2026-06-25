@@ -140,6 +140,37 @@ public sealed class FileUserLibraryServiceTests
         Assert.Equal(updated.Value.CustomLists, entry.Value.CustomLists);
     }
 
+    [Fact]
+    public async Task UpdateReviewAsync_PersistsReviewAcrossReload()
+    {
+        var storagePath = CreateStoragePath();
+        var service = new FileUserLibraryService(storagePath);
+        await service.UpsertEntryAsync(new UserMediaEntry("anilist:20", MediaType.Anime, MediaListStatus.Current));
+
+        var updated = await service.UpdateReviewAsync("anilist:20", "A focused rewatch.");
+        var reloaded = new FileUserLibraryService(storagePath);
+        var entry = await reloaded.GetEntryAsync("anilist:20");
+
+        Assert.True(updated.IsSuccess);
+        Assert.True(entry.IsSuccess);
+        Assert.Equal("A focused rewatch.", entry.Value!.Review);
+    }
+
+    [Fact]
+    public async Task GetEntriesAsync_LoadsLegacyJsonWithoutReview()
+    {
+        var storagePath = CreateStoragePath();
+        Directory.CreateDirectory(Path.GetDirectoryName(storagePath)!);
+        await File.WriteAllTextAsync(storagePath, """
+            [{"MediaId":"anilist:20","MediaType":"Anime","Status":"Current","Progress":1,"Score":8,"PosterUri":null,"Notes":null,"Tags":[],"CustomLists":[],"StartedAt":null,"CompletedAt":null,"UpdatedAt":"2026-01-01T00:00:00+00:00"}]
+            """);
+
+        var result = await new FileUserLibraryService(storagePath).GetEntryAsync("anilist:20");
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Value!.Review);
+    }
+
     private static string CreateStoragePath()
     {
         return Path.Combine(Path.GetTempPath(), "TanaHub.Tests", $"{Guid.NewGuid():N}", "library.json");

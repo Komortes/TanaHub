@@ -457,6 +457,36 @@
             </Button>
           </StackPanel>
 
+          <Border Classes="divider"/>
+
+          <StackPanel Spacing="8">
+            <TextBlock Text="Review" FontSize="12"
+                       Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+            <TextBox x:Name="ReviewBox"
+                     Text="{Binding Review}"
+                     PlaceholderText="Your review…"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     MinHeight="96"
+                     MaxHeight="220"
+                     FontSize="12">
+              <TextBox.KeyBindings>
+                <KeyBinding Gesture="Ctrl+Enter"
+                            Command="{Binding SaveReviewCommand}"
+                            CommandParameter="{Binding #ReviewBox.Text}"/>
+              </TextBox.KeyBindings>
+            </TextBox>
+            <Button Classes="ghost" HorizontalAlignment="Right" Height="28"
+                    Padding="12,0" FontSize="11"
+                    Command="{Binding SaveReviewCommand}"
+                    CommandParameter="{Binding #ReviewBox.Text}">
+              <StackPanel Orientation="Horizontal" Spacing="5">
+                <material:MaterialIcon Width="12" Height="12" Kind="ContentSave"/>
+                <TextBlock Text="Save review"/>
+              </StackPanel>
+            </Button>
+          </StackPanel>
+
         </StackPanel>
       </Border>
 

@@ -170,6 +170,28 @@ public sealed class InMemoryUserLibraryService : IUserLibraryService
         return Task.FromResult(Result<UserMediaEntry>.Success(updated));
     }
 
+    public Task<Result<UserMediaEntry>> UpdateReviewAsync(
+        string mediaId,
+        string? review,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedReview = string.IsNullOrWhiteSpace(review) ? null : review.Trim();
+        if (normalizedReview?.Length > 4000)
+        {
+            return Failure<UserMediaEntry>("Review must be 4,000 characters or fewer.");
+        }
+
+        if (!entries.TryGetValue(mediaId, out var entry))
+        {
+            return Task.FromResult(Result<UserMediaEntry>.Failure(
+                ApplicationError.NotFound($"Library entry '{mediaId}' was not found.")));
+        }
+
+        var updated = entry with { Review = normalizedReview, UpdatedAt = DateTimeOffset.UtcNow };
+        entries[mediaId] = updated;
+        return Task.FromResult(Result<UserMediaEntry>.Success(updated));
+    }
+
     public Task<Result<UserMediaEntry>> UpdateOrganizationAsync(
         string mediaId,
         IReadOnlyList<string> tags,

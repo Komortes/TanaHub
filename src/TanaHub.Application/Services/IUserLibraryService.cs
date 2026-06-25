@@ -39,6 +39,11 @@ public interface IUserLibraryService
         string? notes,
         CancellationToken cancellationToken = default);
 
+    Task<Result<UserMediaEntry>> UpdateReviewAsync(
+        string mediaId,
+        string? review,
+        CancellationToken cancellationToken = default);
+
     Task<Result<UserMediaEntry>> UpdateOrganizationAsync(
         string mediaId,
         IReadOnlyList<string> tags,

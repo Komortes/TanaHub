@@ -70,4 +70,60 @@ public sealed class InMemoryUserLibraryServiceTests
         Assert.True(result.IsFailure);
         Assert.Equal("validation_error", result.Error.Code);
     }
+
+    [Fact]
+    public async Task UpdateReviewAsync_SavesTrimmedReview()
+    {
+        var service = new InMemoryUserLibraryService([
+            new UserMediaEntry("anilist:1", MediaType.Anime, MediaListStatus.Current)
+        ]);
+
+        var result = await service.UpdateReviewAsync("anilist:1", "  Excellent pacing.  ");
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Excellent pacing.", result.Value!.Review);
+    }
+
+    [Fact]
+    public async Task UpdateReviewAsync_ClearsWhitespaceOnlyReview()
+    {
+        var service = new InMemoryUserLibraryService([
+            new UserMediaEntry("anilist:1", MediaType.Anime, MediaListStatus.Current)
+            {
+                Review = "Old review"
+            }
+        ]);
+
+        var result = await service.UpdateReviewAsync("anilist:1", "  \n ");
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Value!.Review);
+    }
+
+    [Fact]
+    public async Task UpdateReviewAsync_RejectsReviewLongerThanFourThousandCharacters()
+    {
+        var service = new InMemoryUserLibraryService([
+            new UserMediaEntry("anilist:1", MediaType.Anime, MediaListStatus.Current)
+            {
+                Review = "Kept review"
+            }
+        ]);
+
+        var result = await service.UpdateReviewAsync("anilist:1", new string('a', 4001));
+        var entry = await service.GetEntryAsync("anilist:1");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("validation_error", result.Error.Code);
+        Assert.Equal("Kept review", entry.Value!.Review);
+    }
+
+    [Fact]
+    public async Task UpdateReviewAsync_ReturnsNotFoundForMissingEntry()
+    {
+        var result = await new InMemoryUserLibraryService().UpdateReviewAsync("missing", "Review");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("not_found", result.Error.Code);
+    }
 }

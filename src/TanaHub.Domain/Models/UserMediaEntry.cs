@@ -30,6 +30,8 @@ public sealed record UserMediaEntry
 
     public string? Notes { get; init; }
 
+    public string? Review { get; init; }
+
     public IReadOnlyList<string> Tags { get; init; } = [];
 
     public IReadOnlyList<string> CustomLists { get; init; } = [];

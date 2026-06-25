@@ -26,6 +26,14 @@ public sealed class DomainModelTests
     }
 
     [Fact]
+    public void UserMediaEntry_DefaultsReviewToNull()
+    {
+        var entry = new UserMediaEntry("anilist:1", MediaType.Anime, MediaListStatus.Current);
+
+        Assert.Null(entry.Review);
+    }
+
+    [Fact]
     public void Anime_SetsMediaType()
     {
         var anime = new Anime(

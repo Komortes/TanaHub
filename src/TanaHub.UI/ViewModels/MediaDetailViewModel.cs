@@ -45,12 +45,14 @@ public sealed class MediaDetailViewModel
         IAsyncRelayCommand setProgressZeroCommand,
         IAsyncRelayCommand removeCommand,
         string? notes,
+        string? review,
         string tagsText,
         string customListsText,
         IAsyncRelayCommand<string?> saveTagsCommand,
         IAsyncRelayCommand<string?> saveCustomListsCommand,
         IReadOnlyList<CharacterInfo> characters,
-        IAsyncRelayCommand<string?> saveNotesCommand)
+        IAsyncRelayCommand<string?> saveNotesCommand,
+        IAsyncRelayCommand<string?> saveReviewCommand)
     {
         Id = id;
         Title = title;
@@ -88,12 +90,14 @@ public sealed class MediaDetailViewModel
         SetProgressZeroCommand = setProgressZeroCommand;
         RemoveCommand = removeCommand;
         Notes = notes;
+        Review = review;
         TagsText = tagsText;
         CustomListsText = customListsText;
         SaveTagsCommand = saveTagsCommand;
         SaveCustomListsCommand = saveCustomListsCommand;
         Characters = characters;
         SaveNotesCommand = saveNotesCommand;
+        SaveReviewCommand = saveReviewCommand;
     }
 
     public string Id { get; }
@@ -181,6 +185,7 @@ public sealed class MediaDetailViewModel
     public IAsyncRelayCommand SetProgressZeroCommand { get; }
     public IAsyncRelayCommand RemoveCommand { get; }
     public string? Notes { get; }
+    public string? Review { get; }
     public string TagsText { get; }
     public string CustomListsText { get; }
     public IAsyncRelayCommand<string?> SaveTagsCommand { get; }
@@ -188,6 +193,7 @@ public sealed class MediaDetailViewModel
     public IReadOnlyList<CharacterInfo> Characters { get; }
     public bool HasCharacters => Characters.Count > 0;
     public IAsyncRelayCommand<string?> SaveNotesCommand { get; }
+    public IAsyncRelayCommand<string?> SaveReviewCommand { get; }
 
     private static string StripHtml(string html)
     {

@@ -262,6 +262,37 @@ public sealed class FileUserLibraryService : IUserLibraryService
         }
     }
 
+    public async Task<Result<UserMediaEntry>> UpdateReviewAsync(
+        string mediaId,
+        string? review,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedReview = string.IsNullOrWhiteSpace(review) ? null : review.Trim();
+        if (normalizedReview?.Length > 4000)
+        {
+            return Failure<UserMediaEntry>("Review must be 4,000 characters or fewer.");
+        }
+
+        await gate.WaitAsync(cancellationToken);
+        try
+        {
+            if (!entries.TryGetValue(mediaId, out var entry))
+            {
+                return Result<UserMediaEntry>.Failure(
+                    ApplicationError.NotFound($"Library entry '{mediaId}' was not found."));
+            }
+
+            var updated = entry with { Review = normalizedReview, UpdatedAt = DateTimeOffset.UtcNow };
+            entries[mediaId] = updated;
+            await SaveAsync(cancellationToken);
+            return Result<UserMediaEntry>.Success(updated);
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
     public async Task<Result<UserMediaEntry>> UpdateOrganizationAsync(
         string mediaId,
         IReadOnlyList<string> tags,
@@ -364,6 +395,7 @@ public sealed class FileUserLibraryService : IUserLibraryService
             Score = dto.Score,
             PosterUri = Uri.TryCreate(dto.PosterUri, UriKind.Absolute, out var posterUri) ? posterUri : null,
             Notes = dto.Notes,
+            Review = dto.Review,
             Tags = dto.Tags ?? [],
             CustomLists = dto.CustomLists ?? [],
             StartedAt = dto.StartedAt,
@@ -394,6 +426,7 @@ public sealed class FileUserLibraryService : IUserLibraryService
         int? Score,
         string? PosterUri,
         string? Notes,
+        string? Review,
         IReadOnlyList<string>? Tags,
         IReadOnlyList<string>? CustomLists,
         DateTimeOffset? StartedAt,
@@ -410,6 +443,7 @@ public sealed class FileUserLibraryService : IUserLibraryService
                 entry.Score,
                 entry.PosterUri?.ToString(),
                 entry.Notes,
+                entry.Review,
                 entry.Tags,
                 entry.CustomLists,
                 entry.StartedAt,

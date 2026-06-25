@@ -278,7 +278,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(IsLibraryAllSelected));
         OnPropertyChanged(nameof(IsLibraryAnimeSelected));
         OnPropertyChanged(nameof(IsLibraryMangaSelected));
-        _ = LoadLibraryAsync();
+        ApplyLibraryFilters();
     }
 
     public bool IsLibraryAllSelected => SelectedLibraryType == "All";
@@ -424,7 +424,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _ => "AniList airing · next 7 days"
     };
     public string LibraryEmptyMessage =>
-        SelectedLibraryStatus == "All" && string.IsNullOrWhiteSpace(LibrarySearchText)
+        SelectedLibraryType == "All"
+        && SelectedLibraryStatus == "All"
+        && SelectedLibraryTag == "All tags"
+        && SelectedLibraryCustomList == "All lists"
+        && string.IsNullOrWhiteSpace(LibrarySearchText)
             ? "Your library is empty"
             : "No entries match your current filter";
 
@@ -475,6 +479,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private string? discoverCountryFilter;
     private bool suppressDiscoverFilterRefresh;
     private bool suppressLibraryFilterRefresh;
+    private int libraryLoadVersion;
 
     partial void OnSelectedScheduleRangeChanged(string value)
     {
@@ -584,12 +589,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
             new AsyncRelayCommand(() => SetProgressAsync(mediaId, 0)),
             new AsyncRelayCommand(() => RemoveFromLibraryAsync(mediaId)),
             libraryEntry?.Notes,
+            libraryEntry?.Review,
             string.Join(", ", libraryEntry?.Tags ?? []),
             string.Join(", ", libraryEntry?.CustomLists ?? []),
             new AsyncRelayCommand<string?>(tags => SaveTagsAsync(mediaId, tags)),
             new AsyncRelayCommand<string?>(lists => SaveCustomListsAsync(mediaId, lists)),
             item.Characters,
-            new AsyncRelayCommand<string?>(notes => SaveNotesAsync(mediaId, notes)));
+            new AsyncRelayCommand<string?>(notes => SaveNotesAsync(mediaId, notes)),
+            new AsyncRelayCommand<string?>(review => SaveReviewAsync(mediaId, review)));
 
         CurrentPageTitle = item.Title.DisplayTitle;
         CurrentPageSummary = $"{item.Format} · {item.ReleaseStatus}";
@@ -838,7 +845,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private async Task SelectLibraryTypeAsync(string type)
     {
         SelectedLibraryType = string.IsNullOrWhiteSpace(type) ? "All" : type;
-        // OnSelectedLibraryTypeChanged fires LoadLibraryAsync
+        // OnSelectedLibraryTypeChanged applies the in-memory filter.
     }
 
     [RelayCommand]
@@ -1135,16 +1142,19 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     private async Task LoadLibraryAsync()
     {
+        var loadVersion = ++libraryLoadVersion;
         var result = await userLibraryService.GetEntriesAsync(new UserLibraryQuery
         {
-            Type = ParseMediaTypeFilter(SelectedLibraryType),
-            PageSize = 500
+            PageSize = int.MaxValue
         });
 
-        if (result.IsFailure) return;
+        if (result.IsFailure || loadVersion != libraryLoadVersion)
+        {
+            return;
+        }
 
-        ContinueItems.Clear();
         var hydrated = new List<LibraryEntryViewModel>();
+        var continueItems = new List<LibraryEntryViewModel>();
         var entries = result.Value!.Items.ToArray();
 
         foreach (var entry in entries)
@@ -1152,10 +1162,22 @@ public sealed partial class MainWindowViewModel : ObservableObject
             var vm = await CreateLibraryEntryViewModelAsync(entry);
             hydrated.Add(vm);
             if (entry.Status is MediaListStatus.Current or MediaListStatus.Paused)
-                ContinueItems.Add(vm);
+            {
+                continueItems.Add(vm);
+            }
+        }
+
+        if (loadVersion != libraryLoadVersion)
+        {
+            return;
         }
 
         allLibraryEntries = hydrated;
+        ContinueItems.Clear();
+        foreach (var item in continueItems)
+        {
+            ContinueItems.Add(item);
+        }
         RefreshDashboardMetrics(LibraryInsightsCalculator.Calculate(entries));
         OnPropertyChanged(nameof(HasContinueItems));
         ApplyLibraryFilters();
@@ -1392,6 +1414,18 @@ public sealed partial class MainWindowViewModel : ObservableObject
         if (result.IsFailure)
         {
             SearchStatus = result.Error.Message;
+        }
+    }
+
+    private async Task SaveReviewAsync(string mediaId, string? review)
+    {
+        var result = await userLibraryService.UpdateReviewAsync(mediaId, review);
+        SearchStatus = result.IsSuccess ? "Review saved." : result.Error.Message;
+
+        if (result.IsSuccess)
+        {
+            await LoadLibraryAsync();
+            await RefreshDetailIfOpenAsync(mediaId);
         }
     }
 
@@ -1723,6 +1757,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private IEnumerable<LibraryEntryViewModel> FilterLibraryEntries(IEnumerable<LibraryEntryViewModel> entries)
     {
         var filtered = entries;
+
+        if (SelectedLibraryType != "All")
+        {
+            filtered = filtered.Where(entry =>
+                entry.Type.Equals(SelectedLibraryType, StringComparison.OrdinalIgnoreCase));
+        }
 
         if (SelectedLibraryStatus != "All")
         {
