@@ -221,21 +221,35 @@
       </StackPanel>
     </Border>
 
-    <!-- Library export -->
+    <!-- Library import/export -->
     <Border Classes="panel">
       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
         <StackPanel Spacing="4">
-          <TextBlock Text="Library export" FontSize="16" FontWeight="Bold"
+          <TextBlock Text="Library import / export" FontSize="16" FontWeight="Bold"
                      Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
           <TextBlock Text="{Binding LibraryExportStatus}" FontSize="12"
                      Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
         </StackPanel>
-        <Button Grid.Column="1" VerticalAlignment="Center" Command="{Binding ExportLibraryCommand}">
-          <StackPanel Orientation="Horizontal" Spacing="7">
-            <material:MaterialIcon Width="15" Height="15" Kind="FileExportOutline"/>
-            <TextBlock Text="Export CSV"/>
-          </StackPanel>
-        </Button>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <Button Command="{Binding ImportMalXmlCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <material:MaterialIcon Width="15" Height="15" Kind="FileImportOutline"/>
+              <TextBlock Text="Import MAL XML"/>
+            </StackPanel>
+          </Button>
+          <Button Command="{Binding ExportMalXmlCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <material:MaterialIcon Width="15" Height="15" Kind="FileExportOutline"/>
+              <TextBlock Text="Export MAL XML"/>
+            </StackPanel>
+          </Button>
+          <Button Command="{Binding ExportLibraryCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <material:MaterialIcon Width="15" Height="15" Kind="FileExportOutline"/>
+              <TextBlock Text="Export CSV"/>
+            </StackPanel>
+          </Button>
+        </StackPanel>
       </Grid>
     </Border>
   </StackPanel>

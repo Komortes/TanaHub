@@ -2,6 +2,9 @@ namespace TanaHub.UI.Services;
 
 public interface IFileOpenService
 {
+    Task<(Stream? Stream, string MimeType, string SourceName, string? SourcePath)> PickTextAsync(
+        CancellationToken cancellationToken = default);
+
     Task<(Stream? Stream, string MimeType, string SourceName, string? SourcePath)> PickImageAsync(
         CancellationToken cancellationToken = default);
 

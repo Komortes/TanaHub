@@ -7,11 +7,39 @@ namespace TanaHub.Desktop.Services;
 
 public sealed class AvaloniaFileOpenService : IFileOpenService
 {
+    private static readonly FilePickerFileType TextType = new("Text and XML files")
+    {
+        Patterns = ["*.xml", "*.txt"],
+        MimeTypes = ["application/xml", "text/xml", "text/plain"],
+    };
+
     private static readonly FilePickerFileType ImageType = new("Image files")
     {
         Patterns = ["*.png", "*.jpg", "*.jpeg", "*.webp", "*.gif", "*.bmp"],
         MimeTypes = ["image/png", "image/jpeg", "image/webp", "image/gif", "image/bmp"],
     };
+
+    public async Task<(Stream? Stream, string MimeType, string SourceName, string? SourcePath)> PickTextAsync(
+        CancellationToken cancellationToken = default)
+    {
+        if (GetWindow() is not { } window || !window.StorageProvider.CanOpen)
+            return (null, string.Empty, string.Empty, null);
+
+        var files = await window.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Choose a MAL XML file",
+            AllowMultiple = false,
+            FileTypeFilter = [TextType],
+        });
+
+        if (files is not { Count: > 0 })
+            return (null, string.Empty, string.Empty, null);
+
+        var stream = await files[0].OpenReadAsync();
+        var mime   = GuessTextMime(files[0].Name);
+        var path   = files[0].Path.IsFile ? files[0].Path.LocalPath : null;
+        return (stream, mime, files[0].Name, path);
+    }
 
     public async Task<(Stream? Stream, string MimeType, string SourceName, string? SourcePath)> PickImageAsync(
         CancellationToken cancellationToken = default)
@@ -57,6 +85,12 @@ public sealed class AvaloniaFileOpenService : IFileOpenService
     private static Avalonia.Controls.Window? GetWindow()
         => Avalonia.Application.Current?.ApplicationLifetime
                is IClassicDesktopStyleApplicationLifetime { MainWindow: { } w } ? w : null;
+
+    private static string GuessTextMime(string fileName)
+    {
+        var ext = Path.GetExtension(fileName).ToLowerInvariant();
+        return ext == ".xml" ? "application/xml" : "text/plain";
+    }
 
     private static string GuessMime(string fileName)
     {

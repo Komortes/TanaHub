@@ -457,7 +457,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private string settingsStorageDetail = "Loading settings...";
 
     [ObservableProperty]
-    private string libraryExportStatus = "Export a portable CSV copy of your local library.";
+    private string libraryExportStatus = "Import or export your library as CSV or MAL XML.";
 
     [ObservableProperty]
     private string aniListClientId = string.Empty;
@@ -1070,6 +1070,83 @@ public sealed partial class MainWindowViewModel : ObservableObject
         LibraryExportStatus = saved
             ? $"Exported {rows.Count} library item(s)."
             : "Export canceled.";
+    }
+
+    [RelayCommand]
+    private async Task ExportMalXmlAsync()
+    {
+        var result = await userLibraryService.GetEntriesAsync(new UserLibraryQuery
+        {
+            PageSize = 500
+        });
+
+        if (result.IsFailure)
+        {
+            LibraryExportStatus = result.Error.Message;
+            return;
+        }
+
+        var rows = new List<LibraryExportItem>();
+        foreach (var entry in result.Value!.Items)
+        {
+            var media = await mediaCatalogService.GetByIdAsync(entry.MediaId);
+            rows.Add(new LibraryExportItem(
+                entry.MediaId,
+                media.IsSuccess ? media.Value!.Title.DisplayTitle : entry.MediaId,
+                entry.MediaType.ToString(),
+                entry.Status.ToString(),
+                entry.Progress,
+                entry.Score)
+            {
+                Tags = entry.Tags,
+                CustomLists = entry.CustomLists
+            });
+        }
+
+        var saved = await fileSaveService.SaveTextAsync(
+            $"tanahub-mal-library-{DateTimeOffset.Now:yyyy-MM-dd}.xml",
+            MalXmlLibraryExchange.Export(rows),
+            "xml",
+            "application/xml");
+
+        LibraryExportStatus = saved
+            ? $"Exported {rows.Count} MAL XML item(s)."
+            : "MAL XML export canceled.";
+    }
+
+    [RelayCommand]
+    private async Task ImportMalXmlAsync()
+    {
+        var picked = await fileOpenService.PickTextAsync();
+        if (picked.Stream is null)
+        {
+            LibraryExportStatus = "MAL XML import canceled.";
+            return;
+        }
+
+        await using var stream = picked.Stream;
+        using var reader = new StreamReader(stream);
+        var importResult = MalXmlLibraryExchange.Import(await reader.ReadToEndAsync());
+        if (importResult.IsFailure)
+        {
+            LibraryExportStatus = importResult.Error.Message;
+            return;
+        }
+
+        var imported = 0;
+        foreach (var entry in importResult.Value!)
+        {
+            var upsert = await userLibraryService.UpsertEntryAsync(entry);
+            if (upsert.IsSuccess)
+            {
+                imported++;
+            }
+        }
+
+        await LoadLibraryAsync();
+        LibraryExportStatus = imported == 0
+            ? "No MAL XML entries found."
+            : $"Imported {imported} MAL XML item(s).";
     }
 
     private async Task SaveSettingsAsync(AppSettings settings)
