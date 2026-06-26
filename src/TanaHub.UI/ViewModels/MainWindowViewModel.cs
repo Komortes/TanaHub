@@ -549,7 +549,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
         var libraryProgress = libraryEntry is null
             ? string.Empty
-            : $"{libraryEntry.Progress}/{(item is Anime ? episodes : chapters)}";
+            : ProgressDisplayFormatter.Format(libraryEntry.Progress, item is Anime ? episodes : chapters);
         var libraryScore = libraryEntry?.Score?.ToString() ?? string.Empty;
 
         SelectedMedia = new MediaDetailViewModel(
@@ -1316,7 +1316,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             title,
             entry.MediaType.ToString(),
             entry.Status.ToString(),
-            $"{entry.Progress}/{total}",
+            ProgressDisplayFormatter.Format(entry.Progress, total),
             entry.Score?.ToString() ?? "-",
             posterUri,
             new AsyncRelayCommand(() => IncrementProgressAsync(entry.MediaId)),
