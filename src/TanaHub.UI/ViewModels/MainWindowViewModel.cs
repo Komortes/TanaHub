@@ -106,6 +106,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         currentEmptyState = selectedNavigationItem.EmptyState;
         SearchResults = [];
         DashboardMetrics = [];
+        DashboardCharts = [];
         ContinueItems = [];
         LibraryEntries = [];
         ScheduleItems = [];
@@ -122,6 +123,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ObservableCollection<MediaSearchResultViewModel> SearchResults { get; }
 
     public ObservableCollection<DashboardMetricViewModel> DashboardMetrics { get; }
+
+    public ObservableCollection<DashboardChartViewModel> DashboardCharts { get; }
 
     public ObservableCollection<LibraryEntryViewModel> ContinueItems { get; }
 
@@ -1228,6 +1231,25 @@ public sealed partial class MainWindowViewModel : ObservableObject
             insights.ChaptersRead.ToString(),
             "manga progress tracked",
             MaterialIconKind.BookOpenPageVariant));
+
+        DashboardCharts.Clear();
+        DashboardCharts.Add(DashboardChartViewModel.FromSegments(
+            "Library mix",
+            insights.TotalEntries == 0 ? "No titles tracked yet" : $"{FormatTitleCount(insights.TotalEntries)} by type",
+            insights.ByMediaType,
+            insights.TotalEntries,
+            MaterialIconKind.ChartDonut));
+        DashboardCharts.Add(DashboardChartViewModel.FromSegments(
+            "Status breakdown",
+            insights.TotalEntries == 0 ? "No titles tracked yet" : $"{FormatTitleCount(insights.TotalEntries)} by list status",
+            insights.ByStatus,
+            insights.TotalEntries,
+            MaterialIconKind.ChartBar));
+    }
+
+    private static string FormatTitleCount(int count)
+    {
+        return count == 1 ? "1 title" : $"{count} titles";
     }
 
     private async Task LoadScheduleAsync()

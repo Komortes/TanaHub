@@ -289,6 +289,68 @@
         </ItemsControl.ItemTemplate>
       </ItemsControl>
 
+      <!-- Charts -->
+      <ItemsControl ItemsSource="{Binding DashboardCharts}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Spacing="10"/>
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:DashboardChartViewModel">
+            <Border Classes="card" Padding="16,14">
+              <StackPanel Spacing="12">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                  <Border Width="32" Height="32" CornerRadius="9"
+                          Background="{DynamicResource TanaHubAccentGlowBrush}">
+                    <material:MaterialIcon Width="16" Height="16"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Kind="{Binding Icon}"
+                                           Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
+                  </Border>
+                  <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                    <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+                    <TextBlock Text="{Binding Detail}" FontSize="11"
+                               Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+                  </StackPanel>
+                </Grid>
+
+                <TextBlock IsVisible="{Binding !HasSegments}"
+                           Text="Add titles to your library to see this chart."
+                           FontSize="11"
+                           Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+
+                <ItemsControl IsVisible="{Binding HasSegments}" ItemsSource="{Binding Segments}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Spacing="9"/>
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:DashboardChartSegmentViewModel">
+                      <StackPanel Spacing="4">
+                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                          <TextBlock Text="{Binding Label}" FontSize="11"
+                                     Foreground="{DynamicResource TanaHubTextSecondaryBrush}"
+                                     TextTrimming="CharacterEllipsis"/>
+                          <TextBlock Grid.Column="1" Classes="mono" Text="{Binding CountText}" FontSize="10"
+                                     Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+                          <TextBlock Grid.Column="2" Classes="mono" Text="{Binding PercentText}" FontSize="10"
+                                     Foreground="{DynamicResource TanaHubCyanBrush}"/>
+                        </Grid>
+                        <ProgressBar Minimum="0" Maximum="100" Value="{Binding Percent}" Height="5"/>
+                      </StackPanel>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
     </StackPanel>
 
   </Grid>
