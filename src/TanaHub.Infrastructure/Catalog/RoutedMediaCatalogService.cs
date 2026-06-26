@@ -21,7 +21,7 @@ internal sealed class RoutedMediaCatalogService : IMediaCatalogService, ICatalog
         AniListMediaCatalogService aniList,
         MangaDexMediaCatalogService mangaDex)
     {
-        this.aniList  = aniList;
+        this.aniList = aniList;
         this.mangaDex = mangaDex;
     }
 

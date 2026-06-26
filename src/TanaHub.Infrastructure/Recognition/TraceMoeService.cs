@@ -46,12 +46,12 @@ internal sealed class TraceMoeService : IRecognitionService
                     var episode = r.Episode?.ToString();
                     Uri.TryCreate(r.Image, UriKind.Absolute, out var thumb);
                     return new RecognitionMatch(
-                        AniListId:    r.Anilist!.Id,
-                        RomajiTitle:  r.Anilist.Title?.Romaji ?? $"#{r.Anilist.Id}",
+                        AniListId: r.Anilist!.Id,
+                        RomajiTitle: r.Anilist.Title?.Romaji ?? $"#{r.Anilist.Id}",
                         EnglishTitle: r.Anilist.Title?.English,
-                        NativeTitle:  r.Anilist.Title?.Native,
-                        Episode:      episode,
-                        Similarity:   r.Similarity,
+                        NativeTitle: r.Anilist.Title?.Native,
+                        Episode: episode,
+                        Similarity: r.Similarity,
                         ThumbnailUri: thumb);
                 })
                 .ToArray();
@@ -73,28 +73,28 @@ internal sealed class TraceMoeService : IRecognitionService
 
     private sealed class TraceMoeResponse
     {
-        [JsonPropertyName("error")]  public string? Error  { get; init; }
+        [JsonPropertyName("error")] public string? Error { get; init; }
         [JsonPropertyName("result")] public List<TraceMoeResult> Result { get; init; } = [];
     }
 
     private sealed class TraceMoeResult
     {
-        [JsonPropertyName("anilist")]    public TraceMoeAniList? Anilist    { get; init; }
-        [JsonPropertyName("episode")]    public object?          Episode    { get; init; }
-        [JsonPropertyName("similarity")] public double           Similarity { get; init; }
-        [JsonPropertyName("image")]      public string?          Image      { get; init; }
+        [JsonPropertyName("anilist")] public TraceMoeAniList? Anilist { get; init; }
+        [JsonPropertyName("episode")] public object? Episode { get; init; }
+        [JsonPropertyName("similarity")] public double Similarity { get; init; }
+        [JsonPropertyName("image")] public string? Image { get; init; }
     }
 
     private sealed class TraceMoeAniList
     {
-        [JsonPropertyName("id")]    public int                Id    { get; init; }
-        [JsonPropertyName("title")] public TraceMoeTitle?     Title { get; init; }
+        [JsonPropertyName("id")] public int Id { get; init; }
+        [JsonPropertyName("title")] public TraceMoeTitle? Title { get; init; }
     }
 
     private sealed class TraceMoeTitle
     {
-        [JsonPropertyName("romaji")]  public string? Romaji  { get; init; }
+        [JsonPropertyName("romaji")] public string? Romaji { get; init; }
         [JsonPropertyName("english")] public string? English { get; init; }
-        [JsonPropertyName("native")]  public string? Native  { get; init; }
+        [JsonPropertyName("native")] public string? Native { get; init; }
     }
 }

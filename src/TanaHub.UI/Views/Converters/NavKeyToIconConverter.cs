@@ -13,13 +13,13 @@ public sealed class NavKeyToIconConverter : IValueConverter
     {
         return value is string key ? key switch
         {
-            "home"     => MaterialIconKind.HomeVariant,
+            "home" => MaterialIconKind.HomeVariant,
             "discover" => MaterialIconKind.CompassOutline,
-            "library"  => MaterialIconKind.Bookshelf,
+            "library" => MaterialIconKind.Bookshelf,
             "schedule" => MaterialIconKind.CalendarClock,
-            "settings"   => MaterialIconKind.CogOutline,
-            "recognize"  => MaterialIconKind.ImageSearchOutline,
-            _            => MaterialIconKind.HelpCircle
+            "settings" => MaterialIconKind.CogOutline,
+            "recognize" => MaterialIconKind.ImageSearchOutline,
+            _ => MaterialIconKind.HelpCircle
         } : MaterialIconKind.HelpCircle;
     }
 

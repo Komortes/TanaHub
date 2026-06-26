@@ -22,6 +22,8 @@ jobs:
           global-json-file: global.json
       - name: Restore
         run: dotnet restore TanaHub.sln
+      - name: Format check
+        run: dotnet format TanaHub.sln --verify-no-changes
       - name: Build
         run: dotnet build TanaHub.sln --configuration Release --no-restore
       - name: Test

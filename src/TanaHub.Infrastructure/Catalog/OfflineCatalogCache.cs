@@ -71,49 +71,49 @@ internal sealed class OfflineCatalogCache
 
     private sealed class CachedItemDto
     {
-        [JsonPropertyName("id")]           public string Id { get; set; } = string.Empty;
-        [JsonPropertyName("mediaType")]    public string MediaType { get; set; } = string.Empty;
-        [JsonPropertyName("romaji")]       public string? Romaji { get; set; }
-        [JsonPropertyName("english")]      public string? English { get; set; }
-        [JsonPropertyName("native")]       public string? Native { get; set; }
-        [JsonPropertyName("format")]       public string? Format { get; set; }
-        [JsonPropertyName("status")]       public string? Status { get; set; }
-        [JsonPropertyName("startYear")]    public int? StartYear { get; set; }
-        [JsonPropertyName("avgScore")]     public int? AverageScore { get; set; }
+        [JsonPropertyName("id")] public string Id { get; set; } = string.Empty;
+        [JsonPropertyName("mediaType")] public string MediaType { get; set; } = string.Empty;
+        [JsonPropertyName("romaji")] public string? Romaji { get; set; }
+        [JsonPropertyName("english")] public string? English { get; set; }
+        [JsonPropertyName("native")] public string? Native { get; set; }
+        [JsonPropertyName("format")] public string? Format { get; set; }
+        [JsonPropertyName("status")] public string? Status { get; set; }
+        [JsonPropertyName("startYear")] public int? StartYear { get; set; }
+        [JsonPropertyName("avgScore")] public int? AverageScore { get; set; }
         [JsonPropertyName("description")] public string? Description { get; set; }
-        [JsonPropertyName("genres")]       public List<string>? Genres { get; set; }
-        [JsonPropertyName("poster")]       public string? Poster { get; set; }
-        [JsonPropertyName("banner")]       public string? Banner { get; set; }
-        [JsonPropertyName("thumb")]        public string? Thumbnail { get; set; }
+        [JsonPropertyName("genres")] public List<string>? Genres { get; set; }
+        [JsonPropertyName("poster")] public string? Poster { get; set; }
+        [JsonPropertyName("banner")] public string? Banner { get; set; }
+        [JsonPropertyName("thumb")] public string? Thumbnail { get; set; }
         // Anime
-        [JsonPropertyName("episodes")]     public int? Episodes { get; set; }
-        [JsonPropertyName("duration")]     public int? Duration { get; set; }
-        [JsonPropertyName("studio")]       public string? Studio { get; set; }
+        [JsonPropertyName("episodes")] public int? Episodes { get; set; }
+        [JsonPropertyName("duration")] public int? Duration { get; set; }
+        [JsonPropertyName("studio")] public string? Studio { get; set; }
         // Manga
-        [JsonPropertyName("chapters")]     public int? Chapters { get; set; }
-        [JsonPropertyName("volumes")]      public int? Volumes { get; set; }
+        [JsonPropertyName("chapters")] public int? Chapters { get; set; }
+        [JsonPropertyName("volumes")] public int? Volumes { get; set; }
         // Characters
-        [JsonPropertyName("chars")]        public List<CachedCharDto>? Characters { get; set; }
+        [JsonPropertyName("chars")] public List<CachedCharDto>? Characters { get; set; }
 
         public static CachedItemDto From(MediaItem item)
         {
             var dto = new CachedItemDto
             {
-                Id           = item.Id,
-                MediaType    = item.Type.ToString(),
-                Romaji       = item.Title.Romaji,
-                English      = item.Title.English,
-                Native       = item.Title.Native,
-                Format       = item.Format.ToString(),
-                Status       = item.ReleaseStatus.ToString(),
-                StartYear    = item.StartYear,
+                Id = item.Id,
+                MediaType = item.Type.ToString(),
+                Romaji = item.Title.Romaji,
+                English = item.Title.English,
+                Native = item.Title.Native,
+                Format = item.Format.ToString(),
+                Status = item.ReleaseStatus.ToString(),
+                StartYear = item.StartYear,
                 AverageScore = item.AverageScore,
-                Description  = item.Description,
-                Genres       = item.Genres.Count > 0 ? [.. item.Genres] : null,
-                Poster       = item.Images.PosterUri?.ToString(),
-                Banner       = item.Images.BannerUri?.ToString(),
-                Thumbnail    = item.Images.ThumbnailUri?.ToString(),
-                Characters   = item.Characters.Count > 0
+                Description = item.Description,
+                Genres = item.Genres.Count > 0 ? [.. item.Genres] : null,
+                Poster = item.Images.PosterUri?.ToString(),
+                Banner = item.Images.BannerUri?.ToString(),
+                Thumbnail = item.Images.ThumbnailUri?.ToString(),
+                Characters = item.Characters.Count > 0
                     ? item.Characters.Select(c => new CachedCharDto { N = c.Name, I = c.ImageUri?.ToString(), R = c.Role }).ToList()
                     : null,
             };
@@ -121,12 +121,12 @@ internal sealed class OfflineCatalogCache
             {
                 dto.Episodes = anime.EpisodeCount;
                 dto.Duration = anime.DurationMinutes;
-                dto.Studio   = anime.Studio;
+                dto.Studio = anime.Studio;
             }
             else if (item is Manga manga)
             {
                 dto.Chapters = manga.ChapterCount;
-                dto.Volumes  = manga.VolumeCount;
+                dto.Volumes = manga.VolumeCount;
             }
             return dto;
         }
@@ -134,7 +134,7 @@ internal sealed class OfflineCatalogCache
         public MediaItem? ToMediaItem()
         {
             if (string.IsNullOrWhiteSpace(Id)) return null;
-            var title  = new MediaTitle(Romaji ?? $"#{Id}", English, Native);
+            var title = new MediaTitle(Romaji ?? $"#{Id}", English, Native);
             var format = Enum.TryParse<MediaFormat>(Format, out var f) ? f : MediaFormat.Unknown;
             var status = Enum.TryParse<MediaReleaseStatus>(Status, out var s) ? s : MediaReleaseStatus.Unknown;
             var images = new MediaImages(ToUri(Poster), ToUri(Banner), ToUri(Thumbnail));
@@ -149,18 +149,29 @@ internal sealed class OfflineCatalogCache
             {
                 return new Anime(Id, title, format, status)
                 {
-                    StartYear = StartYear, AverageScore = AverageScore,
-                    Description = Description, Genres = genres, Characters = characters, Images = images,
-                    EpisodeCount = Episodes, DurationMinutes = Duration, Studio = Studio,
+                    StartYear = StartYear,
+                    AverageScore = AverageScore,
+                    Description = Description,
+                    Genres = genres,
+                    Characters = characters,
+                    Images = images,
+                    EpisodeCount = Episodes,
+                    DurationMinutes = Duration,
+                    Studio = Studio,
                 };
             }
             if (MediaType == nameof(TanaHub.Domain.Enums.MediaType.Manga))
             {
                 return new Manga(Id, title, format, status)
                 {
-                    StartYear = StartYear, AverageScore = AverageScore,
-                    Description = Description, Genres = genres, Characters = characters, Images = images,
-                    ChapterCount = Chapters, VolumeCount = Volumes,
+                    StartYear = StartYear,
+                    AverageScore = AverageScore,
+                    Description = Description,
+                    Genres = genres,
+                    Characters = characters,
+                    Images = images,
+                    ChapterCount = Chapters,
+                    VolumeCount = Volumes,
                 };
             }
             return null;

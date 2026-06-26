@@ -113,7 +113,7 @@ public static class InfrastructureServiceCollectionExtensions
                 Tags = ["classic", "rewatch"],
                 CustomLists = ["Favorites"]
             },
-            new UserMediaEntry("mangadex:berserk", MediaType.Manga, MediaListStatus.Paused)
+            new UserMediaEntry("anilist:30002", MediaType.Manga, MediaListStatus.Paused)
             {
                 Progress = 373,
                 Score = 10,

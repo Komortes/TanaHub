@@ -190,7 +190,7 @@
             </Grid>
             <StackPanel Spacing="0">
               <TextBlock
-                  Text="{Binding AppConnectionStatusText}"
+                  Text="{Binding AppConnectionStatusKind}"
                   FontSize="11"
                   FontWeight="SemiBold"
                   Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>

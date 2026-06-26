@@ -142,33 +142,33 @@ public sealed class MediaDetailViewModel
     public int UserScoreInt => int.TryParse(LibraryScore, out var v) ? v : 0;
 
     // Score-bar fill state — bar N is active when score >= N
-    public bool IsScoreAtLeast1  => UserScoreInt >= 1;
-    public bool IsScoreAtLeast2  => UserScoreInt >= 2;
-    public bool IsScoreAtLeast3  => UserScoreInt >= 3;
-    public bool IsScoreAtLeast4  => UserScoreInt >= 4;
-    public bool IsScoreAtLeast5  => UserScoreInt >= 5;
-    public bool IsScoreAtLeast6  => UserScoreInt >= 6;
-    public bool IsScoreAtLeast7  => UserScoreInt >= 7;
-    public bool IsScoreAtLeast8  => UserScoreInt >= 8;
-    public bool IsScoreAtLeast9  => UserScoreInt >= 9;
+    public bool IsScoreAtLeast1 => UserScoreInt >= 1;
+    public bool IsScoreAtLeast2 => UserScoreInt >= 2;
+    public bool IsScoreAtLeast3 => UserScoreInt >= 3;
+    public bool IsScoreAtLeast4 => UserScoreInt >= 4;
+    public bool IsScoreAtLeast5 => UserScoreInt >= 5;
+    public bool IsScoreAtLeast6 => UserScoreInt >= 6;
+    public bool IsScoreAtLeast7 => UserScoreInt >= 7;
+    public bool IsScoreAtLeast8 => UserScoreInt >= 8;
+    public bool IsScoreAtLeast9 => UserScoreInt >= 9;
     public bool IsScoreAtLeast10 => UserScoreInt >= 10;
     public string UserScoreDisplay => UserScoreInt == 0 ? "—" : UserScoreInt.ToString();
 
     // Status-pill active state
-    public bool IsStatusCurrent   => LibraryStatus == "Current";
-    public bool IsStatusPlanning  => LibraryStatus == "Planning";
-    public bool IsStatusPaused    => LibraryStatus == "Paused";
+    public bool IsStatusCurrent => LibraryStatus == "Current";
+    public bool IsStatusPlanning => LibraryStatus == "Planning";
+    public bool IsStatusPaused => LibraryStatus == "Paused";
     public bool IsStatusCompleted => LibraryStatus == "Completed";
-    public bool IsStatusDropped   => LibraryStatus == "Dropped";
+    public bool IsStatusDropped => LibraryStatus == "Dropped";
 
     public IBrush StatusForeground => LibraryStatus switch
     {
-        "Current"   => new SolidColorBrush(Color.Parse("#4DD0E1")),
+        "Current" => new SolidColorBrush(Color.Parse("#4DD0E1")),
         "Completed" => new SolidColorBrush(Color.Parse("#A3E635")),
-        "Planning"  => new SolidColorBrush(Color.Parse("#FBBF24")),
-        "Paused"    => new SolidColorBrush(Color.Parse("#FB923C")),
-        "Dropped"   => new SolidColorBrush(Color.Parse("#F87171")),
-        _           => new SolidColorBrush(Color.Parse("#A79ABB"))
+        "Planning" => new SolidColorBrush(Color.Parse("#FBBF24")),
+        "Paused" => new SolidColorBrush(Color.Parse("#FB923C")),
+        "Dropped" => new SolidColorBrush(Color.Parse("#F87171")),
+        _ => new SolidColorBrush(Color.Parse("#A79ABB"))
     };
 
     public IAsyncRelayCommand AddToLibraryCommand { get; }

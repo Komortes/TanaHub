@@ -13,17 +13,17 @@ public sealed class LibraryFilterIconConverter : IValueConverter
     {
         return value is string key ? key switch
         {
-            "All"       => MaterialIconKind.LayersOutline,
-            "Current"   => MaterialIconKind.PlayCircleOutline,
+            "All" => MaterialIconKind.LayersOutline,
+            "Current" => MaterialIconKind.PlayCircleOutline,
             "Completed" => MaterialIconKind.CheckCircleOutline,
-            "Planning"  => MaterialIconKind.BookmarkPlusOutline,
-            "Paused"    => MaterialIconKind.PauseCircleOutline,
-            "Dropped"   => MaterialIconKind.CloseCircleOutline,
-            "Updated"   => MaterialIconKind.ClockEditOutline,
-            "Title"     => MaterialIconKind.SortAlphabeticalAscending,
-            "Score"     => MaterialIconKind.StarOutline,
-            "Progress"  => MaterialIconKind.ChartLine,
-            _           => MaterialIconKind.Circle,
+            "Planning" => MaterialIconKind.BookmarkPlusOutline,
+            "Paused" => MaterialIconKind.PauseCircleOutline,
+            "Dropped" => MaterialIconKind.CloseCircleOutline,
+            "Updated" => MaterialIconKind.ClockEditOutline,
+            "Title" => MaterialIconKind.SortAlphabeticalAscending,
+            "Score" => MaterialIconKind.StarOutline,
+            "Progress" => MaterialIconKind.ChartLine,
+            _ => MaterialIconKind.Circle,
         } : MaterialIconKind.Circle;
     }
 

@@ -26,7 +26,7 @@ internal sealed class MangaDexMediaCatalogService : IMediaCatalogService
         if (query.PageSize < 1)
             return Failure<PagedResult<MediaItem>>("Page size must be greater than zero.");
 
-        var limit  = Math.Min(query.PageSize, 100);
+        var limit = Math.Min(query.PageSize, 100);
         var offset = (query.Page - 1) * limit;
 
         var url = $"{BaseUrl}/manga?limit={limit}&offset={offset}&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive";
@@ -96,19 +96,19 @@ internal sealed class MangaDexMediaCatalogService : IMediaCatalogService
 
         var format = attrs.Type switch
         {
-            "novel"     => MediaFormat.Novel,
-            "oneshot"   => MediaFormat.OneShot,
+            "novel" => MediaFormat.Novel,
+            "oneshot" => MediaFormat.OneShot,
             "doujinshi" => MediaFormat.Special,
-            _           => MediaFormat.Manga,
+            _ => MediaFormat.Manga,
         };
 
         var status = attrs.Status switch
         {
-            "ongoing"    => MediaReleaseStatus.Releasing,
-            "completed"  => MediaReleaseStatus.Finished,
-            "cancelled"  => MediaReleaseStatus.Cancelled,
-            "hiatus"     => MediaReleaseStatus.Hiatus,
-            _            => MediaReleaseStatus.Unknown,
+            "ongoing" => MediaReleaseStatus.Releasing,
+            "completed" => MediaReleaseStatus.Finished,
+            "cancelled" => MediaReleaseStatus.Cancelled,
+            "hiatus" => MediaReleaseStatus.Hiatus,
+            _ => MediaReleaseStatus.Unknown,
         };
 
         Uri? poster = null;
@@ -125,10 +125,10 @@ internal sealed class MangaDexMediaCatalogService : IMediaCatalogService
 
         return new Manga($"mangadex:{manga.Id}", title, format, status)
         {
-            StartYear    = attrs.Year,
-            Description  = desc,
-            Genres       = genres,
-            Images       = new MediaImages(poster),
+            StartYear = attrs.Year,
+            Description = desc,
+            Genres = genres,
+            Images = new MediaImages(poster),
         };
     }
 
@@ -142,18 +142,18 @@ internal sealed class MangaDexMediaCatalogService : IMediaCatalogService
 
     private static string? ToMangaDexStatus(MediaReleaseStatus? s) => s switch
     {
-        MediaReleaseStatus.Releasing        => "ongoing",
-        MediaReleaseStatus.Finished         => "completed",
-        MediaReleaseStatus.Cancelled        => "cancelled",
-        MediaReleaseStatus.Hiatus           => "hiatus",
-        _                                   => null,
+        MediaReleaseStatus.Releasing => "ongoing",
+        MediaReleaseStatus.Finished => "completed",
+        MediaReleaseStatus.Cancelled => "cancelled",
+        MediaReleaseStatus.Hiatus => "hiatus",
+        _ => null,
     };
 
     private static string ToMangaDexOrder(MediaSearchSort sort) => sort switch
     {
-        MediaSearchSort.Newest  => "&order[createdAt]=desc",
-        MediaSearchSort.Score   => "&order[rating]=desc",
-        _                       => "&order[followedCount]=desc",
+        MediaSearchSort.Newest => "&order[createdAt]=desc",
+        MediaSearchSort.Score => "&order[rating]=desc",
+        _ => "&order[followedCount]=desc",
     };
 
     private static Result<T> Failure<T>(string message)
@@ -163,7 +163,7 @@ internal sealed class MangaDexMediaCatalogService : IMediaCatalogService
 
     private sealed class MangaDexListResponse
     {
-        [JsonPropertyName("data")]  public List<MangaDexManga> Data  { get; init; } = [];
+        [JsonPropertyName("data")] public List<MangaDexManga> Data { get; init; } = [];
         [JsonPropertyName("total")] public int Total { get; init; }
     }
 
@@ -174,19 +174,19 @@ internal sealed class MangaDexMediaCatalogService : IMediaCatalogService
 
     private sealed class MangaDexManga
     {
-        [JsonPropertyName("id")]            public string Id { get; init; } = string.Empty;
-        [JsonPropertyName("attributes")]    public MangaDexMangaAttrs Attributes { get; init; } = new();
+        [JsonPropertyName("id")] public string Id { get; init; } = string.Empty;
+        [JsonPropertyName("attributes")] public MangaDexMangaAttrs Attributes { get; init; } = new();
         [JsonPropertyName("relationships")] public List<MangaDexRelationship>? Relationships { get; init; }
     }
 
     private sealed class MangaDexMangaAttrs
     {
-        [JsonPropertyName("title")]       public Dictionary<string, string>? Title { get; init; }
+        [JsonPropertyName("title")] public Dictionary<string, string>? Title { get; init; }
         [JsonPropertyName("description")] public Dictionary<string, string>? Description { get; init; }
-        [JsonPropertyName("status")]      public string? Status { get; init; }
-        [JsonPropertyName("year")]        public int? Year { get; init; }
+        [JsonPropertyName("status")] public string? Status { get; init; }
+        [JsonPropertyName("year")] public int? Year { get; init; }
         [JsonPropertyName("publicationDemographic")] public string? Type { get; init; }
-        [JsonPropertyName("tags")]        public List<MangaDexTag>? Tags { get; init; }
+        [JsonPropertyName("tags")] public List<MangaDexTag>? Tags { get; init; }
     }
 
     private sealed class MangaDexTag
@@ -196,13 +196,13 @@ internal sealed class MangaDexMediaCatalogService : IMediaCatalogService
 
     private sealed class MangaDexTagAttrs
     {
-        [JsonPropertyName("name")]  public Dictionary<string, string>? Name { get; init; }
+        [JsonPropertyName("name")] public Dictionary<string, string>? Name { get; init; }
         [JsonPropertyName("group")] public string? Group { get; init; }
     }
 
     private sealed class MangaDexRelationship
     {
-        [JsonPropertyName("type")]       public string? Type { get; init; }
+        [JsonPropertyName("type")] public string? Type { get; init; }
         [JsonPropertyName("attributes")] public MangaDexRelAttrs? Attributes { get; init; }
     }
 

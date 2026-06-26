@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
-using System.Text;
+using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using TanaHub.Application.Common;
 using TanaHub.Application.Services;
 using TanaHub.Domain.Enums;
@@ -12,10 +13,22 @@ public sealed class AniListSyncService : IAniListSyncService
 {
     private const string GraphQlUrl = "https://graphql.anilist.co";
 
-    private static readonly string ListQuery = """
-        {
-          "query": "query ($userId: Int, $type: MediaType) { MediaListCollection(userId: $userId, type: $type) { lists { entries { mediaId status progress score(format: POINT_10) notes startedAt { year month day } completedAt { year month day } media { coverImage { large } } } } } }",
-          "variables": { "userId": {0}, "type": "{1}" }
+    private const string ListQueryText = """
+        query ($userId: Int, $type: MediaType) {
+          MediaListCollection(userId: $userId, type: $type) {
+            lists {
+              entries {
+                mediaId
+                status
+                progress
+                score(format: POINT_10)
+                notes
+                startedAt { year month day }
+                completedAt { year month day }
+                media { coverImage { large } }
+              }
+            }
+          }
         }
         """;
 
@@ -50,61 +63,59 @@ public sealed class AniListSyncService : IAniListSyncService
     private async Task<List<UserMediaEntry>?> FetchListAsync(
         string accessToken, int userId, string type, CancellationToken ct)
     {
-        var body = ListQuery.Replace("{0}", userId.ToString()).Replace("{1}", type);
         var req = new HttpRequestMessage(HttpMethod.Post, GraphQlUrl);
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        req.Content = new StringContent(body, Encoding.UTF8, "application/json");
+        req.Content = JsonContent.Create(new
+        {
+            query = ListQueryText,
+            variables = new { userId, type }
+        });
 
         try
         {
             var response = await httpClient.SendAsync(req, ct);
             if (!response.IsSuccessStatusCode) return null;
 
-            var json = await response.Content.ReadAsStringAsync(ct);
-            using var doc = JsonDocument.Parse(json);
+            var payload = await response.Content.ReadFromJsonAsync<AniListCollectionResponse>(
+                cancellationToken: ct);
+
+            var lists = payload?.Data?.MediaListCollection?.Lists;
+            if (lists is null) return null;
 
             var mediaTypeDomain = type == "ANIME" ? MediaType.Anime : MediaType.Manga;
             var results = new List<UserMediaEntry>();
 
-            var lists = doc.RootElement
-                .GetProperty("data")
-                .GetProperty("MediaListCollection")
-                .GetProperty("lists");
-
-            foreach (var list in lists.EnumerateArray())
-            {
-                foreach (var e in list.GetProperty("entries").EnumerateArray())
+            foreach (var list in lists)
+                foreach (var e in list.Entries ?? [])
                 {
-                    var mediaId = $"anilist:{e.GetProperty("mediaId").GetInt32()}";
-                    var status = MapStatus(e.GetProperty("status").GetString());
-                    var progress = e.GetProperty("progress").GetInt32();
-                    var score = e.GetProperty("score").GetInt32();
-                    var notes = e.TryGetProperty("notes", out var n) ? n.GetString() : null;
+                    if (e.MediaId <= 0) continue;
 
                     Uri? posterUri = null;
-                    if (e.TryGetProperty("media", out var media) &&
-                        media.TryGetProperty("coverImage", out var cover) &&
-                        cover.TryGetProperty("large", out var large) &&
-                        large.ValueKind == JsonValueKind.String)
-                    {
-                        Uri.TryCreate(large.GetString(), UriKind.Absolute, out posterUri);
-                    }
+                    if (e.Media?.CoverImage?.Large is { } large)
+                        Uri.TryCreate(large, UriKind.Absolute, out posterUri);
 
-                    results.Add(new UserMediaEntry(mediaId, mediaTypeDomain, status)
+                    results.Add(new UserMediaEntry($"anilist:{e.MediaId}", mediaTypeDomain, MapStatus(e.Status))
                     {
-                        Progress = progress,
-                        Score = score > 0 ? score : null,
-                        Notes = string.IsNullOrWhiteSpace(notes) ? null : notes,
+                        Progress = e.Progress,
+                        Score = e.Score > 0 ? e.Score : null,
+                        Notes = string.IsNullOrWhiteSpace(e.Notes) ? null : e.Notes,
                         PosterUri = posterUri,
-                        StartedAt = ParseDate(e, "startedAt"),
-                        CompletedAt = ParseDate(e, "completedAt"),
+                        StartedAt = ParseDate(e.StartedAt),
+                        CompletedAt = ParseDate(e.CompletedAt),
                     });
                 }
-            }
 
             return results;
         }
-        catch
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+        catch (TaskCanceledException)
         {
             return null;
         }
@@ -112,23 +123,74 @@ public sealed class AniListSyncService : IAniListSyncService
 
     private static MediaListStatus MapStatus(string? status) => status switch
     {
-        "CURRENT"   => MediaListStatus.Current,
+        "CURRENT" => MediaListStatus.Current,
         "REPEATING" => MediaListStatus.Current,
         "COMPLETED" => MediaListStatus.Completed,
-        "PLANNING"  => MediaListStatus.Planning,
-        "PAUSED"    => MediaListStatus.Paused,
-        "DROPPED"   => MediaListStatus.Dropped,
-        _           => MediaListStatus.Planning,
+        "PLANNING" => MediaListStatus.Planning,
+        "PAUSED" => MediaListStatus.Paused,
+        "DROPPED" => MediaListStatus.Dropped,
+        _ => MediaListStatus.Planning,
     };
 
-    private static DateTimeOffset? ParseDate(JsonElement entry, string field)
+    private static DateTimeOffset? ParseDate(AniListDate? date)
     {
-        if (!entry.TryGetProperty(field, out var date)) return null;
-        if (!date.TryGetProperty("year", out var y) || y.ValueKind == JsonValueKind.Null) return null;
-        var year = y.GetInt32();
-        var month = date.TryGetProperty("month", out var m) && m.ValueKind != JsonValueKind.Null ? m.GetInt32() : 1;
-        var day = date.TryGetProperty("day", out var d) && d.ValueKind != JsonValueKind.Null ? d.GetInt32() : 1;
-        try { return new DateTimeOffset(year, month, day, 0, 0, 0, TimeSpan.Zero); }
-        catch { return null; }
+        if (date?.Year is not { } year) return null;
+        try
+        {
+            return new DateTimeOffset(year, date.Month ?? 1, date.Day ?? 1, 0, 0, 0, TimeSpan.Zero);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return null;
+        }
+    }
+
+    private sealed class AniListCollectionResponse
+    {
+        [JsonPropertyName("data")] public AniListData? Data { get; init; }
+    }
+
+    private sealed class AniListData
+    {
+        [JsonPropertyName("MediaListCollection")] public AniListMediaListCollection? MediaListCollection { get; init; }
+    }
+
+    private sealed class AniListMediaListCollection
+    {
+        [JsonPropertyName("lists")] public List<AniListList>? Lists { get; init; }
+    }
+
+    private sealed class AniListList
+    {
+        [JsonPropertyName("entries")] public List<AniListEntry>? Entries { get; init; }
+    }
+
+    private sealed class AniListEntry
+    {
+        [JsonPropertyName("mediaId")] public int MediaId { get; init; }
+        [JsonPropertyName("status")] public string? Status { get; init; }
+        [JsonPropertyName("progress")] public int Progress { get; init; }
+        [JsonPropertyName("score")] public int Score { get; init; }
+        [JsonPropertyName("notes")] public string? Notes { get; init; }
+        [JsonPropertyName("startedAt")] public AniListDate? StartedAt { get; init; }
+        [JsonPropertyName("completedAt")] public AniListDate? CompletedAt { get; init; }
+        [JsonPropertyName("media")] public AniListMedia? Media { get; init; }
+    }
+
+    private sealed class AniListDate
+    {
+        [JsonPropertyName("year")] public int? Year { get; init; }
+        [JsonPropertyName("month")] public int? Month { get; init; }
+        [JsonPropertyName("day")] public int? Day { get; init; }
+    }
+
+    private sealed class AniListMedia
+    {
+        [JsonPropertyName("coverImage")] public AniListCoverImage? CoverImage { get; init; }
+    }
+
+    private sealed class AniListCoverImage
+    {
+        [JsonPropertyName("large")] public string? Large { get; init; }
     }
 }

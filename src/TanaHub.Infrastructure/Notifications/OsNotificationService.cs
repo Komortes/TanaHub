@@ -11,7 +11,7 @@ internal sealed partial class OsNotificationService : INotificationService
     {
         try
         {
-            var safeTitle   = StripControls(title);
+            var safeTitle = StripControls(title);
             var safeMessage = StripControls(message);
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))

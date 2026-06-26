@@ -36,8 +36,8 @@ public sealed class AvaloniaFileOpenService : IFileOpenService
             return (null, string.Empty, string.Empty, null);
 
         var stream = await files[0].OpenReadAsync();
-        var mime   = GuessTextMime(files[0].Name);
-        var path   = files[0].Path.IsFile ? files[0].Path.LocalPath : null;
+        var mime = GuessTextMime(files[0].Name);
+        var path = files[0].Path.IsFile ? files[0].Path.LocalPath : null;
         return (stream, mime, files[0].Name, path);
     }
 
@@ -58,8 +58,8 @@ public sealed class AvaloniaFileOpenService : IFileOpenService
             return (null, string.Empty, string.Empty, null);
 
         var stream = await files[0].OpenReadAsync();
-        var mime   = GuessMime(files[0].Name);
-        var path   = files[0].Path.IsFile ? files[0].Path.LocalPath : null;
+        var mime = GuessMime(files[0].Name);
+        var path = files[0].Path.IsFile ? files[0].Path.LocalPath : null;
         return (stream, mime, files[0].Name, path);
     }
 
@@ -98,10 +98,10 @@ public sealed class AvaloniaFileOpenService : IFileOpenService
         return ext switch
         {
             ".jpg" or ".jpeg" => "image/jpeg",
-            ".webp"           => "image/webp",
-            ".gif"            => "image/gif",
-            ".bmp"            => "image/bmp",
-            _                 => "image/png",
+            ".webp" => "image/webp",
+            ".gif" => "image/gif",
+            ".bmp" => "image/bmp",
+            _ => "image/png",
         };
     }
 
