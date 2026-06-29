@@ -29,6 +29,7 @@ Close TanaHub before changing these files. For a clean smoke test, move the `Tan
 - [ ] Open Schedule and switch each date range.
 - [ ] Turn offline cache on and off in Settings.
 - [ ] Confirm the topbar status gives a readable state and detail.
+- [ ] Run Settings → Updates → Check now and confirm the update status is readable.
 
 ### Recognition
 

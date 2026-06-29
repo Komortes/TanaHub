@@ -67,6 +67,7 @@ public sealed partial class MainWindowViewModel
         Func<CancellationToken, Task<(Stream? Stream, string MimeType, string SourceName, string? SourcePath)>> getImage)
     {
         var (stream, mime, sourceName, sourcePath) = await getImage(CancellationToken.None);
+        ClearRecognitionAttemptState();
         if (stream is null)
         {
             RecognitionStatus = sourceName == "Clipboard image"
@@ -77,12 +78,7 @@ public sealed partial class MainWindowViewModel
 
         IsRecognizing = true;
         RecognitionStatus = "Searching…";
-        RecognitionResults.Clear();
-        RecognitionVariantResults.Clear();
-        CurrentRecognitionResult = null;
-        RecognitionEmptyMessage = string.Empty;
         RecognitionSourcePreviewUri = CreateLocalFileUri(sourcePath);
-        OnPropertyChanged(nameof(HasRecognitionVariantResults));
 
         try
         {
@@ -212,6 +208,16 @@ public sealed partial class MainWindowViewModel
     {
         OnPropertyChanged(nameof(IsRecognitionHistoryVisible));
         OnPropertyChanged(nameof(IsRecognitionHistoryEmptyVisible));
+    }
+
+    private void ClearRecognitionAttemptState()
+    {
+        RecognitionResults.Clear();
+        RecognitionVariantResults.Clear();
+        CurrentRecognitionResult = null;
+        RecognitionEmptyMessage = string.Empty;
+        RecognitionSourcePreviewUri = null;
+        OnPropertyChanged(nameof(HasRecognitionVariantResults));
     }
 
     private static Uri? CreateLocalFileUri(string? path)
