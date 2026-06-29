@@ -106,6 +106,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         currentPageSummary = selectedNavigationItem.Summary;
         currentEmptyState = selectedNavigationItem.EmptyState;
         SearchResults = [];
+        RecommendedItems = [];
         DashboardMetrics = [];
         DashboardCharts = [];
         ContinueItems = [];
@@ -122,6 +123,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ObservableCollection<NavigationItemViewModel> NavigationItems { get; }
 
     public ObservableCollection<MediaSearchResultViewModel> SearchResults { get; }
+
+    public ObservableCollection<MediaSearchResultViewModel> RecommendedItems { get; }
 
     public ObservableCollection<DashboardMetricViewModel> DashboardMetrics { get; }
 
@@ -156,6 +159,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     private bool isSearchDropdownOpen;
+
+    [ObservableProperty]
+    private string recommendationSummary = "Personal picks appear after you add titles to your library.";
+
+    public bool HasRecommendedItems => RecommendedItems.Count > 0;
 
     [ObservableProperty]
     private string searchStatus = "Search uses AniList with local fallback.";

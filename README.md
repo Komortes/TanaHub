@@ -19,6 +19,7 @@ A native desktop app for tracking anime and manga. Built with .NET and Avalonia 
 - **Recognize** — identify an anime from a screenshot using trace.moe
 - **AniList sync** — connect your AniList account via OAuth and sync your list both ways
 - **Offline cache** — catalog data is cached locally so the app works without a connection
+- **Recommendations** — get local suggestions based on genres in your library
 - **Import/export** — dump your library to CSV or MAL XML, and import MAL XML backups
 
 ---
@@ -87,7 +88,7 @@ Release packaging instructions are available in [docs/release.md](docs/release.m
 - [x] Library statistics and watch-time charts
 - [x] MAL (MyAnimeList) import/export
 - [x] Custom lists and tags
-- [ ] Recommendations based on your library
+- [x] Recommendations based on your library
 - [ ] Auto-update checker
 
 ---

@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Material.Icons;
 using TanaHub.Application.Insights;
 using TanaHub.Application.Queries;
+using TanaHub.Application.Recommendations;
 using TanaHub.Domain.Enums;
 using TanaHub.Domain.Models;
 using Anime = TanaHub.Domain.Models.Anime;
@@ -144,11 +145,18 @@ public sealed partial class MainWindowViewModel
 
         var hydrated = new List<LibraryEntryViewModel>();
         var continueItems = new List<LibraryEntryViewModel>();
+        var mediaById = new Dictionary<string, MediaItem>(StringComparer.OrdinalIgnoreCase);
         var entries = result.Value!.Items.ToArray();
 
         foreach (var entry in entries)
         {
-            var vm = await CreateLibraryEntryViewModelAsync(entry);
+            var media = await mediaCatalogService.GetByIdAsync(entry.MediaId);
+            if (media.IsSuccess)
+            {
+                mediaById[entry.MediaId] = media.Value!;
+            }
+
+            var vm = CreateLibraryEntryViewModel(entry, media.IsSuccess ? media.Value : null);
             hydrated.Add(vm);
             if (entry.Status is MediaListStatus.Current or MediaListStatus.Paused)
                 continueItems.Add(vm);
@@ -161,7 +169,9 @@ public sealed partial class MainWindowViewModel
         foreach (var item in continueItems)
             ContinueItems.Add(item);
 
-        RefreshDashboardMetrics(LibraryInsightsCalculator.Calculate(entries));
+        RefreshDashboardMetrics(LibraryInsightsCalculator.Calculate(entries, mediaById));
+        await RefreshRecommendationsAsync(entries, mediaById, loadVersion);
+        if (loadVersion != libraryLoadVersion) return;
         OnPropertyChanged(nameof(HasContinueItems));
         ApplyLibraryFilters();
     }
@@ -210,9 +220,14 @@ public sealed partial class MainWindowViewModel
     private async Task<LibraryEntryViewModel> CreateLibraryEntryViewModelAsync(UserMediaEntry entry)
     {
         var media = await mediaCatalogService.GetByIdAsync(entry.MediaId);
-        var title = media.IsSuccess ? media.Value!.Title.DisplayTitle : entry.MediaId;
-        var posterUri = entry.PosterUri ?? (media.IsSuccess ? media.Value!.Images.PosterUri : null);
-        var total = media.Value switch
+        return CreateLibraryEntryViewModel(entry, media.IsSuccess ? media.Value : null);
+    }
+
+    private LibraryEntryViewModel CreateLibraryEntryViewModel(UserMediaEntry entry, MediaItem? media)
+    {
+        var title = media is not null ? media.Title.DisplayTitle : entry.MediaId;
+        var posterUri = entry.PosterUri ?? media?.Images.PosterUri;
+        var total = media switch
         {
             Anime anime when anime.EpisodeCount is not null => anime.EpisodeCount.ToString(),
             Manga manga when manga.ChapterCount is not null => manga.ChapterCount.ToString(),
@@ -230,6 +245,64 @@ public sealed partial class MainWindowViewModel
             new AsyncRelayCommand(() => RemoveFromLibraryAsync(entry.MediaId)),
             new AsyncRelayCommand(() => OpenDetailAsync(entry.MediaId)),
             entry.Notes, entry.Tags, entry.CustomLists);
+    }
+
+    private async Task RefreshRecommendationsAsync(
+        IReadOnlyList<UserMediaEntry> entries,
+        IReadOnlyDictionary<string, MediaItem> mediaById,
+        int loadVersion)
+    {
+        if (loadVersion != libraryLoadVersion) return;
+
+        RecommendedItems.Clear();
+        var genreProfile = LibraryRecommendationBuilder.BuildGenreProfile(entries, mediaById, maxGenres: 3);
+        if (genreProfile.Count == 0)
+        {
+            RecommendationSummary = "Add scored or in-progress titles to get recommendations.";
+            OnPropertyChanged(nameof(HasRecommendedItems));
+            return;
+        }
+
+        var candidatePool = new List<MediaItem>();
+        foreach (var genre in genreProfile)
+        {
+            var result = await mediaCatalogService.SearchAsync(new MediaSearchQuery
+            {
+                Genres = [genre.Name],
+                Sort = MediaSearchSort.Score,
+                PageSize = 8
+            });
+
+            if (result.IsSuccess)
+            {
+                candidatePool.AddRange(result.Value!.Items);
+            }
+        }
+
+        if (loadVersion != libraryLoadVersion) return;
+
+        var recommendations = LibraryRecommendationBuilder.RankCandidates(
+            entries,
+            genreProfile,
+            candidatePool
+                .GroupBy(item => item.Id, StringComparer.OrdinalIgnoreCase)
+                .Select(group => group.First()),
+            maxItems: 8);
+
+        foreach (var item in recommendations)
+        {
+            RecommendedItems.Add(MediaSearchResultViewModel.FromMediaItem(item, AddToLibraryAsync, OpenDetailAsync));
+        }
+
+        RecommendationSummary = RecommendedItems.Count == 0
+            ? $"No new matches for {FormatRecommendationGenres(genreProfile)} yet."
+            : $"Based on {FormatRecommendationGenres(genreProfile)}.";
+        OnPropertyChanged(nameof(HasRecommendedItems));
+    }
+
+    private static string FormatRecommendationGenres(IReadOnlyList<LibraryRecommendationGenre> genres)
+    {
+        return string.Join(", ", genres.Take(3).Select(genre => genre.Name));
     }
 
     private async Task AddToLibraryAsync(string mediaId)
