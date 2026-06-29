@@ -7,6 +7,8 @@ namespace TanaHub.UI.ViewModels;
 
 public sealed partial class MainWindowViewModel
 {
+    private static readonly Version CurrentAppVersion = GetCurrentAppVersion();
+
     [ObservableProperty]
     private string settingsTheme = "Nebula dark";
 
@@ -43,11 +45,27 @@ public sealed partial class MainWindowViewModel
     [ObservableProperty]
     private string aniListSyncStatus = string.Empty;
 
+    [ObservableProperty]
+    private string currentAppVersionLabel = $"v{CurrentAppVersion}";
+
+    [ObservableProperty]
+    private string updateCheckStatus = "Checking for updates after startup...";
+
+    [ObservableProperty]
+    private string latestUpdateUrl = string.Empty;
+
+    [ObservableProperty]
+    private bool isUpdateAvailable;
+
+    [ObservableProperty]
+    private bool isCheckingForUpdates;
+
     public bool IsNebulaThemeSelected => SettingsTheme == "Nebula dark";
     public bool IsHighContrastThemeSelected => SettingsTheme == "High contrast";
     public bool IsAniListSyncSelected => PreferredSyncSource == "AniList";
     public bool IsMyAnimeListSyncSelected => PreferredSyncSource == "MyAnimeList";
     public bool IsMangaDexSyncSelected => PreferredSyncSource == "MangaDex";
+    public bool HasLatestUpdateUrl => !string.IsNullOrWhiteSpace(LatestUpdateUrl);
 
     [RelayCommand]
     private async Task SelectThemeAsync(string theme)
@@ -189,6 +207,51 @@ public sealed partial class MainWindowViewModel
             : $"Imported {imported} MAL XML item(s).";
     }
 
+    [RelayCommand]
+    private Task CheckForUpdatesAsync()
+    {
+        return RefreshUpdateStatusAsync(isManualCheck: true);
+    }
+
+    private async Task RefreshUpdateStatusAsync(bool isManualCheck)
+    {
+        if (IsCheckingForUpdates) return;
+
+        IsCheckingForUpdates = true;
+        UpdateCheckStatus = isManualCheck
+            ? "Checking GitHub releases..."
+            : "Checking for updates...";
+
+        var result = await appUpdateService.CheckForUpdatesAsync(CurrentAppVersion);
+        IsCheckingForUpdates = false;
+
+        if (result.IsFailure)
+        {
+            UpdateCheckStatus = result.Error.Message;
+            SetAppConnectionStatus("Offline", "Update check failed");
+            return;
+        }
+
+        var check = result.Value!;
+        IsUpdateAvailable = check.IsUpdateAvailable;
+
+        if (check.IsUpdateAvailable)
+        {
+            var latest = check.LatestRelease!;
+            LatestUpdateUrl = latest.ReleaseUri.ToString();
+            UpdateCheckStatus = $"Update {latest.TagName} is available: {latest.Name}.";
+            SetAppConnectionStatus("Online", "Update available");
+            OnPropertyChanged(nameof(HasLatestUpdateUrl));
+            return;
+        }
+
+        LatestUpdateUrl = check.LatestRelease?.ReleaseUri.ToString() ?? string.Empty;
+        UpdateCheckStatus = check.LatestRelease is null
+            ? "No published GitHub release found yet."
+            : $"You're up to date on {CurrentAppVersionLabel}.";
+        OnPropertyChanged(nameof(HasLatestUpdateUrl));
+    }
+
     private async Task<List<LibraryExportItem>?> BuildExportRowsAsync()
     {
         var result = await userLibraryService.GetEntriesAsync(new Application.Queries.UserLibraryQuery
@@ -291,5 +354,16 @@ public sealed partial class MainWindowViewModel
         OnPropertyChanged(nameof(IsAniListSyncSelected));
         OnPropertyChanged(nameof(IsMyAnimeListSyncSelected));
         OnPropertyChanged(nameof(IsMangaDexSyncSelected));
+    }
+
+    private static Version GetCurrentAppVersion()
+    {
+        var version = typeof(MainWindowViewModel).Assembly.GetName().Version;
+        if (version is null) return new Version(0, 1, 0);
+
+        return new Version(
+            Math.Max(version.Major, 0),
+            Math.Max(version.Minor, 0),
+            Math.Max(version.Build, 0));
     }
 }

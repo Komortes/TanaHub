@@ -31,6 +31,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IRecognitionService recognitionService;
     private readonly IRecognitionInboxService recognitionInboxService;
     private readonly IFileOpenService fileOpenService;
+    private readonly IAppUpdateService appUpdateService;
     private readonly HashSet<string> notifiedThisSession = new(StringComparer.OrdinalIgnoreCase);
     private AppSettings appSettings = new();
     private CancellationTokenSource? searchDebounce;
@@ -49,7 +50,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         ICatalogSourceSelector catalogSourceSelector,
         IRecognitionService recognitionService,
         IRecognitionInboxService recognitionInboxService,
-        IFileOpenService fileOpenService)
+        IFileOpenService fileOpenService,
+        IAppUpdateService appUpdateService)
     {
         this.mediaCatalogService = mediaCatalogService;
         this.userLibraryService = userLibraryService;
@@ -64,6 +66,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         this.recognitionService = recognitionService;
         this.recognitionInboxService = recognitionInboxService;
         this.fileOpenService = fileOpenService;
+        this.appUpdateService = appUpdateService;
 
         NavigationItems =
         [
@@ -368,6 +371,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private async Task LoadPageDataAsync()
     {
         await LoadSettingsAsync();
+        _ = RefreshUpdateStatusAsync(isManualCheck: false);
         await Task.WhenAll(
             LoadDiscoverBrowseAsync(),
             LoadSearchResultsAsync(),

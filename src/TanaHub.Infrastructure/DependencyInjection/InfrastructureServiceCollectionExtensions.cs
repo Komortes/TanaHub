@@ -9,6 +9,7 @@ using TanaHub.Infrastructure.Settings;
 using TanaHub.Infrastructure.Notifications;
 using TanaHub.Infrastructure.Recognition;
 using TanaHub.Infrastructure.Sync;
+using TanaHub.Infrastructure.Updates;
 
 namespace TanaHub.Infrastructure.DependencyInjection;
 
@@ -73,6 +74,18 @@ public static class InfrastructureServiceCollectionExtensions
 
         services.AddSingleton<IAniListSyncService>(_ => new AniListSyncService(
             new HttpClient { Timeout = TimeSpan.FromSeconds(30) }));
+
+        services.AddSingleton<IAppUpdateService>(_ =>
+        {
+            var httpClient = new HttpClient
+            {
+                BaseAddress = new Uri("https://api.github.com/"),
+                Timeout = TimeSpan.FromSeconds(10)
+            };
+
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("TanaHub/0.1");
+            return new GitHubReleaseUpdateService(httpClient, "Komortes", "TanaHub");
+        });
 
         return services;
     }

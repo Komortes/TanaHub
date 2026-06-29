@@ -17,13 +17,15 @@
             <TextBlock Text="Current development wiring" FontSize="12" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
           </StackPanel>
           <Border Classes="divider"/>
-          <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="130,*" RowSpacing="10">
+          <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="130,*" RowSpacing="10">
             <TextBlock Text="Mode" FontSize="12" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
             <TextBlock Grid.Column="1" Text="File-backed library and settings" FontSize="12" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
             <TextBlock Grid.Row="1" Text="Theme" FontSize="12" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
             <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SettingsTheme}" FontSize="12" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
             <TextBlock Grid.Row="2" Text="Sync" FontSize="12" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
             <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding PreferredSyncSource}" FontSize="12" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+            <TextBlock Grid.Row="3" Text="Version" FontSize="12" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding CurrentAppVersionLabel}" FontSize="12" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
           </Grid>
         </StackPanel>
       </Border>
@@ -41,6 +43,35 @@
         </StackPanel>
       </Border>
     </Grid>
+
+    <!-- Updates -->
+    <Border Classes="panel">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
+        <StackPanel Spacing="4">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <material:MaterialIcon Width="18" Height="18" Kind="Update" Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
+            <TextBlock Text="Updates" FontSize="16" FontWeight="Bold"
+                       Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+            <Border Classes="pill" Padding="8,3" IsVisible="{Binding IsUpdateAvailable}">
+              <TextBlock Text="Available" FontSize="10" FontWeight="Bold"
+                         Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
+            </Border>
+          </StackPanel>
+          <TextBlock Text="{Binding UpdateCheckStatus}" FontSize="12" TextWrapping="Wrap"
+                     Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+          <TextBlock Text="{Binding LatestUpdateUrl}" FontSize="11" TextWrapping="Wrap"
+                     IsVisible="{Binding HasLatestUpdateUrl}"
+                     Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+        </StackPanel>
+        <Button Grid.Column="1" Command="{Binding CheckForUpdatesCommand}"
+                IsEnabled="{Binding !IsCheckingForUpdates}" VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <material:MaterialIcon Width="15" Height="15" Kind="Refresh"/>
+            <TextBlock Text="Check now"/>
+          </StackPanel>
+        </Button>
+      </Grid>
+    </Border>
 
     <Grid ColumnDefinitions="*,*" ColumnSpacing="18">
 

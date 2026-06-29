@@ -4,6 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <AnalysisLevel>latest</AnalysisLevel>
+    <VersionPrefix>0.1.0</VersionPrefix>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <TreatWarningsAsErrors Condition="'$(CI)' == 'true' Or '$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
   </PropertyGroup>
