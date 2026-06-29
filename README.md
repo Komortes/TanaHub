@@ -86,7 +86,7 @@ Release packaging instructions are available in [docs/release.md](docs/release.m
 - [x] Reading progress tracking for manga (chapter/volume)
 - [x] Library statistics and watch-time charts
 - [x] MAL (MyAnimeList) import/export
-- [ ] Custom lists and tags
+- [x] Custom lists and tags
 - [ ] Recommendations based on your library
 - [ ] Auto-update checker
 
