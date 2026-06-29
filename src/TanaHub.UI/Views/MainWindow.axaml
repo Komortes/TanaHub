@@ -293,9 +293,12 @@
                 <Style Selector="ListBoxItem:selected:pointerover /template/ ContentPresenter">
                   <Setter Property="Background" Value="Transparent"/>
                 </Style>
-                <!-- Suppress FluentTheme focus highlight so keyboard nav stays clean -->
+                <!-- Keep keyboard focus visible without covering the sliding selection indicator -->
                 <Style Selector="ListBoxItem:focus-visible /template/ ContentPresenter">
-                  <Setter Property="Background" Value="Transparent"/>
+                  <Setter Property="Background" Value="{DynamicResource TanaHubAccentGlowStrongBrush}"/>
+                  <Setter Property="BorderBrush" Value="{DynamicResource TanaHubAccentLightBrush}"/>
+                  <Setter Property="BorderThickness" Value="1"/>
+                  <Setter Property="CornerRadius" Value="12"/>
                 </Style>
                 <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
                   <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceHoverBrush}"/>

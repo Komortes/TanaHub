@@ -31,6 +31,12 @@ Close TanaHub before changing these files. For a clean smoke test, move the `Tan
 - [ ] Confirm the topbar status gives a readable state and detail.
 - [ ] Run Settings → Updates → Check now and confirm the update status is readable.
 
+### Keyboard and Accessibility
+
+- [ ] Navigate the sidebar, search, detail actions, settings, and recognition history with keyboard only.
+- [ ] Confirm the focused sidebar item has a visible focus state.
+- [ ] Confirm icon-only controls expose readable tooltips.
+
 ### Recognition
 
 - [ ] Select a valid screenshot and confirm source preview, best match, and variants appear.

@@ -75,9 +75,13 @@
 **Description:** Verify keyboard paths, focus visibility, labels/tooltips, and contrast on the main workflows. Fix concrete gaps found during the audit.
 
 **Acceptance criteria:**
-- [ ] Primary actions are keyboard reachable.
-- [ ] Icon-only buttons have tooltips.
-- [ ] Dynamic states have readable text, not color-only meaning.
+- [x] Primary actions are keyboard reachable.
+- [x] Icon-only buttons have tooltips.
+- [x] Dynamic states have readable text, not color-only meaning.
+
+**Verification:**
+- [x] `dotnet test TanaHub.sln`
+- [ ] Manual flow: navigate sidebar, search, detail actions, settings, and history controls with keyboard only.
 
 ### Checkpoint: Product Ready
 - [ ] Smoke checklist passes on a fresh profile.
