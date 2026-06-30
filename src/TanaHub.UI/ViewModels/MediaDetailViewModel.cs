@@ -6,7 +6,7 @@ using TanaHub.Domain.Models;
 
 namespace TanaHub.UI.ViewModels;
 
-public sealed class MediaDetailViewModel
+public sealed partial class MediaDetailViewModel
 {
     public MediaDetailViewModel(
         string id,
@@ -160,15 +160,23 @@ public sealed class MediaDetailViewModel
     public bool IsStatusPaused => LibraryStatus == "Paused";
     public bool IsStatusCompleted => LibraryStatus == "Completed";
     public bool IsStatusDropped => LibraryStatus == "Dropped";
+    public bool IsStatusRepeating => LibraryStatus == "Repeating";
+
+    private static readonly IBrush BrushCurrent = new SolidColorBrush(Color.Parse("#4DD0E1"));
+    private static readonly IBrush BrushCompleted = new SolidColorBrush(Color.Parse("#A3E635"));
+    private static readonly IBrush BrushPlanning = new SolidColorBrush(Color.Parse("#FBBF24"));
+    private static readonly IBrush BrushPaused = new SolidColorBrush(Color.Parse("#FB923C"));
+    private static readonly IBrush BrushDropped = new SolidColorBrush(Color.Parse("#F87171"));
+    private static readonly IBrush BrushDefault = new SolidColorBrush(Color.Parse("#A79ABB"));
 
     public IBrush StatusForeground => LibraryStatus switch
     {
-        "Current" => new SolidColorBrush(Color.Parse("#4DD0E1")),
-        "Completed" => new SolidColorBrush(Color.Parse("#A3E635")),
-        "Planning" => new SolidColorBrush(Color.Parse("#FBBF24")),
-        "Paused" => new SolidColorBrush(Color.Parse("#FB923C")),
-        "Dropped" => new SolidColorBrush(Color.Parse("#F87171")),
-        _ => new SolidColorBrush(Color.Parse("#A79ABB"))
+        "Current" or "Repeating" => BrushCurrent,
+        "Completed" => BrushCompleted,
+        "Planning" => BrushPlanning,
+        "Paused" => BrushPaused,
+        "Dropped" => BrushDropped,
+        _ => BrushDefault
     };
 
     public IAsyncRelayCommand AddToLibraryCommand { get; }
@@ -195,12 +203,20 @@ public sealed class MediaDetailViewModel
     public IAsyncRelayCommand<string?> SaveNotesCommand { get; }
     public IAsyncRelayCommand<string?> SaveReviewCommand { get; }
 
+    [GeneratedRegex(@"<br\s*/?>", RegexOptions.IgnoreCase)]
+    private static partial Regex BrTagRegex();
+
+    [GeneratedRegex("<[^>]+>")]
+    private static partial Regex HtmlTagRegex();
+
+    [GeneratedRegex(@"\n{3,}")]
+    private static partial Regex MultiNewlineRegex();
+
     private static string StripHtml(string html)
     {
         if (string.IsNullOrEmpty(html)) return html;
-        var withNewlines = Regex.Replace(html, @"<br\s*/?>", "\n", RegexOptions.IgnoreCase);
-        var stripped = Regex.Replace(withNewlines, "<[^>]+>", "");
-        var collapsed = Regex.Replace(stripped, @"\n{3,}", "\n\n");
-        return collapsed.Trim();
+        var withNewlines = BrTagRegex().Replace(html, "\n");
+        var stripped = HtmlTagRegex().Replace(withNewlines, "");
+        return MultiNewlineRegex().Replace(stripped, "\n\n").Trim();
     }
 }

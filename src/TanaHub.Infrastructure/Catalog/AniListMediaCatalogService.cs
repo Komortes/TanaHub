@@ -66,7 +66,7 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
             if (offlineCache is not null)
             {
                 offlineCache.PutRange(items);
-                _ = offlineCache.FlushAsync(cancellationToken);
+                _ = offlineCache.FlushAsync(CancellationToken.None);
             }
 
             return Result<PagedResult<MediaItem>>.Success(new PagedResult<MediaItem>(
@@ -122,7 +122,7 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
             if (offlineCache is not null)
             {
                 offlineCache.Put(item);
-                _ = offlineCache.FlushAsync(cancellationToken);
+                _ = offlineCache.FlushAsync(CancellationToken.None);
             }
             return Result<MediaItem>.Success(item);
         }

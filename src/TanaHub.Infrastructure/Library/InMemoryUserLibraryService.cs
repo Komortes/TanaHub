@@ -46,11 +46,6 @@ public sealed class InMemoryUserLibraryService : IUserLibraryService
             filtered = filtered.Where(entry => entry.Status == query.Status.Value);
         }
 
-        if (!string.IsNullOrWhiteSpace(query.SearchText))
-        {
-            filtered = filtered.Where(entry => entry.MediaId.Contains(query.SearchText, StringComparison.OrdinalIgnoreCase));
-        }
-
         var totalCount = filtered.Count();
         var pageItems = filtered
             .OrderByDescending(entry => entry.UpdatedAt)

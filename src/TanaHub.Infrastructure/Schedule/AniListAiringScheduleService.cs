@@ -37,34 +37,46 @@ public sealed class AniListAiringScheduleService : IAiringScheduleService
 
         try
         {
-            using var response = await httpClient.PostAsJsonAsync(
-                GraphQlEndpoint,
-                new GraphQlRequest(ScheduleQuery, new
-                {
-                    page = 1,
-                    perPage = Math.Min(pageSize, 50),
-                    from = from.ToUnixTimeSeconds(),
-                    to = to.ToUnixTimeSeconds()
-                }),
-                cancellationToken);
+            var allItems = new List<AiringScheduleItem>();
+            var page = 1;
+            const int perPage = 50;
 
-            response.EnsureSuccessStatusCode();
-
-            var payload = await response.Content.ReadFromJsonAsync<GraphQlResponse<AiringScheduleData>>(
-                cancellationToken: cancellationToken);
-
-            if (payload?.Errors?.Count > 0)
+            while (true)
             {
-                return Result<IReadOnlyList<AiringScheduleItem>>.Failure(
-                    ApplicationError.ExternalService(payload.Errors[0].Message ?? "AniList schedule error."));
+                using var response = await httpClient.PostAsJsonAsync(
+                    GraphQlEndpoint,
+                    new GraphQlRequest(ScheduleQuery, new
+                    {
+                        page,
+                        perPage,
+                        from = from.ToUnixTimeSeconds(),
+                        to = to.ToUnixTimeSeconds()
+                    }),
+                    cancellationToken);
+
+                response.EnsureSuccessStatusCode();
+
+                var payload = await response.Content.ReadFromJsonAsync<GraphQlResponse<AiringScheduleData>>(
+                    cancellationToken: cancellationToken);
+
+                if (payload?.Errors?.Count > 0)
+                {
+                    return Result<IReadOnlyList<AiringScheduleItem>>.Failure(
+                        ApplicationError.ExternalService(payload.Errors[0].Message ?? "AniList schedule error."));
+                }
+
+                var schedules = payload?.Data?.Page?.AiringSchedules;
+                if (schedules is null or { Count: 0 }) break;
+
+                allItems.AddRange(schedules
+                    .Where(s => s.Media is not null)
+                    .Select(ToDomain));
+
+                if (allItems.Count >= pageSize || schedules.Count < perPage) break;
+                page++;
             }
 
-            var items = payload?.Data?.Page?.AiringSchedules?
-                .Where(schedule => schedule.Media is not null)
-                .Select(ToDomain)
-                .ToArray() ?? [];
-
-            return Result<IReadOnlyList<AiringScheduleItem>>.Success(items);
+            return Result<IReadOnlyList<AiringScheduleItem>>.Success(allItems.Take(pageSize).ToArray());
         }
         catch (HttpRequestException ex)
         {

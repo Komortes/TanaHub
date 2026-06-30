@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using TanaHub.Application.Common;
 using TanaHub.Application.Services;
@@ -43,7 +44,14 @@ internal sealed class TraceMoeService : IRecognitionService
                 .Take(5)
                 .Select(r =>
                 {
-                    var episode = r.Episode?.ToString();
+                    var episode = r.Episode is { } ep
+                        ? ep.ValueKind switch
+                        {
+                            JsonValueKind.Number => ep.GetRawText(),
+                            JsonValueKind.String => ep.GetString(),
+                            _ => null
+                        }
+                        : null;
                     Uri.TryCreate(r.Image, UriKind.Absolute, out var thumb);
                     return new RecognitionMatch(
                         AniListId: r.Anilist!.Id,
@@ -80,7 +88,7 @@ internal sealed class TraceMoeService : IRecognitionService
     private sealed class TraceMoeResult
     {
         [JsonPropertyName("anilist")] public TraceMoeAniList? Anilist { get; init; }
-        [JsonPropertyName("episode")] public object? Episode { get; init; }
+        [JsonPropertyName("episode")] public JsonElement? Episode { get; init; }
         [JsonPropertyName("similarity")] public double Similarity { get; init; }
         [JsonPropertyName("image")] public string? Image { get; init; }
     }

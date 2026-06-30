@@ -41,7 +41,14 @@ public sealed class AniListOAuthService : IAniListAuthService
             return Result<AniListAuthResult>.Failure(ApplicationError.Validation($"Cannot start local listener: {ex.Message}"));
         }
 
-        Process.Start(new ProcessStartInfo(authUrl) { UseShellExecute = true });
+        try
+        {
+            Process.Start(new ProcessStartInfo(authUrl) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            return Result<AniListAuthResult>.Failure(ApplicationError.Validation($"Could not open browser: {ex.Message}"));
+        }
 
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         cts.CancelAfter(TimeSpan.FromMinutes(5));

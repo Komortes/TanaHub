@@ -118,7 +118,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
         allLibraryEntries = [];
         SetVisiblePage(selectedNavigationItem.Key);
 
-        _ = LoadPageDataAsync();
+        _ = LoadPageDataAsync().ContinueWith(t =>
+        {
+            if (t.IsFaulted)
+                SearchStatus = $"Startup error: {t.Exception?.GetBaseException().Message}";
+        }, TaskScheduler.Current);
     }
 
     public string AppName => "TanaHub";

@@ -95,11 +95,13 @@ public sealed partial class MainWindowViewModel
                     return;
                 }
 
+                (string Title, Uri? PosterUri)? bestPreview = null;
                 for (var index = 0; index < matches.Count; index++)
                 {
                     var match = matches[index];
                     var mediaId = $"anilist:{match.AniListId}";
                     var preview = await GetRecognitionTitlePreviewAsync(mediaId, match);
+                    if (index == 0) bestPreview = preview;
                     var vm = new RecognitionResultViewModel(
                         MediaId: mediaId,
                         Title: preview.Title,
@@ -114,7 +116,7 @@ public sealed partial class MainWindowViewModel
                 }
 
                 OnPropertyChanged(nameof(HasRecognitionVariantResults));
-                await SaveBestRecognitionAttemptAsync(matches[0], sourceName, sourcePath);
+                await SaveBestRecognitionAttemptAsync(matches[0], bestPreview!.Value, sourceName, sourcePath);
                 RecognitionStatus = $"{matches.Count} match{(matches.Count == 1 ? string.Empty : "es")} · powered by trace.moe";
             }
         }
@@ -125,10 +127,9 @@ public sealed partial class MainWindowViewModel
     }
 
     private async Task SaveBestRecognitionAttemptAsync(
-        RecognitionMatch match, string sourceName, string? sourcePath)
+        RecognitionMatch match, (string Title, Uri? PosterUri) preview, string sourceName, string? sourcePath)
     {
         var mediaId = $"anilist:{match.AniListId}";
-        var preview = await GetRecognitionTitlePreviewAsync(mediaId, match);
         var attempt = new RecognitionAttempt
         {
             SourceName = string.IsNullOrWhiteSpace(sourceName) ? "Selected image" : sourceName,

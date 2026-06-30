@@ -256,7 +256,7 @@ public sealed partial class MainWindowViewModel
     {
         var result = await userLibraryService.GetEntriesAsync(new Application.Queries.UserLibraryQuery
         {
-            PageSize = 500
+            PageSize = int.MaxValue
         });
 
         if (result.IsFailure) { LibraryExportStatus = result.Error.Message; return null; }

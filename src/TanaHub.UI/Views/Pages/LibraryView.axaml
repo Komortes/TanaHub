@@ -235,13 +235,13 @@
         </StackPanel>
 
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
-          <Button Classes.ghost="{Binding !IsLibraryListMode}"
+          <Button Classes.ghost="{Binding !IsLibraryListVisible}"
                   Width="34" Height="34" Padding="0"
                   Command="{Binding SelectLibraryViewModeCommand}" CommandParameter="List"
                   ToolTip.Tip="List view">
             <material:MaterialIcon Width="15" Height="15" Kind="ViewList"/>
           </Button>
-          <Button Classes.ghost="{Binding !IsLibraryGridMode}"
+          <Button Classes.ghost="{Binding !IsLibraryGridVisible}"
                   Width="34" Height="34" Padding="0"
                   Command="{Binding SelectLibraryViewModeCommand}" CommandParameter="Grid"
                   ToolTip.Tip="Grid view">

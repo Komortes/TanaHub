@@ -119,7 +119,7 @@ public sealed class FileRecognitionInboxService : IRecognitionInboxService
                 .Where(attempt => !string.IsNullOrWhiteSpace(attempt.Id))
                 .ToDictionary(attempt => attempt.Id, StringComparer.OrdinalIgnoreCase);
         }
-        catch
+        catch (Exception ex) when (ex is IOException or System.Text.Json.JsonException or UnauthorizedAccessException)
         {
             return new Dictionary<string, RecognitionAttempt>(StringComparer.OrdinalIgnoreCase);
         }
@@ -135,6 +135,7 @@ public sealed class FileRecognitionInboxService : IRecognitionInboxService
 
         var dtos = attempts.Values
             .OrderByDescending(attempt => attempt.CreatedAt)
+            .Take(200)
             .Select(RecognitionAttemptDto.FromDomain)
             .ToArray();
 

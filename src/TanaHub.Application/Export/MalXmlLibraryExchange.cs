@@ -82,7 +82,7 @@ public static class MalXmlLibraryExchange
 
             return Result<IReadOnlyList<UserMediaEntry>>.Success(entries);
         }
-        catch
+        catch (Exception ex) when (ex is System.Xml.XmlException or FormatException or InvalidOperationException)
         {
             return Result<IReadOnlyList<UserMediaEntry>>.Failure(
                 ApplicationError.Validation("MAL XML could not be parsed."));

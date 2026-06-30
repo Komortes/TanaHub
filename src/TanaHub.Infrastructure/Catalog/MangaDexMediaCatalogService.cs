@@ -94,9 +94,13 @@ internal sealed class MangaDexMediaCatalogService : IMediaCatalogService
             attrs.Title?.GetValueOrDefault("en"),
             attrs.Title?.GetValueOrDefault("ja"));
 
-        var format = attrs.Type switch
+        var formatTag = attrs.Tags?
+            .Where(t => t.Attributes?.Group == "format")
+            .Select(t => t.Attributes?.Name?.GetValueOrDefault("en")?.ToLowerInvariant())
+            .FirstOrDefault(v => v is not null);
+
+        var format = formatTag switch
         {
-            "novel" => MediaFormat.Novel,
             "oneshot" => MediaFormat.OneShot,
             "doujinshi" => MediaFormat.Special,
             _ => MediaFormat.Manga,
@@ -185,7 +189,7 @@ internal sealed class MangaDexMediaCatalogService : IMediaCatalogService
         [JsonPropertyName("description")] public Dictionary<string, string>? Description { get; init; }
         [JsonPropertyName("status")] public string? Status { get; init; }
         [JsonPropertyName("year")] public int? Year { get; init; }
-        [JsonPropertyName("publicationDemographic")] public string? Type { get; init; }
+        [JsonPropertyName("publicationDemographic")] public string? Demographic { get; init; }
         [JsonPropertyName("tags")] public List<MangaDexTag>? Tags { get; init; }
     }
 

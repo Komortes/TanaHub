@@ -59,11 +59,6 @@ public sealed class FileUserLibraryService : IUserLibraryService
                 filtered = filtered.Where(entry => entry.Status == query.Status.Value);
             }
 
-            if (!string.IsNullOrWhiteSpace(query.SearchText))
-            {
-                filtered = filtered.Where(entry => entry.MediaId.Contains(query.SearchText, StringComparison.OrdinalIgnoreCase));
-            }
-
             if (!string.IsNullOrWhiteSpace(query.Tag))
             {
                 filtered = filtered.Where(entry => entry.Tags.Any(tag =>
@@ -364,8 +359,10 @@ public sealed class FileUserLibraryService : IUserLibraryService
                 .Select(ToDomain)
                 .ToDictionary(entry => entry.MediaId, StringComparer.OrdinalIgnoreCase);
         }
-        catch
+        catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
         {
+            var backupPath = storagePath + ".bak";
+            try { File.Copy(storagePath, backupPath, overwrite: true); } catch { /* best-effort */ }
             return seedEntries.ToDictionary(entry => entry.MediaId, StringComparer.OrdinalIgnoreCase);
         }
     }

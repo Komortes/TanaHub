@@ -76,7 +76,7 @@ public sealed class FileAppSettingsService : IAppSettingsService
             return await JsonSerializer.DeserializeAsync<AppSettings>(stream, JsonOptions, cancellationToken)
                 ?? new AppSettings();
         }
-        catch
+        catch (Exception ex) when (ex is IOException or System.Text.Json.JsonException or UnauthorizedAccessException)
         {
             return new AppSettings();
         }

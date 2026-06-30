@@ -54,8 +54,6 @@ public sealed partial class MainWindowViewModel
     public bool IsLibraryMangaSelected => SelectedLibraryType == "Manga";
     public bool IsLibraryListVisible => SelectedLibraryViewMode == "List";
     public bool IsLibraryGridVisible => SelectedLibraryViewMode == "Grid";
-    public bool IsLibraryListMode => SelectedLibraryViewMode == "List";
-    public bool IsLibraryGridMode => SelectedLibraryViewMode == "Grid";
     public bool IsLibraryEmpty => LibraryEntries.Count == 0;
     public bool HasContinueItems => ContinueItems.Count > 0;
 
@@ -94,8 +92,6 @@ public sealed partial class MainWindowViewModel
     {
         OnPropertyChanged(nameof(IsLibraryListVisible));
         OnPropertyChanged(nameof(IsLibraryGridVisible));
-        OnPropertyChanged(nameof(IsLibraryListMode));
-        OnPropertyChanged(nameof(IsLibraryGridMode));
     }
 
     [RelayCommand]
@@ -148,15 +144,19 @@ public sealed partial class MainWindowViewModel
         var mediaById = new Dictionary<string, MediaItem>(StringComparer.OrdinalIgnoreCase);
         var entries = result.Value!.Items.ToArray();
 
-        foreach (var entry in entries)
-        {
-            var media = await mediaCatalogService.GetByIdAsync(entry.MediaId);
-            if (media.IsSuccess)
-            {
-                mediaById[entry.MediaId] = media.Value!;
-            }
+        var mediaTasks = entries
+            .Select(entry => mediaCatalogService.GetByIdAsync(entry.MediaId))
+            .ToArray();
+        var mediaResults = await Task.WhenAll(mediaTasks);
 
-            var vm = CreateLibraryEntryViewModel(entry, media.IsSuccess ? media.Value : null);
+        for (var i = 0; i < entries.Length; i++)
+        {
+            var entry = entries[i];
+            var mediaResult = mediaResults[i];
+            if (mediaResult.IsSuccess)
+                mediaById[entry.MediaId] = mediaResult.Value!;
+
+            var vm = CreateLibraryEntryViewModel(entry, mediaResult.IsSuccess ? mediaResult.Value : null);
             hydrated.Add(vm);
             if (entry.Status is MediaListStatus.Current or MediaListStatus.Paused)
                 continueItems.Add(vm);

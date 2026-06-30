@@ -22,7 +22,7 @@ public static class InfrastructureServiceCollectionExtensions
         {
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             var cache = new OfflineCatalogCache(Path.Combine(appData, "TanaHub", "catalog_cache.json"));
-            Task.Run(() => cache.LoadAsync());
+            _ = cache.LoadAsync();
             return cache;
         });
         services.AddSingleton<AniListMediaCatalogService>(provider =>

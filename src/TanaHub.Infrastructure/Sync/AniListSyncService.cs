@@ -124,7 +124,7 @@ public sealed class AniListSyncService : IAniListSyncService
     private static MediaListStatus MapStatus(string? status) => status switch
     {
         "CURRENT" => MediaListStatus.Current,
-        "REPEATING" => MediaListStatus.Current,
+        "REPEATING" => MediaListStatus.Repeating,
         "COMPLETED" => MediaListStatus.Completed,
         "PLANNING" => MediaListStatus.Planning,
         "PAUSED" => MediaListStatus.Paused,
