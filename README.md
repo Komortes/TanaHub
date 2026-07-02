@@ -94,6 +94,12 @@ Release packaging instructions are available in [docs/release.md](docs/release.m
 
 ---
 
+## Security note
+
+Your AniList Client Secret and OAuth access token are stored locally in `settings.json`, encrypted at rest with a per-installation AES-256-GCM key (`.settings.key`, kept in the same app-data folder with owner-only file permissions on macOS/Linux). This protects against casual exposure (e.g. accidentally syncing the file to cloud storage or backups being read by another tool), but it is not a substitute for an OS keychain: anyone with read access to both files under your OS user account can still decrypt the values. Do not commit or share your app-data folder.
+
+---
+
 ## License
 
 MIT — see [LICENSE](LICENSE)

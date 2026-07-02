@@ -5,6 +5,7 @@ using TanaHub.Application.Queries;
 using TanaHub.Application.Services;
 using TanaHub.Domain.Enums;
 using TanaHub.Domain.Models;
+using TanaHub.Infrastructure.Common;
 
 namespace TanaHub.Infrastructure.Library;
 
@@ -369,19 +370,12 @@ public sealed class FileUserLibraryService : IUserLibraryService
 
     private async Task SaveAsync(CancellationToken cancellationToken)
     {
-        var directory = Path.GetDirectoryName(storagePath);
-        if (!string.IsNullOrWhiteSpace(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
-
         var dtos = entries.Values
             .OrderBy(entry => entry.MediaId, StringComparer.OrdinalIgnoreCase)
             .Select(UserMediaEntryDto.FromDomain)
             .ToArray();
 
-        await using var stream = File.Create(storagePath);
-        await JsonSerializer.SerializeAsync(stream, dtos, JsonOptions, cancellationToken);
+        await AtomicFileWriter.WriteJsonAsync(storagePath, dtos, JsonOptions, cancellationToken);
     }
 
     private static UserMediaEntry ToDomain(UserMediaEntryDto dto)

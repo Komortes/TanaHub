@@ -2,6 +2,7 @@ using System.Text.Json;
 using TanaHub.Application.Common;
 using TanaHub.Application.Services;
 using TanaHub.Domain.Models;
+using TanaHub.Infrastructure.Common;
 
 namespace TanaHub.Infrastructure.Recognition;
 
@@ -127,20 +128,13 @@ public sealed class FileRecognitionInboxService : IRecognitionInboxService
 
     private async Task SaveFileAsync(CancellationToken cancellationToken)
     {
-        var directory = Path.GetDirectoryName(storagePath);
-        if (!string.IsNullOrWhiteSpace(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
-
         var dtos = attempts.Values
             .OrderByDescending(attempt => attempt.CreatedAt)
             .Take(200)
             .Select(RecognitionAttemptDto.FromDomain)
             .ToArray();
 
-        await using var stream = File.Create(storagePath);
-        await JsonSerializer.SerializeAsync(stream, dtos, JsonOptions, cancellationToken);
+        await AtomicFileWriter.WriteJsonAsync(storagePath, dtos, JsonOptions, cancellationToken);
     }
 
     private static RecognitionAttempt ToDomain(RecognitionAttemptDto dto)

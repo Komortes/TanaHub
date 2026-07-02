@@ -2,6 +2,7 @@ using System.Text.Json;
 using TanaHub.Application.Common;
 using TanaHub.Application.Services;
 using TanaHub.Domain.Models;
+using TanaHub.Infrastructure.Common;
 
 namespace TanaHub.Infrastructure.Settings;
 
@@ -13,12 +14,14 @@ public sealed class FileAppSettingsService : IAppSettingsService
     };
 
     private readonly string storagePath;
+    private readonly string keyPath;
     private readonly SemaphoreSlim gate = new(1, 1);
 
     public FileAppSettingsService(string storagePath)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(storagePath);
         this.storagePath = storagePath;
+        keyPath = Path.Combine(Path.GetDirectoryName(storagePath) ?? ".", ".settings.key");
     }
 
     public async Task<Result<AppSettings>> GetAsync(CancellationToken cancellationToken = default)
@@ -46,14 +49,13 @@ public sealed class FileAppSettingsService : IAppSettingsService
                 UpdatedAt = DateTimeOffset.UtcNow
             };
 
-            var directory = Path.GetDirectoryName(storagePath);
-            if (!string.IsNullOrWhiteSpace(directory))
+            var onDisk = updated with
             {
-                Directory.CreateDirectory(directory);
-            }
+                AniListClientSecret = LocalSecretProtector.Protect(updated.AniListClientSecret, keyPath),
+                AniListAccessToken = LocalSecretProtector.Protect(updated.AniListAccessToken, keyPath)
+            };
 
-            await using var stream = File.Create(storagePath);
-            await JsonSerializer.SerializeAsync(stream, updated, JsonOptions, cancellationToken);
+            await AtomicFileWriter.WriteJsonAsync(storagePath, onDisk, JsonOptions, cancellationToken);
 
             return Result<AppSettings>.Success(updated);
         }
@@ -73,8 +75,14 @@ public sealed class FileAppSettingsService : IAppSettingsService
         try
         {
             await using var stream = File.OpenRead(storagePath);
-            return await JsonSerializer.DeserializeAsync<AppSettings>(stream, JsonOptions, cancellationToken)
+            var loaded = await JsonSerializer.DeserializeAsync<AppSettings>(stream, JsonOptions, cancellationToken)
                 ?? new AppSettings();
+
+            return loaded with
+            {
+                AniListClientSecret = LocalSecretProtector.Unprotect(loaded.AniListClientSecret, keyPath),
+                AniListAccessToken = LocalSecretProtector.Unprotect(loaded.AniListAccessToken, keyPath)
+            };
         }
         catch (Exception ex) when (ex is IOException or System.Text.Json.JsonException or UnauthorizedAccessException)
         {

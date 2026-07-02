@@ -69,18 +69,19 @@ public sealed class AniListOAuthService : IAniListAuthService
         if (string.IsNullOrWhiteSpace(code))
             return Result<AniListAuthResult>.Failure(ApplicationError.Validation("Authorization was denied or no code received."));
 
-        var accessToken = await ExchangeCodeAsync(code, clientId, clientSecret, cancellationToken);
-        if (accessToken is null)
-            return Result<AniListAuthResult>.Failure(ApplicationError.Validation("Failed to exchange authorization code for access token."));
+        var tokenResult = await ExchangeCodeAsync(code, clientId, clientSecret, cancellationToken);
+        if (tokenResult.IsFailure)
+            return Result<AniListAuthResult>.Failure(tokenResult.Error);
 
-        var viewer = await FetchViewerAsync(accessToken, cancellationToken);
-        if (viewer is null)
-            return Result<AniListAuthResult>.Failure(ApplicationError.Validation("Failed to fetch AniList user info."));
+        var viewerResult = await FetchViewerAsync(tokenResult.Value!, cancellationToken);
+        if (viewerResult.IsFailure)
+            return Result<AniListAuthResult>.Failure(viewerResult.Error);
 
-        return Result<AniListAuthResult>.Success(new AniListAuthResult(accessToken, viewer.Value.Username, viewer.Value.UserId));
+        return Result<AniListAuthResult>.Success(
+            new AniListAuthResult(tokenResult.Value!, viewerResult.Value.Username, viewerResult.Value.UserId));
     }
 
-    private async Task<string?> ExchangeCodeAsync(string code, string clientId, string clientSecret, CancellationToken ct)
+    private async Task<Result<string>> ExchangeCodeAsync(string code, string clientId, string clientSecret, CancellationToken ct)
     {
         var form = new FormUrlEncodedContent(new Dictionary<string, string>
         {
@@ -94,19 +95,32 @@ public sealed class AniListOAuthService : IAniListAuthService
         try
         {
             var response = await httpClient.PostAsync(TokenUrl, form, ct);
-            if (!response.IsSuccessStatusCode) return null;
-
             var json = await response.Content.ReadAsStringAsync(ct);
+            if (!response.IsSuccessStatusCode)
+                return Result<string>.Failure(ApplicationError.Validation(
+                    $"Token exchange failed ({(int)response.StatusCode}): {json}"));
+
             using var doc = JsonDocument.Parse(json);
-            return doc.RootElement.GetProperty("access_token").GetString();
+            var token = doc.RootElement.GetProperty("access_token").GetString();
+            return string.IsNullOrWhiteSpace(token)
+                ? Result<string>.Failure(ApplicationError.Validation("Token response did not contain an access token."))
+                : Result<string>.Success(token);
         }
-        catch
+        catch (HttpRequestException ex)
         {
-            return null;
+            return Result<string>.Failure(ApplicationError.Validation($"Network error during token exchange: {ex.Message}"));
+        }
+        catch (JsonException ex)
+        {
+            return Result<string>.Failure(ApplicationError.Validation($"Malformed token response: {ex.Message}"));
+        }
+        catch (TaskCanceledException)
+        {
+            return Result<string>.Failure(ApplicationError.Validation("Token exchange timed out."));
         }
     }
 
-    private async Task<(string Username, int UserId)?> FetchViewerAsync(string accessToken, CancellationToken ct)
+    private async Task<Result<(string Username, int UserId)>> FetchViewerAsync(string accessToken, CancellationToken ct)
     {
         const string query = """{"query":"query{Viewer{id name}}"}""";
         var req = new HttpRequestMessage(HttpMethod.Post, "https://graphql.anilist.co");
@@ -116,18 +130,28 @@ public sealed class AniListOAuthService : IAniListAuthService
         try
         {
             var response = await httpClient.SendAsync(req, ct);
-            if (!response.IsSuccessStatusCode) return null;
-
             var json = await response.Content.ReadAsStringAsync(ct);
+            if (!response.IsSuccessStatusCode)
+                return Result<(string, int)>.Failure(ApplicationError.Validation(
+                    $"Failed to fetch AniList viewer ({(int)response.StatusCode}): {json}"));
+
             using var doc = JsonDocument.Parse(json);
             var viewer = doc.RootElement.GetProperty("data").GetProperty("Viewer");
             var username = viewer.GetProperty("name").GetString() ?? string.Empty;
             var userId = viewer.GetProperty("id").GetInt32();
-            return (username, userId);
+            return Result<(string, int)>.Success((username, userId));
         }
-        catch
+        catch (HttpRequestException ex)
         {
-            return null;
+            return Result<(string, int)>.Failure(ApplicationError.Validation($"Network error while fetching viewer: {ex.Message}"));
+        }
+        catch (JsonException ex)
+        {
+            return Result<(string, int)>.Failure(ApplicationError.Validation($"Malformed viewer response: {ex.Message}"));
+        }
+        catch (TaskCanceledException)
+        {
+            return Result<(string, int)>.Failure(ApplicationError.Validation("Fetching viewer info timed out."));
         }
     }
 

@@ -17,6 +17,8 @@ public sealed class RemoteImage : Image
     };
 
     private static readonly ConcurrentDictionary<Uri, Bitmap?> Cache = new();
+    private static readonly ConcurrentQueue<Uri> CacheOrder = new();
+    private const int MaxCacheEntries = 300;
 
     private Uri? requestedUri;
 
@@ -83,10 +85,20 @@ public sealed class RemoteImage : Image
         }
 
         Cache[uri] = bitmap;
+        CacheOrder.Enqueue(uri);
+        TrimCache();
 
         if (requestedUri == uri)
         {
             Source = bitmap;
+        }
+    }
+
+    private static void TrimCache()
+    {
+        while (Cache.Count > MaxCacheEntries && CacheOrder.TryDequeue(out var oldest))
+        {
+            Cache.TryRemove(oldest, out _);
         }
     }
 }

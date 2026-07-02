@@ -66,7 +66,7 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
             if (offlineCache is not null)
             {
                 offlineCache.PutRange(items);
-                _ = offlineCache.FlushAsync(CancellationToken.None);
+                FireAndForgetFlush(offlineCache);
             }
 
             return Result<PagedResult<MediaItem>>.Success(new PagedResult<MediaItem>(
@@ -122,7 +122,7 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
             if (offlineCache is not null)
             {
                 offlineCache.Put(item);
-                _ = offlineCache.FlushAsync(CancellationToken.None);
+                FireAndForgetFlush(offlineCache);
             }
             return Result<MediaItem>.Success(item);
         }
@@ -415,6 +415,16 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
     private static Result<T> Failure<T>(string message)
     {
         return Result<T>.Failure(ApplicationError.Validation(message));
+    }
+
+    private static void FireAndForgetFlush(OfflineCatalogCache cache)
+    {
+        _ = cache.FlushAsync(CancellationToken.None)
+            .ContinueWith(
+                task => _ = task.Exception,
+                CancellationToken.None,
+                TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
     }
 
     private const string MediaQuery = """
