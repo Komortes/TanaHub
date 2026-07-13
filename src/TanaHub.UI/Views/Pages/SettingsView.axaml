@@ -210,7 +210,7 @@
               <Button Command="{Binding SyncFromAniListCommand}">
                 <StackPanel Orientation="Horizontal" Spacing="7">
                   <material:MaterialIcon Width="15" Height="15" Kind="CloudSync"/>
-                  <TextBlock Text="Sync library"/>
+                  <TextBlock Text="Import library"/>
                 </StackPanel>
               </Button>
               <TextBlock Text="{Binding AniListSyncStatus}" FontSize="10"

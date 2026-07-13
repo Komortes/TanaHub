@@ -86,7 +86,7 @@
                 Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
                 BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
           <Grid>
-            <controls:RemoteImage SourceUri="{Binding RecognitionSourcePreviewUri}"
+            <controls:RemoteImage SourceUri="{Binding RecognitionSourcePreviewUri}" AllowFileSource="True"
                                   IsVisible="{Binding HasRecognitionSourcePreview}"/>
             <material:MaterialIcon Width="34" Height="34" Kind="ImageOffOutline"
                                    Foreground="{DynamicResource TanaHubTextMutedBrush}"
@@ -127,7 +127,7 @@
                   Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
                   BorderBrush="{DynamicResource TanaHubBorderBrush}" BorderThickness="1">
             <Grid>
-              <controls:RemoteImage SourceUri="{Binding RecognitionSourcePreviewUri}"
+              <controls:RemoteImage SourceUri="{Binding RecognitionSourcePreviewUri}" AllowFileSource="True"
                                     IsVisible="{Binding HasRecognitionSourcePreview}"/>
               <StackPanel IsVisible="{Binding !HasRecognitionSourcePreview}"
                           HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">

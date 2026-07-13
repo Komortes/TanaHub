@@ -34,6 +34,8 @@ public abstract record MediaItem
 
     public int? AverageScore { get; init; }
 
+    public int? MalId { get; init; }
+
     public string? Description { get; init; }
 
     public IReadOnlyList<string> Genres { get; init; } = [];

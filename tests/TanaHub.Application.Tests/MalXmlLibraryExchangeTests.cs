@@ -27,9 +27,9 @@ public sealed class MalXmlLibraryExchangeTests
     }
 
     [Fact]
-    public void Export_WritesZeroMalIdForNonMalEntry()
+    public void Export_SkipsEntryWithoutMalId()
     {
-        var xml = MalXmlLibraryExchange.Export([
+        var result = MalXmlLibraryExchange.CreateExport([
             new LibraryExportItem(
                 "anilist:1",
                 "Cowboy Bebop",
@@ -39,7 +39,31 @@ public sealed class MalXmlLibraryExchangeTests
                 10)
         ]);
 
-        Assert.Contains("<series_animedb_id>0</series_animedb_id>", xml);
+        Assert.Equal(0, result.ExportedCount);
+        Assert.Equal(1, result.SkippedCount);
+        Assert.DoesNotContain("<anime>", result.Xml);
+        Assert.DoesNotContain("<series_animedb_id>0</series_animedb_id>", result.Xml);
+    }
+
+    [Fact]
+    public void Export_UsesMappedMalIdForAniListEntry()
+    {
+        var result = MalXmlLibraryExchange.CreateExport([
+            new LibraryExportItem(
+                "anilist:1",
+                "Cowboy Bebop",
+                "Anime",
+                "Completed",
+                26,
+                10)
+            {
+                MalId = 1
+            }
+        ]);
+
+        Assert.Equal(1, result.ExportedCount);
+        Assert.Equal(0, result.SkippedCount);
+        Assert.Contains("<series_animedb_id>1</series_animedb_id>", result.Xml);
     }
 
     [Fact]

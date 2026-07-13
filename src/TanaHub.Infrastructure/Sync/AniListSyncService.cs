@@ -42,7 +42,7 @@ public sealed class AniListSyncService : IAniListSyncService
         IUserLibraryService libraryService,
         CancellationToken cancellationToken = default)
     {
-        var imported = 0;
+        var importedEntries = new List<UserMediaEntry>();
 
         foreach (var (typeName, mediaType) in new[] { ("ANIME", MediaType.Anime), ("MANGA", MediaType.Manga) })
         {
@@ -50,20 +50,16 @@ public sealed class AniListSyncService : IAniListSyncService
             if (entries is null)
                 return Result<int>.Failure(ApplicationError.Validation($"Failed to fetch {typeName} list from AniList."));
 
-            foreach (var entry in entries)
-            {
-                var upsertResult = await libraryService.UpsertEntryAsync(entry, cancellationToken);
-                if (upsertResult.IsSuccess) imported++;
-            }
+            importedEntries.AddRange(entries);
         }
 
-        return Result<int>.Success(imported);
+        return await libraryService.MergeEntriesAsync(importedEntries, cancellationToken);
     }
 
     private async Task<List<UserMediaEntry>?> FetchListAsync(
         string accessToken, int userId, string type, CancellationToken ct)
     {
-        var req = new HttpRequestMessage(HttpMethod.Post, GraphQlUrl);
+        using var req = new HttpRequestMessage(HttpMethod.Post, GraphQlUrl);
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         req.Content = JsonContent.Create(new
         {
@@ -73,7 +69,7 @@ public sealed class AniListSyncService : IAniListSyncService
 
         try
         {
-            var response = await httpClient.SendAsync(req, ct);
+            using var response = await httpClient.SendAsync(req, ct);
             if (!response.IsSuccessStatusCode) return null;
 
             var payload = await response.Content.ReadFromJsonAsync<AniListCollectionResponse>(

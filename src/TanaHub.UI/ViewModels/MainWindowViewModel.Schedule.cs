@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using TanaHub.Application.Queries;
 using TanaHub.Domain.Models;
 
 namespace TanaHub.UI.ViewModels;
@@ -66,9 +67,15 @@ public sealed partial class MainWindowViewModel
             return;
         }
 
-        var libraryIds = LibraryEntries
-            .Select(e => e.MediaId)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var libraryResult = await userLibraryService.GetEntriesAsync(new UserLibraryQuery
+        {
+            PageSize = int.MaxValue
+        });
+        var libraryIds = libraryResult.IsSuccess
+            ? libraryResult.Value!.Items
+                .Select(entry => entry.MediaId)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase)
+            : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var item in result.Value!)
         {

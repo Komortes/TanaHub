@@ -34,6 +34,26 @@ public sealed class MainWindowViewModelRecognitionTests
         Assert.Equal("No image selected.", viewModel.RecognitionStatus);
     }
 
+    [Fact]
+    public async Task PasteAndRecognizeCommand_DeletesPreviousTemporaryClipboardImage()
+    {
+        var temporaryPath = Path.Combine(Path.GetTempPath(), $"tanahub_paste_{Guid.NewGuid():N}.png");
+        await File.WriteAllBytesAsync(temporaryPath, [1, 2, 3]);
+        var files = new Queue<(Stream? Stream, string MimeType, string SourceName, string? SourcePath)>(
+        [
+            (new MemoryStream([1, 2, 3]), "image/png", "Clipboard image", temporaryPath),
+            (null, string.Empty, "Clipboard image", null)
+        ]);
+        using var viewModel = CreateViewModel(new FakeFileOpenService(files));
+
+        await viewModel.PasteAndRecognizeCommand.ExecuteAsync(null);
+        Assert.True(File.Exists(temporaryPath));
+
+        await viewModel.PasteAndRecognizeCommand.ExecuteAsync(null);
+
+        Assert.False(File.Exists(temporaryPath));
+    }
+
     private static MainWindowViewModel CreateViewModel(IFileOpenService fileOpenService)
     {
         return new MainWindowViewModel(
@@ -98,6 +118,11 @@ public sealed class MainWindowViewModelRecognitionTests
             UserMediaEntry entry,
             CancellationToken cancellationToken = default) =>
             Task.FromResult(Result<UserMediaEntry>.Success(entry));
+
+        public Task<Result<int>> MergeEntriesAsync(
+            IReadOnlyCollection<UserMediaEntry> entries,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(Result<int>.Success(entries.Count));
 
         public Task<Result<UserMediaEntry>> IncrementProgressAsync(
             string mediaId,
@@ -209,6 +234,10 @@ public sealed class MainWindowViewModelRecognitionTests
     private sealed class FakeCatalogSourceSelector : ICatalogSourceSelector
     {
         public void SetSource(string source)
+        {
+        }
+
+        public void SetOfflineCacheEnabled(bool enabled)
         {
         }
     }

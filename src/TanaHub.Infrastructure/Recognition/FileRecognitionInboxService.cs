@@ -67,9 +67,14 @@ public sealed class FileRecognitionInboxService : IRecognitionInboxService
                 CreatedAt = attempt.CreatedAt == default ? DateTimeOffset.UtcNow : attempt.CreatedAt
             };
 
-            attempts[saved.Id] = saved;
-            await SaveFileAsync(cancellationToken);
-            return Result<RecognitionAttempt>.Success(saved);
+            var candidate = CloneAttempts();
+            candidate[saved.Id] = saved;
+            candidate = candidate.Values
+                .OrderByDescending(item => item.CreatedAt)
+                .Take(200)
+                .ToDictionary(item => item.Id, StringComparer.OrdinalIgnoreCase);
+
+            return await CommitAsync(candidate, saved, cancellationToken);
         }
         finally
         {
@@ -89,13 +94,14 @@ public sealed class FileRecognitionInboxService : IRecognitionInboxService
         await gate.WaitAsync(cancellationToken);
         try
         {
-            var removed = attempts.Remove(attemptId);
-            if (removed)
+            var candidate = CloneAttempts();
+            var removed = candidate.Remove(attemptId);
+            if (!removed)
             {
-                await SaveFileAsync(cancellationToken);
+                return Result<bool>.Success(false);
             }
 
-            return Result<bool>.Success(removed);
+            return await CommitAsync(candidate, true, cancellationToken);
         }
         finally
         {
@@ -126,15 +132,45 @@ public sealed class FileRecognitionInboxService : IRecognitionInboxService
         }
     }
 
-    private async Task SaveFileAsync(CancellationToken cancellationToken)
+    private async Task SaveFileAsync(
+        IEnumerable<RecognitionAttempt> snapshot,
+        CancellationToken cancellationToken)
     {
-        var dtos = attempts.Values
+        var dtos = snapshot
             .OrderByDescending(attempt => attempt.CreatedAt)
             .Take(200)
             .Select(RecognitionAttemptDto.FromDomain)
             .ToArray();
 
         await AtomicFileWriter.WriteJsonAsync(storagePath, dtos, JsonOptions, cancellationToken);
+    }
+
+    private Dictionary<string, RecognitionAttempt> CloneAttempts()
+    {
+        return new Dictionary<string, RecognitionAttempt>(attempts, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private async Task<Result<T>> CommitAsync<T>(
+        Dictionary<string, RecognitionAttempt> candidate,
+        T value,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await SaveFileAsync(candidate.Values, cancellationToken);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        {
+            return Result<T>.Failure(ApplicationError.Storage("Recognition history could not be saved."));
+        }
+
+        attempts.Clear();
+        foreach (var pair in candidate)
+        {
+            attempts[pair.Key] = pair.Value;
+        }
+
+        return Result<T>.Success(value);
     }
 
     private static RecognitionAttempt ToDomain(RecognitionAttemptDto dto)

@@ -171,6 +171,60 @@ public sealed class FileUserLibraryServiceTests
         Assert.Null(result.Value!.Review);
     }
 
+    [Fact]
+    public async Task MergeEntriesAsync_PreservesLocalOnlyFieldsAndPersistsIncomingProgress()
+    {
+        var storagePath = CreateStoragePath();
+        var service = new FileUserLibraryService(storagePath);
+        await service.UpsertEntryAsync(new UserMediaEntry("anilist:20", MediaType.Anime, MediaListStatus.Current)
+        {
+            Progress = 3,
+            Notes = "Old remote note",
+            Review = "Keep this review",
+            Tags = ["favorite"],
+            CustomLists = ["Weekend"]
+        });
+
+        var merged = await service.MergeEntriesAsync([
+            new UserMediaEntry("anilist:20", MediaType.Anime, MediaListStatus.Completed)
+            {
+                Progress = 12,
+                Score = 9,
+                Notes = "Updated remote note"
+            }
+        ]);
+
+        var reloaded = await new FileUserLibraryService(storagePath).GetEntryAsync("anilist:20");
+
+        Assert.True(merged.IsSuccess);
+        Assert.Equal(1, merged.Value);
+        Assert.True(reloaded.IsSuccess);
+        Assert.Equal(MediaListStatus.Completed, reloaded.Value!.Status);
+        Assert.Equal(12, reloaded.Value.Progress);
+        Assert.Equal(9, reloaded.Value.Score);
+        Assert.Equal("Updated remote note", reloaded.Value.Notes);
+        Assert.Equal("Keep this review", reloaded.Value.Review);
+        Assert.Equal(["favorite"], reloaded.Value.Tags);
+        Assert.Equal(["Weekend"], reloaded.Value.CustomLists);
+    }
+
+    [Fact]
+    public async Task UpsertEntryAsync_ReturnsStorageErrorWithoutPublishingInMemoryChange()
+    {
+        var blockedDirectory = CreateStoragePath();
+        Directory.CreateDirectory(Path.GetDirectoryName(blockedDirectory)!);
+        await File.WriteAllTextAsync(blockedDirectory, "not a directory");
+        var service = new FileUserLibraryService(Path.Combine(blockedDirectory, "library.json"));
+
+        var result = await service.UpsertEntryAsync(
+            new UserMediaEntry("anilist:20", MediaType.Anime, MediaListStatus.Current));
+        var stored = await service.GetEntryAsync("anilist:20");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("storage_error", result.Error.Code);
+        Assert.True(stored.IsFailure);
+    }
+
     private static string CreateStoragePath()
     {
         return Path.Combine(Path.GetTempPath(), "TanaHub.Tests", $"{Guid.NewGuid():N}", "library.json");

@@ -84,9 +84,8 @@
         <!-- LISTS section -->
         <StackPanel Spacing="6">
           <StackPanel Orientation="Horizontal" Spacing="7" Margin="2,0,0,4">
-            <Border Width="3" Height="11" CornerRadius="2" VerticalAlignment="Center"
-                    Background="{DynamicResource TanaHubAccentBrush}"/>
-            <TextBlock Text="LISTS" FontSize="10" FontWeight="Bold"
+            <Border Classes="eyebrow-bar" Background="{DynamicResource TanaHubAccentBrush}"/>
+            <TextBlock Classes="eyebrow" Text="LISTS"
                        Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
           </StackPanel>
           <ListBox Classes="filter-list accent-sel"
@@ -110,9 +109,8 @@
         <!-- TAGS section -->
         <StackPanel Spacing="6">
           <StackPanel Orientation="Horizontal" Spacing="7" Margin="2,0,0,4">
-            <Border Width="3" Height="11" CornerRadius="2" VerticalAlignment="Center"
-                    Background="{DynamicResource TanaHubGreenBrush}"/>
-            <TextBlock Text="TAGS" FontSize="10" FontWeight="Bold"
+            <Border Classes="eyebrow-bar" Background="{DynamicResource TanaHubGreenBrush}"/>
+            <TextBlock Classes="eyebrow" Text="TAGS"
                        Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
           </StackPanel>
           <ListBox Classes="filter-list accent-sel"
@@ -133,9 +131,8 @@
         <!-- CUSTOM LISTS section -->
         <StackPanel Spacing="6">
           <StackPanel Orientation="Horizontal" Spacing="7" Margin="2,0,0,4">
-            <Border Width="3" Height="11" CornerRadius="2" VerticalAlignment="Center"
-                    Background="{DynamicResource TanaHubSakuraBrush}"/>
-            <TextBlock Text="CUSTOM" FontSize="10" FontWeight="Bold"
+            <Border Classes="eyebrow-bar" Background="{DynamicResource TanaHubSakuraBrush}"/>
+            <TextBlock Classes="eyebrow" Text="CUSTOM"
                        Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
           </StackPanel>
           <ListBox Classes="filter-list cyan-sel"
@@ -159,9 +156,8 @@
         <!-- SORT section -->
         <StackPanel Spacing="6">
           <StackPanel Orientation="Horizontal" Spacing="7" Margin="2,0,0,4">
-            <Border Width="3" Height="11" CornerRadius="2" VerticalAlignment="Center"
-                    Background="{DynamicResource TanaHubCyanBrush}"/>
-            <TextBlock Text="SORT" FontSize="10" FontWeight="Bold"
+            <Border Classes="eyebrow-bar" Background="{DynamicResource TanaHubCyanBrush}"/>
+            <TextBlock Classes="eyebrow" Text="SORT"
                        Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
           </StackPanel>
           <ListBox Classes="filter-list cyan-sel"
@@ -210,44 +206,48 @@
 
       <!-- Type tabs + view mode + refresh -->
       <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-        <StackPanel Orientation="Horizontal" Spacing="4">
-          <Button Classes.ghost="{Binding !IsLibraryAllSelected}"
-                  Command="{Binding SelectLibraryTypeCommand}" CommandParameter="All">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <material:MaterialIcon Width="14" Height="14" Kind="ViewGrid"/>
-              <TextBlock Text="All"/>
-            </StackPanel>
-          </Button>
-          <Button Classes.ghost="{Binding !IsLibraryAnimeSelected}"
-                  Command="{Binding SelectLibraryTypeCommand}" CommandParameter="Anime">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <material:MaterialIcon Width="14" Height="14" Kind="MovieOpenPlay"/>
-              <TextBlock Text="Anime"/>
-            </StackPanel>
-          </Button>
-          <Button Classes.ghost="{Binding !IsLibraryMangaSelected}"
-                  Command="{Binding SelectLibraryTypeCommand}" CommandParameter="Manga">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <material:MaterialIcon Width="14" Height="14" Kind="BookOpenPageVariant"/>
-              <TextBlock Text="Manga"/>
-            </StackPanel>
-          </Button>
-        </StackPanel>
+        <Border Classes="seg-group" VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="2">
+            <Button Classes="seg" Classes.active="{Binding IsLibraryAllSelected}"
+                    Command="{Binding SelectLibraryTypeCommand}" CommandParameter="All">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <material:MaterialIcon Width="14" Height="14" Kind="ViewGrid"/>
+                <TextBlock Text="All"/>
+              </StackPanel>
+            </Button>
+            <Button Classes="seg" Classes.active="{Binding IsLibraryAnimeSelected}"
+                    Command="{Binding SelectLibraryTypeCommand}" CommandParameter="Anime">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <material:MaterialIcon Width="14" Height="14" Kind="MovieOpenPlay"/>
+                <TextBlock Text="Anime"/>
+              </StackPanel>
+            </Button>
+            <Button Classes="seg" Classes.active="{Binding IsLibraryMangaSelected}"
+                    Command="{Binding SelectLibraryTypeCommand}" CommandParameter="Manga">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <material:MaterialIcon Width="14" Height="14" Kind="BookOpenPageVariant"/>
+                <TextBlock Text="Manga"/>
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </Border>
 
-        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
-          <Button Classes.ghost="{Binding !IsLibraryListVisible}"
-                  Width="34" Height="34" Padding="0"
-                  Command="{Binding SelectLibraryViewModeCommand}" CommandParameter="List"
-                  ToolTip.Tip="List view">
-            <material:MaterialIcon Width="15" Height="15" Kind="ViewList"/>
-          </Button>
-          <Button Classes.ghost="{Binding !IsLibraryGridVisible}"
-                  Width="34" Height="34" Padding="0"
-                  Command="{Binding SelectLibraryViewModeCommand}" CommandParameter="Grid"
-                  ToolTip.Tip="Grid view">
-            <material:MaterialIcon Width="15" Height="15" Kind="ViewGrid"/>
-          </Button>
-        </StackPanel>
+        <Border Grid.Column="1" Classes="seg-group" VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="2">
+            <Button Classes="seg" Classes.active="{Binding IsLibraryListVisible}"
+                    Width="30" Height="28" Padding="0"
+                    Command="{Binding SelectLibraryViewModeCommand}" CommandParameter="List"
+                    ToolTip.Tip="List view">
+              <material:MaterialIcon Width="15" Height="15" Kind="ViewList"/>
+            </Button>
+            <Button Classes="seg" Classes.active="{Binding IsLibraryGridVisible}"
+                    Width="30" Height="28" Padding="0"
+                    Command="{Binding SelectLibraryViewModeCommand}" CommandParameter="Grid"
+                    ToolTip.Tip="Grid view">
+              <material:MaterialIcon Width="15" Height="15" Kind="ViewGrid"/>
+            </Button>
+          </StackPanel>
+        </Border>
 
         <Button Classes="ghost" Grid.Column="2" Height="34" Command="{Binding RefreshLibraryCommand}">
           <StackPanel Orientation="Horizontal" Spacing="7">
@@ -285,7 +285,7 @@
         <!-- Column headers -->
         <Border IsVisible="{Binding !IsLibraryEmpty}" Padding="12,7"
                 CornerRadius="8" Background="{DynamicResource TanaHubSurfaceRaisedBrush}">
-          <Grid ColumnDefinitions="48,*,96,78,60,128" ColumnSpacing="10">
+          <Grid ColumnDefinitions="48,*,104,78,60,140" ColumnSpacing="10">
             <TextBlock Grid.Column="1" Text="TITLE" FontSize="10" FontWeight="SemiBold"
                        VerticalAlignment="Center"
                        Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
@@ -310,7 +310,7 @@
             <DataTemplate x:DataType="vm:LibraryEntryViewModel">
               <Button Classes="row" Padding="12,10" CornerRadius="8"
                       Command="{Binding OpenDetailCommand}">
-                <Grid ColumnDefinitions="48,*,96,78,60,128" ColumnSpacing="10">
+                <Grid ColumnDefinitions="48,*,104,78,60,140" ColumnSpacing="10">
                   <Border Width="36" Height="52" CornerRadius="7" ClipToBounds="True">
                     <Border.Background>
                       <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
@@ -342,7 +342,7 @@
                   <TextBlock Classes="mono" Grid.Column="4" Text="{Binding Score}"
                              FontSize="13" FontWeight="Bold" VerticalAlignment="Center"
                              Foreground="{Binding ScoreForeground}"/>
-                  <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                  <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                     <Button Classes="ghost" Width="30" Height="30" Padding="0"
                             Command="{Binding IncrementCommand}" ToolTip.Tip="Increment progress">
                       <material:MaterialIcon Width="16" Height="16" Kind="Plus"/>
@@ -373,13 +373,13 @@
       <ItemsControl IsVisible="{Binding IsLibraryGridVisible}" ItemsSource="{Binding LibraryEntries}">
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
-            <WrapPanel ItemWidth="184"/>
+            <WrapPanel ItemWidth="192"/>
           </ItemsPanelTemplate>
         </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
           <DataTemplate x:DataType="vm:LibraryEntryViewModel">
             <Button Classes="card" Command="{Binding OpenDetailCommand}"
-                    Width="172" Height="262" Margin="0,0,12,12"
+                    Width="180" Height="272" Margin="0,0,12,12"
                     RenderTransformOrigin="0.5,0.5">
               <Border Classes="card" ClipToBounds="True">
                 <Grid RowDefinitions="*,Auto">
@@ -417,21 +417,21 @@
                     </StackPanel>
                   </Grid>
                   <!-- Actions row: status chip on left, buttons on right -->
-                  <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="10,6,10,8" ColumnSpacing="6">
+                  <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="10,8,10,10" ColumnSpacing="6">
                     <Border Classes="chip" Padding="6,3" VerticalAlignment="Center" HorizontalAlignment="Left">
                       <TextBlock Text="{Binding Status}" FontSize="10"
                                  Foreground="{Binding StatusForeground}"/>
                     </Border>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
-                      <Button Classes="ghost" Width="28" Height="28" Padding="0"
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                      <Button Classes="ghost" Width="30" Height="30" Padding="0"
                               Command="{Binding IncrementCommand}" ToolTip.Tip="Increment progress">
                         <material:MaterialIcon Width="14" Height="14" Kind="Plus"/>
                       </Button>
-                      <Button Classes="ghost" Width="28" Height="28" Padding="0"
+                      <Button Classes="ghost" Width="30" Height="30" Padding="0"
                               Command="{Binding IncreaseScoreCommand}" ToolTip.Tip="Increase score">
                         <material:MaterialIcon Width="14" Height="14" Kind="StarPlus"/>
                       </Button>
-                      <Button Classes="danger" Width="28" Height="28" Padding="0"
+                      <Button Classes="danger" Width="30" Height="30" Padding="0"
                               Command="{Binding RemoveCommand}" ToolTip.Tip="Remove from library">
                         <material:MaterialIcon Width="14" Height="14" Kind="TrashCanOutline"/>
                       </Button>

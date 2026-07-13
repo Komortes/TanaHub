@@ -3,6 +3,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Net.Http.Headers;
+using System.Security.Cryptography;
 using TanaHub.Application.Common;
 using TanaHub.Application.Services;
 
@@ -27,8 +28,8 @@ public sealed class AniListOAuthService : IAniListAuthService
         if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(clientSecret))
             return Result<AniListAuthResult>.Failure(ApplicationError.Validation("Client ID and Client Secret are required."));
 
-        var authUrl = $"{AuthBaseUrl}?client_id={Uri.EscapeDataString(clientId)}" +
-                      $"&redirect_uri={Uri.EscapeDataString(RedirectUri)}&response_type=code";
+        var state = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
+        var authUrl = CreateAuthorizationUrl(clientId, state);
 
         using var listener = new HttpListener();
         listener.Prefixes.Add(RedirectUri);
@@ -53,18 +54,28 @@ public sealed class AniListOAuthService : IAniListAuthService
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         cts.CancelAfter(TimeSpan.FromMinutes(5));
 
-        HttpListenerContext ctx;
-        try
+        string? code;
+        while (true)
         {
-            ctx = await listener.GetContextAsync().WaitAsync(cts.Token);
-        }
-        catch (OperationCanceledException)
-        {
-            return Result<AniListAuthResult>.Failure(ApplicationError.Validation("Authorization timed out."));
-        }
+            HttpListenerContext ctx;
+            try
+            {
+                ctx = await listener.GetContextAsync().WaitAsync(cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return Result<AniListAuthResult>.Failure(ApplicationError.Validation("Authorization timed out."));
+            }
 
-        var code = ParseQueryParam(ctx.Request.Url?.Query, "code");
-        await RespondAndClose(ctx, code is not null);
+            if (!TryReadCallback(ctx.Request.Url?.Query, state, out code))
+            {
+                await RespondAndClose(ctx, success: false);
+                continue;
+            }
+
+            await RespondAndClose(ctx, code is not null);
+            break;
+        }
 
         if (string.IsNullOrWhiteSpace(code))
             return Result<AniListAuthResult>.Failure(ApplicationError.Validation("Authorization was denied or no code received."));
@@ -83,7 +94,7 @@ public sealed class AniListOAuthService : IAniListAuthService
 
     private async Task<Result<string>> ExchangeCodeAsync(string code, string clientId, string clientSecret, CancellationToken ct)
     {
-        var form = new FormUrlEncodedContent(new Dictionary<string, string>
+        using var form = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["grant_type"] = "authorization_code",
             ["client_id"] = clientId,
@@ -94,7 +105,7 @@ public sealed class AniListOAuthService : IAniListAuthService
 
         try
         {
-            var response = await httpClient.PostAsync(TokenUrl, form, ct);
+            using var response = await httpClient.PostAsync(TokenUrl, form, ct);
             var json = await response.Content.ReadAsStringAsync(ct);
             if (!response.IsSuccessStatusCode)
                 return Result<string>.Failure(ApplicationError.Validation(
@@ -123,13 +134,13 @@ public sealed class AniListOAuthService : IAniListAuthService
     private async Task<Result<(string Username, int UserId)>> FetchViewerAsync(string accessToken, CancellationToken ct)
     {
         const string query = """{"query":"query{Viewer{id name}}"}""";
-        var req = new HttpRequestMessage(HttpMethod.Post, "https://graphql.anilist.co");
+        using var req = new HttpRequestMessage(HttpMethod.Post, "https://graphql.anilist.co");
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         req.Content = new StringContent(query, Encoding.UTF8, "application/json");
 
         try
         {
-            var response = await httpClient.SendAsync(req, ct);
+            using var response = await httpClient.SendAsync(req, ct);
             var json = await response.Content.ReadAsStringAsync(ct);
             if (!response.IsSuccessStatusCode)
                 return Result<(string, int)>.Failure(ApplicationError.Validation(
@@ -155,6 +166,36 @@ public sealed class AniListOAuthService : IAniListAuthService
         }
     }
 
+    internal static string CreateAuthorizationUrl(string clientId, string state)
+    {
+        return $"{AuthBaseUrl}?client_id={Uri.EscapeDataString(clientId)}" +
+               $"&redirect_uri={Uri.EscapeDataString(RedirectUri)}&response_type=code" +
+               $"&state={Uri.EscapeDataString(state)}";
+    }
+
+    internal static bool TryReadCallback(
+        string? query,
+        string expectedState,
+        out string? code)
+    {
+        code = null;
+        var actualState = ParseQueryParam(query, "state");
+        if (actualState is null || !FixedTimeEquals(actualState, expectedState))
+        {
+            return false;
+        }
+
+        code = ParseQueryParam(query, "code");
+        return true;
+    }
+
+    private static bool FixedTimeEquals(string left, string right)
+    {
+        var leftBytes = Encoding.UTF8.GetBytes(left);
+        var rightBytes = Encoding.UTF8.GetBytes(right);
+        return CryptographicOperations.FixedTimeEquals(leftBytes, rightBytes);
+    }
+
     private static string? ParseQueryParam(string? query, string key)
     {
         if (string.IsNullOrWhiteSpace(query)) return null;
@@ -163,7 +204,7 @@ public sealed class AniListOAuthService : IAniListAuthService
         {
             var parts = pair.Split('=', 2);
             if (parts.Length == 2 && parts[0] == key)
-                return Uri.UnescapeDataString(parts[1]);
+                return WebUtility.UrlDecode(parts[1]);
         }
         return null;
     }

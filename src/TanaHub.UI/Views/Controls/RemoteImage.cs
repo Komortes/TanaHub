@@ -11,6 +11,9 @@ public sealed class RemoteImage : Image
     public static readonly StyledProperty<Uri?> SourceUriProperty =
         AvaloniaProperty.Register<RemoteImage, Uri?>(nameof(SourceUri));
 
+    public static readonly StyledProperty<bool> AllowFileSourceProperty =
+        AvaloniaProperty.Register<RemoteImage, bool>(nameof(AllowFileSource));
+
     private static readonly HttpClient HttpClient = new()
     {
         Timeout = TimeSpan.FromSeconds(8)
@@ -18,7 +21,10 @@ public sealed class RemoteImage : Image
 
     private static readonly ConcurrentDictionary<Uri, Bitmap?> Cache = new();
     private static readonly ConcurrentQueue<Uri> CacheOrder = new();
-    private const int MaxCacheEntries = 300;
+    private const int MaxCacheEntries = 64;
+    private const int MaxEncodedImageBytes = 8 * 1024 * 1024;
+    private const long MaxDecodedPixels = 16_000_000;
+    private const long MaxCacheableBitmapBytes = 4 * 1024 * 1024;
 
     private Uri? requestedUri;
 
@@ -31,6 +37,12 @@ public sealed class RemoteImage : Image
     {
         get => GetValue(SourceUriProperty);
         set => SetValue(SourceUriProperty, value);
+    }
+
+    public bool AllowFileSource
+    {
+        get => GetValue(AllowFileSourceProperty);
+        set => SetValue(AllowFileSourceProperty, value);
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
@@ -69,14 +81,29 @@ public sealed class RemoteImage : Image
         {
             if (uri.IsFile)
             {
+                if (!AllowFileSource || new FileInfo(uri.LocalPath).Length > MaxEncodedImageBytes)
+                {
+                    return;
+                }
+
                 await using var stream = File.OpenRead(uri.LocalPath);
                 bitmap = new Bitmap(stream);
             }
             else
             {
-                var bytes = await HttpClient.GetByteArrayAsync(uri);
+                var bytes = await RemoteImageDownloader.DownloadAsync(
+                    HttpClient,
+                    uri,
+                    MaxEncodedImageBytes,
+                    CancellationToken.None);
                 await using var stream = new MemoryStream(bytes);
                 bitmap = new Bitmap(stream);
+            }
+
+            if ((long)bitmap.PixelSize.Width * bitmap.PixelSize.Height > MaxDecodedPixels)
+            {
+                bitmap.Dispose();
+                bitmap = null;
             }
         }
         catch
@@ -84,9 +111,15 @@ public sealed class RemoteImage : Image
             // Keep the gradient fallback visible when remote images fail.
         }
 
-        Cache[uri] = bitmap;
-        CacheOrder.Enqueue(uri);
-        TrimCache();
+        var estimatedBitmapBytes = bitmap is null
+            ? 0
+            : (long)bitmap.PixelSize.Width * bitmap.PixelSize.Height * 4;
+        if (estimatedBitmapBytes <= MaxCacheableBitmapBytes)
+        {
+            Cache[uri] = bitmap;
+            CacheOrder.Enqueue(uri);
+            TrimCache();
+        }
 
         if (requestedUri == uri)
         {

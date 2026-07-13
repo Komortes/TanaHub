@@ -9,15 +9,29 @@ public static class MalXmlLibraryExchange
 {
     public static string Export(IEnumerable<LibraryExportItem> items)
     {
+        return CreateExport(items).Xml;
+    }
+
+    public static MalXmlExportDocument CreateExport(IEnumerable<LibraryExportItem> items)
+    {
         var root = new XElement("myanimelist");
+        var exportedCount = 0;
+        var skippedCount = 0;
 
         foreach (var item in items)
         {
             var type = ParseMediaType(item.Type);
+            var malId = item.MalId ?? ExtractMalId(item.MediaId, type);
+            if (malId <= 0)
+            {
+                skippedCount++;
+                continue;
+            }
+
             if (type == MediaType.Manga)
             {
                 root.Add(new XElement("manga",
-                    new XElement("manga_mangadb_id", ExtractMalId(item.MediaId, MediaType.Manga)),
+                    new XElement("manga_mangadb_id", malId),
                     new XElement("manga_title", item.Title),
                     new XElement("my_read_chapters", Math.Max(0, item.Progress)),
                     new XElement("my_score", item.Score ?? 0),
@@ -26,15 +40,17 @@ public static class MalXmlLibraryExchange
             else
             {
                 root.Add(new XElement("anime",
-                    new XElement("series_animedb_id", ExtractMalId(item.MediaId, MediaType.Anime)),
+                    new XElement("series_animedb_id", malId),
                     new XElement("series_title", item.Title),
                     new XElement("my_watched_episodes", Math.Max(0, item.Progress)),
                     new XElement("my_score", item.Score ?? 0),
                     new XElement("my_status", ToMalStatus(item.Status, MediaType.Anime))));
             }
+
+            exportedCount++;
         }
 
-        return new XDocument(root).ToString();
+        return new MalXmlExportDocument(new XDocument(root).ToString(), exportedCount, skippedCount);
     }
 
     public static Result<IReadOnlyList<UserMediaEntry>> Import(string xml)
@@ -155,3 +171,5 @@ public static class MalXmlLibraryExchange
         return score is > 0 and <= 10 ? score : null;
     }
 }
+
+public sealed record MalXmlExportDocument(string Xml, int ExportedCount, int SkippedCount);

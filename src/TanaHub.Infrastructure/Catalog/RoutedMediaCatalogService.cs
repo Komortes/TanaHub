@@ -17,6 +17,8 @@ internal sealed class RoutedMediaCatalogService : IMediaCatalogService, ICatalog
 
     public void SetSource(string source) => CurrentSource = source;
 
+    public void SetOfflineCacheEnabled(bool enabled) => aniList.OfflineCacheEnabled = enabled;
+
     public RoutedMediaCatalogService(
         AniListMediaCatalogService aniList,
         MangaDexMediaCatalogService mangaDex)

@@ -84,6 +84,29 @@ public sealed class InMemoryUserLibraryService : IUserLibraryService
         return Task.FromResult(Result<UserMediaEntry>.Success(entries[entry.MediaId]));
     }
 
+    public Task<Result<int>> MergeEntriesAsync(
+        IReadOnlyCollection<UserMediaEntry> incomingEntries,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(incomingEntries);
+
+        var updatedAt = DateTimeOffset.UtcNow;
+        foreach (var incoming in incomingEntries)
+        {
+            entries[incoming.MediaId] = entries.TryGetValue(incoming.MediaId, out var existing)
+                ? incoming with
+                {
+                    Review = existing.Review,
+                    Tags = existing.Tags,
+                    CustomLists = existing.CustomLists,
+                    UpdatedAt = updatedAt
+                }
+                : incoming with { UpdatedAt = updatedAt };
+        }
+
+        return Task.FromResult(Result<int>.Success(incomingEntries.Count));
+    }
+
     public Task<Result<UserMediaEntry>> IncrementProgressAsync(
         string mediaId,
         int amount = 1,

@@ -11,4 +11,6 @@ public sealed record LibraryExportItem(
     public IReadOnlyList<string> Tags { get; init; } = [];
 
     public IReadOnlyList<string> CustomLists { get; init; } = [];
+
+    public int? MalId { get; init; }
 }

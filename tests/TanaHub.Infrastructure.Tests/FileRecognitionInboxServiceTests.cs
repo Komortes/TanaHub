@@ -100,8 +100,56 @@ public sealed class FileRecognitionInboxServiceTests
         Assert.True(result.IsFailure);
     }
 
+    [Fact]
+    public async Task SaveAsync_DoesNotPublishAttemptWhenStorageFails()
+    {
+        var blockedDirectory = CreateStoragePath();
+        Directory.CreateDirectory(Path.GetDirectoryName(blockedDirectory)!);
+        await File.WriteAllTextAsync(blockedDirectory, "not a directory");
+        var service = new FileRecognitionInboxService(Path.Combine(blockedDirectory, "recognition_inbox.json"));
+
+        var saved = await service.SaveAsync(new RecognitionAttempt
+        {
+            Id = "attempt-1",
+            SourceName = "frame.png"
+        });
+        var recent = await service.GetRecentAsync();
+
+        Assert.True(saved.IsFailure);
+        Assert.Equal("storage_error", saved.Error.Code);
+        Assert.Empty(recent.Value!);
+    }
+
+    [Fact]
+    public async Task RemoveAsync_KeepsAttemptWhenStorageFails()
+    {
+        var storagePath = CreateStoragePath();
+        var service = new FileRecognitionInboxService(storagePath);
+        await service.SaveAsync(new RecognitionAttempt
+        {
+            Id = "attempt-1",
+            SourceName = "frame.png"
+        });
+        BlockStorageDirectory(storagePath);
+
+        var removed = await service.RemoveAsync("attempt-1");
+        var recent = await service.GetRecentAsync();
+
+        Assert.True(removed.IsFailure);
+        Assert.Equal("storage_error", removed.Error.Code);
+        Assert.Equal("attempt-1", Assert.Single(recent.Value!).Id);
+    }
+
     private static string CreateStoragePath()
     {
         return Path.Combine(Path.GetTempPath(), "TanaHub.Tests", $"{Guid.NewGuid():N}", "recognition_inbox.json");
+    }
+
+    private static void BlockStorageDirectory(string storagePath)
+    {
+        var directory = Path.GetDirectoryName(storagePath)!;
+        File.Delete(storagePath);
+        Directory.Delete(directory);
+        File.WriteAllText(directory, "not a directory");
     }
 }

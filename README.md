@@ -17,7 +17,7 @@ A native desktop app for tracking anime and manga. Built with .NET and Avalonia 
 - **Title detail** — synopsis, characters, relations, airing info, and personal notes all in one place
 - **Schedule** — see what's airing this week and when
 - **Recognize** — identify an anime from a screenshot using trace.moe
-- **AniList sync** — connect your AniList account via OAuth and sync your list both ways
+- **AniList import** — connect your AniList account via OAuth and import anime and manga into your library
 - **Offline cache** — catalog data is cached locally so the app works without a connection
 - **Recommendations** — get local suggestions based on genres in your library
 - **Update checks** — see whether a newer GitHub release is available

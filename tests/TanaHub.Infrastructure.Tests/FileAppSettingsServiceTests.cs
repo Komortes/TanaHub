@@ -45,6 +45,24 @@ public sealed class FileAppSettingsServiceTests
         Assert.Equal("MangaDex", result.Value.PreferredSyncSource);
     }
 
+    [Fact]
+    public async Task SaveAsync_ReturnsStorageErrorWhenParentPathIsAFile()
+    {
+        var blockedDirectory = CreateStoragePath();
+        Directory.CreateDirectory(Path.GetDirectoryName(blockedDirectory)!);
+        await File.WriteAllTextAsync(blockedDirectory, "not a directory");
+        var service = new FileAppSettingsService(Path.Combine(blockedDirectory, "settings.json"));
+
+        var result = await service.SaveAsync(new AppSettings
+        {
+            Theme = "High contrast",
+            AniListClientSecret = "sensitive-secret"
+        });
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("storage_error", result.Error.Code);
+    }
+
     private static string CreateStoragePath()
     {
         return Path.Combine(Path.GetTempPath(), "TanaHub.Tests", $"{Guid.NewGuid():N}", "settings.json");

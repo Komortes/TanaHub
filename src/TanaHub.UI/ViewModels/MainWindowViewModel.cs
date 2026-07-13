@@ -16,7 +16,7 @@ using Manga = TanaHub.Domain.Models.Manga;
 
 namespace TanaHub.UI.ViewModels;
 
-public sealed partial class MainWindowViewModel : ObservableObject
+public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 {
     private readonly IMediaCatalogService mediaCatalogService;
     private readonly IUserLibraryService userLibraryService;
@@ -36,6 +36,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private AppSettings appSettings = new();
     private CancellationTokenSource? searchDebounce;
     private string previousPageKey = "home";
+    private string? temporaryRecognitionSourcePath;
 
     public MainWindowViewModel(
         IMediaCatalogService mediaCatalogService,
@@ -412,5 +413,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
             _ => "Cached"
         };
         AppConnectionStatusDetail = detail;
+    }
+
+    public void Dispose()
+    {
+        searchDebounce?.Cancel();
+        searchDebounce?.Dispose();
+        searchDebounce = null;
+        DeleteTemporaryRecognitionSource();
     }
 }

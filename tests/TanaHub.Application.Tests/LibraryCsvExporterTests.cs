@@ -26,4 +26,18 @@ public sealed class LibraryCsvExporterTests
         Assert.Contains("anilist:1", csv);
         Assert.Contains(",26,10,rewatch; comfort,Friday queue", csv);
     }
+
+    [Theory]
+    [InlineData("=WEBSERVICE(\"https://example.test\")")]
+    [InlineData("+1+1")]
+    [InlineData("-2+3")]
+    [InlineData("@SUM(1,2)")]
+    public void Export_NeutralizesSpreadsheetFormulas(string title)
+    {
+        var csv = LibraryCsvExporter.Export([
+            new LibraryExportItem("anilist:1", title, "Anime", "Planning", 0, null)
+        ]);
+
+        Assert.Contains($"'{title.Replace("\"", "\"\"")}", csv);
+    }
 }

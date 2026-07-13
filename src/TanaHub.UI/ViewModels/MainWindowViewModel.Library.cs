@@ -14,6 +14,7 @@ namespace TanaHub.UI.ViewModels;
 
 public sealed partial class MainWindowViewModel
 {
+    private const int MaxCatalogConcurrency = 6;
     private List<LibraryEntryViewModel> allLibraryEntries;
     private bool suppressLibraryFilterRefresh;
     private int libraryLoadVersion;
@@ -144,10 +145,10 @@ public sealed partial class MainWindowViewModel
         var mediaById = new Dictionary<string, MediaItem>(StringComparer.OrdinalIgnoreCase);
         var entries = result.Value!.Items.ToArray();
 
-        var mediaTasks = entries
-            .Select(entry => mediaCatalogService.GetByIdAsync(entry.MediaId))
-            .ToArray();
-        var mediaResults = await Task.WhenAll(mediaTasks);
+        var mediaResults = await BoundedAsyncLoader.RunAsync(
+            entries,
+            MaxCatalogConcurrency,
+            (entry, ct) => mediaCatalogService.GetByIdAsync(entry.MediaId, ct));
 
         for (var i = 0; i < entries.Length; i++)
         {

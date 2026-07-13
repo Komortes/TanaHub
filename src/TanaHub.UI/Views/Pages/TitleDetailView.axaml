@@ -100,11 +100,12 @@
         </Border.Background>
         <Grid>
           <controls:RemoteImage SourceUri="{Binding BannerUri}" IsVisible="{Binding HasBanner}"/>
-          <Border VerticalAlignment="Bottom" Height="160">
+          <Border VerticalAlignment="Bottom" Height="180">
             <Border.Background>
               <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
                 <GradientStop Color="#00000000" Offset="0"/>
-                <GradientStop Color="#EE07060E" Offset="1"/>
+                <GradientStop Color="#6607060E" Offset="0.45"/>
+                <GradientStop Color="#F407060E" Offset="1"/>
               </LinearGradientBrush>
             </Border.Background>
           </Border>
@@ -116,6 +117,8 @@
         <!-- Poster -->
         <Border Width="160" Height="228" VerticalAlignment="Top"
                 CornerRadius="10" ClipToBounds="True"
+                BorderBrush="{DynamicResource TanaHubBorderLightBrush}"
+                BorderThickness="1"
                 BoxShadow="0 8 32 0 #4C000000">
           <Grid>
             <Border>
@@ -131,7 +134,7 @@
         </Border>
 
         <!-- Info column -->
-        <StackPanel Grid.Column="1" Margin="0,20,0,0" Spacing="10">
+        <StackPanel Grid.Column="1" Margin="0,16,0,0" Spacing="10">
 
           <!-- Type / Year / Status chips -->
           <StackPanel Orientation="Horizontal" Spacing="7">
@@ -195,81 +198,80 @@
 
           <!-- In library: status pills + score on same row -->
           <StackPanel IsVisible="{Binding IsInLibrary}" Spacing="8" Margin="0,4,0,0">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-              <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                <Button Classes="status-pill current"
-                        Classes.active="{Binding IsStatusCurrent}"
-                        Command="{Binding MarkCurrentCommand}">
-                  <StackPanel Orientation="Horizontal" Spacing="6">
-                    <material:MaterialIcon Width="13" Height="13" Kind="PlayCircleOutline"/>
-                    <TextBlock Text="Watching"/>
-                  </StackPanel>
-                </Button>
-                <Button Classes="status-pill planning"
-                        Classes.active="{Binding IsStatusPlanning}"
-                        Command="{Binding MarkPlanningCommand}">
-                  <StackPanel Orientation="Horizontal" Spacing="6">
-                    <material:MaterialIcon Width="13" Height="13" Kind="BookmarkPlusOutline"/>
-                    <TextBlock Text="Planning"/>
-                  </StackPanel>
-                </Button>
-                <Button Classes="status-pill paused"
-                        Classes.active="{Binding IsStatusPaused}"
-                        Command="{Binding MarkPausedCommand}">
-                  <StackPanel Orientation="Horizontal" Spacing="6">
-                    <material:MaterialIcon Width="13" Height="13" Kind="PauseCircleOutline"/>
-                    <TextBlock Text="Paused"/>
-                  </StackPanel>
-                </Button>
-                <Button Classes="status-pill completed"
-                        Classes.active="{Binding IsStatusCompleted}"
-                        Command="{Binding MarkCompletedCommand}">
-                  <StackPanel Orientation="Horizontal" Spacing="6">
-                    <material:MaterialIcon Width="13" Height="13" Kind="CheckCircleOutline"/>
-                    <TextBlock Text="Completed"/>
-                  </StackPanel>
-                </Button>
-                <Button Classes="status-pill dropped"
-                        Classes.active="{Binding IsStatusDropped}"
-                        Command="{Binding MarkDroppedCommand}">
-                  <StackPanel Orientation="Horizontal" Spacing="6">
-                    <material:MaterialIcon Width="13" Height="13" Kind="CloseCircleOutline"/>
-                    <TextBlock Text="Dropped"/>
-                  </StackPanel>
-                </Button>
-              </StackPanel>
-              <!-- Score: chip showing current value + fill bars -->
-              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                <Border Width="28" Height="24" CornerRadius="4"
-                        Background="{DynamicResource TanaHubAccentGlowBrush}">
-                  <TextBlock Classes="mono" Text="{Binding UserScoreDisplay}" FontSize="11" FontWeight="Bold"
-                             HorizontalAlignment="Center" VerticalAlignment="Center"
-                             Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
-                </Border>
-                <StackPanel Orientation="Horizontal" Spacing="3">
-                  <Button Classes="score-bar b1" Classes.active="{Binding IsScoreAtLeast1}"
-                          Command="{Binding SetScoreCommand}" CommandParameter="1"/>
-                  <Button Classes="score-bar b2" Classes.active="{Binding IsScoreAtLeast2}"
-                          Command="{Binding SetScoreCommand}" CommandParameter="2"/>
-                  <Button Classes="score-bar b3" Classes.active="{Binding IsScoreAtLeast3}"
-                          Command="{Binding SetScoreCommand}" CommandParameter="3"/>
-                  <Button Classes="score-bar b4" Classes.active="{Binding IsScoreAtLeast4}"
-                          Command="{Binding SetScoreCommand}" CommandParameter="4"/>
-                  <Button Classes="score-bar b5" Classes.active="{Binding IsScoreAtLeast5}"
-                          Command="{Binding SetScoreCommand}" CommandParameter="5"/>
-                  <Button Classes="score-bar b6" Classes.active="{Binding IsScoreAtLeast6}"
-                          Command="{Binding SetScoreCommand}" CommandParameter="6"/>
-                  <Button Classes="score-bar b7" Classes.active="{Binding IsScoreAtLeast7}"
-                          Command="{Binding SetScoreCommand}" CommandParameter="7"/>
-                  <Button Classes="score-bar b8" Classes.active="{Binding IsScoreAtLeast8}"
-                          Command="{Binding SetScoreCommand}" CommandParameter="8"/>
-                  <Button Classes="score-bar b9" Classes.active="{Binding IsScoreAtLeast9}"
-                          Command="{Binding SetScoreCommand}" CommandParameter="9"/>
-                  <Button Classes="score-bar b10" Classes.active="{Binding IsScoreAtLeast10}"
-                          Command="{Binding SetScoreCommand}" CommandParameter="10"/>
+            <WrapPanel>
+              <Button Classes="status-pill current" Margin="0,0,6,6"
+                      Classes.active="{Binding IsStatusCurrent}"
+                      Command="{Binding MarkCurrentCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <material:MaterialIcon Width="13" Height="13" Kind="PlayCircleOutline"/>
+                  <TextBlock Text="Watching"/>
                 </StackPanel>
+              </Button>
+              <Button Classes="status-pill planning" Margin="0,0,6,6"
+                      Classes.active="{Binding IsStatusPlanning}"
+                      Command="{Binding MarkPlanningCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <material:MaterialIcon Width="13" Height="13" Kind="BookmarkPlusOutline"/>
+                  <TextBlock Text="Planning"/>
+                </StackPanel>
+              </Button>
+              <Button Classes="status-pill paused" Margin="0,0,6,6"
+                      Classes.active="{Binding IsStatusPaused}"
+                      Command="{Binding MarkPausedCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <material:MaterialIcon Width="13" Height="13" Kind="PauseCircleOutline"/>
+                  <TextBlock Text="Paused"/>
+                </StackPanel>
+              </Button>
+              <Button Classes="status-pill completed" Margin="0,0,6,6"
+                      Classes.active="{Binding IsStatusCompleted}"
+                      Command="{Binding MarkCompletedCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <material:MaterialIcon Width="13" Height="13" Kind="CheckCircleOutline"/>
+                  <TextBlock Text="Completed"/>
+                </StackPanel>
+              </Button>
+              <Button Classes="status-pill dropped" Margin="0,0,6,6"
+                      Classes.active="{Binding IsStatusDropped}"
+                      Command="{Binding MarkDroppedCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <material:MaterialIcon Width="13" Height="13" Kind="CloseCircleOutline"/>
+                  <TextBlock Text="Dropped"/>
+                </StackPanel>
+              </Button>
+            </WrapPanel>
+
+            <!-- Score: chip showing current value + fill bars -->
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+              <Border Width="28" Height="24" CornerRadius="4"
+                      Background="{DynamicResource TanaHubAccentGlowBrush}">
+                <TextBlock Classes="mono" Text="{Binding UserScoreDisplay}" FontSize="11" FontWeight="Bold"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
+              </Border>
+              <StackPanel Orientation="Horizontal" Spacing="3">
+                <Button Classes="score-bar b1" Classes.active="{Binding IsScoreAtLeast1}"
+                        Command="{Binding SetScoreCommand}" CommandParameter="1"/>
+                <Button Classes="score-bar b2" Classes.active="{Binding IsScoreAtLeast2}"
+                        Command="{Binding SetScoreCommand}" CommandParameter="2"/>
+                <Button Classes="score-bar b3" Classes.active="{Binding IsScoreAtLeast3}"
+                        Command="{Binding SetScoreCommand}" CommandParameter="3"/>
+                <Button Classes="score-bar b4" Classes.active="{Binding IsScoreAtLeast4}"
+                        Command="{Binding SetScoreCommand}" CommandParameter="4"/>
+                <Button Classes="score-bar b5" Classes.active="{Binding IsScoreAtLeast5}"
+                        Command="{Binding SetScoreCommand}" CommandParameter="5"/>
+                <Button Classes="score-bar b6" Classes.active="{Binding IsScoreAtLeast6}"
+                        Command="{Binding SetScoreCommand}" CommandParameter="6"/>
+                <Button Classes="score-bar b7" Classes.active="{Binding IsScoreAtLeast7}"
+                        Command="{Binding SetScoreCommand}" CommandParameter="7"/>
+                <Button Classes="score-bar b8" Classes.active="{Binding IsScoreAtLeast8}"
+                        Command="{Binding SetScoreCommand}" CommandParameter="8"/>
+                <Button Classes="score-bar b9" Classes.active="{Binding IsScoreAtLeast9}"
+                        Command="{Binding SetScoreCommand}" CommandParameter="9"/>
+                <Button Classes="score-bar b10" Classes.active="{Binding IsScoreAtLeast10}"
+                        Command="{Binding SetScoreCommand}" CommandParameter="10"/>
               </StackPanel>
-            </Grid>
+            </StackPanel>
 
             <!-- Quick actions -->
             <StackPanel Orientation="Horizontal" Spacing="8">
@@ -313,44 +315,34 @@
         <StackPanel Spacing="14">
           <StackPanel Orientation="Horizontal" Spacing="8">
             <Border Classes="eyebrow-bar" Background="{DynamicResource TanaHubTextMutedBrush}"/>
-            <TextBlock Classes="eyebrow" Text="DETAILS" LetterSpacing="1"
+            <TextBlock Classes="eyebrow" Text="DETAILS"
                        Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
           </StackPanel>
           <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto"
                 ColumnDefinitions="Auto,*" RowSpacing="10" ColumnSpacing="16">
-            <Border Grid.Row="0" Classes="chip" Padding="7,3" HorizontalAlignment="Left">
-              <TextBlock Text="Format" FontSize="11"
-                         Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
-            </Border>
+            <TextBlock Grid.Row="0" Text="Format" FontSize="11" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
             <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Format}" FontSize="12"
                        FontWeight="SemiBold" VerticalAlignment="Center"
                        Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
-            <Border Grid.Row="1" Classes="chip" Padding="7,3" HorizontalAlignment="Left">
-              <TextBlock Text="Year" FontSize="11"
-                         Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
-            </Border>
+            <TextBlock Grid.Row="1" Text="Year" FontSize="11" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
             <TextBlock Classes="mono" Grid.Row="1" Grid.Column="1" Text="{Binding Year}"
                        FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"
                        Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
-            <Border Grid.Row="2" Classes="chip" Padding="7,3" HorizontalAlignment="Left">
-              <TextBlock Text="Status" FontSize="11"
-                         Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
-            </Border>
+            <TextBlock Grid.Row="2" Text="Status" FontSize="11" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
             <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ReleaseStatus}"
                        FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"
                        Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
-            <Border Grid.Row="3" Classes="chip" Padding="7,3" HorizontalAlignment="Left">
-              <TextBlock Text="{Binding ProgressLabel}" FontSize="11"
-                         Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
-            </Border>
+            <TextBlock Grid.Row="3" Text="{Binding ProgressLabel}" FontSize="11" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
             <TextBlock Classes="mono" Grid.Row="3" Grid.Column="1" Text="{Binding ProgressValue}"
                        FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"
                        Foreground="{DynamicResource TanaHubCyanBrush}"/>
-            <Border Grid.Row="4" Classes="chip" Padding="7,3" HorizontalAlignment="Left"
-                    IsVisible="{Binding HasStudio}">
-              <TextBlock Text="Studio" FontSize="11"
-                         Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
-            </Border>
+            <TextBlock Grid.Row="4" Text="Studio" FontSize="11" VerticalAlignment="Center"
+                       IsVisible="{Binding HasStudio}"
+                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
             <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Studio}" FontSize="12"
                        FontWeight="SemiBold" VerticalAlignment="Center" IsVisible="{Binding HasStudio}"
                        Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
@@ -379,7 +371,7 @@
         <StackPanel Spacing="14">
           <StackPanel Orientation="Horizontal" Spacing="8">
             <Border Classes="eyebrow-bar" Background="{DynamicResource TanaHubTextMutedBrush}"/>
-            <TextBlock Classes="eyebrow" Text="ORGANIZE" LetterSpacing="1"
+            <TextBlock Classes="eyebrow" Text="ORGANIZE"
                        Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
           </StackPanel>
 
@@ -497,7 +489,7 @@
       <StackPanel Spacing="12">
         <StackPanel Orientation="Horizontal" Spacing="8">
           <Border Classes="eyebrow-bar" Background="{DynamicResource TanaHubAccentLightBrush}"/>
-          <TextBlock Classes="eyebrow" Text="SYNOPSIS" LetterSpacing="1"
+          <TextBlock Classes="eyebrow" Text="SYNOPSIS"
                      Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
         </StackPanel>
         <TextBlock Text="{Binding Description}" FontSize="13" TextWrapping="Wrap"
@@ -509,10 +501,10 @@
     <StackPanel Spacing="10" IsVisible="{Binding HasCharacters}">
       <StackPanel Orientation="Horizontal" Spacing="8">
         <Border Classes="eyebrow-bar" Background="{DynamicResource TanaHubSakuraBrush}"/>
-        <TextBlock Classes="eyebrow" Text="CHARACTERS" LetterSpacing="1"
+        <TextBlock Classes="eyebrow" Text="CHARACTERS"
                    Foreground="{DynamicResource TanaHubSakuraBrush}"/>
       </StackPanel>
-      <ItemsControl ItemsSource="{Binding Characters}">
+      <ItemsControl ItemsSource="{Binding Characters}" Margin="-4">
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
             <UniformGrid Columns="2"/>
@@ -521,7 +513,7 @@
         <ItemsControl.ItemTemplate>
           <DataTemplate x:DataType="domain:CharacterInfo">
             <Border Background="{DynamicResource TanaHubSurfaceBrush}"
-                    CornerRadius="10" Padding="10" Margin="0,0,8,8">
+                    CornerRadius="10" Padding="10" Margin="4">
               <Grid ColumnDefinitions="52,*" ColumnSpacing="10">
                 <Border Width="48" Height="64" CornerRadius="7" ClipToBounds="True">
                   <Border.Background>

@@ -126,9 +126,42 @@ public sealed class FileUserLibraryService : IUserLibraryService
                 UpdatedAt = DateTimeOffset.UtcNow
             };
 
-            entries[entry.MediaId] = updated;
-            await SaveAsync(cancellationToken);
-            return Result<UserMediaEntry>.Success(updated);
+            var candidate = CloneEntries();
+            candidate[entry.MediaId] = updated;
+            return await CommitAsync(candidate, updated, cancellationToken);
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
+    public async Task<Result<int>> MergeEntriesAsync(
+        IReadOnlyCollection<UserMediaEntry> incomingEntries,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(incomingEntries);
+
+        await gate.WaitAsync(cancellationToken);
+        try
+        {
+            var candidate = new Dictionary<string, UserMediaEntry>(entries, StringComparer.OrdinalIgnoreCase);
+            var updatedAt = DateTimeOffset.UtcNow;
+
+            foreach (var incoming in incomingEntries)
+            {
+                candidate[incoming.MediaId] = candidate.TryGetValue(incoming.MediaId, out var existing)
+                    ? incoming with
+                    {
+                        Review = existing.Review,
+                        Tags = existing.Tags,
+                        CustomLists = existing.CustomLists,
+                        UpdatedAt = updatedAt
+                    }
+                    : incoming with { UpdatedAt = updatedAt };
+            }
+
+            return await CommitAsync(candidate, incomingEntries.Count, cancellationToken);
         }
         finally
         {
@@ -156,9 +189,9 @@ public sealed class FileUserLibraryService : IUserLibraryService
             }
 
             var updated = entry.IncrementProgress(amount);
-            entries[mediaId] = updated;
-            await SaveAsync(cancellationToken);
-            return Result<UserMediaEntry>.Success(updated);
+            var candidate = CloneEntries();
+            candidate[mediaId] = updated;
+            return await CommitAsync(candidate, updated, cancellationToken);
         }
         finally
         {
@@ -188,9 +221,9 @@ public sealed class FileUserLibraryService : IUserLibraryService
                 UpdatedAt = DateTimeOffset.UtcNow
             };
 
-            entries[mediaId] = updated;
-            await SaveAsync(cancellationToken);
-            return Result<UserMediaEntry>.Success(updated);
+            var candidate = CloneEntries();
+            candidate[mediaId] = updated;
+            return await CommitAsync(candidate, updated, cancellationToken);
         }
         finally
         {
@@ -223,9 +256,9 @@ public sealed class FileUserLibraryService : IUserLibraryService
                 UpdatedAt = DateTimeOffset.UtcNow
             };
 
-            entries[mediaId] = updated;
-            await SaveAsync(cancellationToken);
-            return Result<UserMediaEntry>.Success(updated);
+            var candidate = CloneEntries();
+            candidate[mediaId] = updated;
+            return await CommitAsync(candidate, updated, cancellationToken);
         }
         finally
         {
@@ -248,9 +281,9 @@ public sealed class FileUserLibraryService : IUserLibraryService
             }
 
             var updated = entry with { Notes = notes, UpdatedAt = DateTimeOffset.UtcNow };
-            entries[mediaId] = updated;
-            await SaveAsync(cancellationToken);
-            return Result<UserMediaEntry>.Success(updated);
+            var candidate = CloneEntries();
+            candidate[mediaId] = updated;
+            return await CommitAsync(candidate, updated, cancellationToken);
         }
         finally
         {
@@ -279,9 +312,9 @@ public sealed class FileUserLibraryService : IUserLibraryService
             }
 
             var updated = entry with { Review = normalizedReview, UpdatedAt = DateTimeOffset.UtcNow };
-            entries[mediaId] = updated;
-            await SaveAsync(cancellationToken);
-            return Result<UserMediaEntry>.Success(updated);
+            var candidate = CloneEntries();
+            candidate[mediaId] = updated;
+            return await CommitAsync(candidate, updated, cancellationToken);
         }
         finally
         {
@@ -311,9 +344,9 @@ public sealed class FileUserLibraryService : IUserLibraryService
                 UpdatedAt = DateTimeOffset.UtcNow
             };
 
-            entries[mediaId] = updated;
-            await SaveAsync(cancellationToken);
-            return Result<UserMediaEntry>.Success(updated);
+            var candidate = CloneEntries();
+            candidate[mediaId] = updated;
+            return await CommitAsync(candidate, updated, cancellationToken);
         }
         finally
         {
@@ -328,13 +361,14 @@ public sealed class FileUserLibraryService : IUserLibraryService
         await gate.WaitAsync(cancellationToken);
         try
         {
-            var removed = entries.Remove(mediaId);
-            if (removed)
+            var candidate = CloneEntries();
+            var removed = candidate.Remove(mediaId);
+            if (!removed)
             {
-                await SaveAsync(cancellationToken);
+                return Result<bool>.Success(false);
             }
 
-            return Result<bool>.Success(removed);
+            return await CommitAsync(candidate, true, cancellationToken);
         }
         finally
         {
@@ -368,14 +402,44 @@ public sealed class FileUserLibraryService : IUserLibraryService
         }
     }
 
-    private async Task SaveAsync(CancellationToken cancellationToken)
+    private async Task SaveAsync(
+        IEnumerable<UserMediaEntry> snapshot,
+        CancellationToken cancellationToken)
     {
-        var dtos = entries.Values
+        var dtos = snapshot
             .OrderBy(entry => entry.MediaId, StringComparer.OrdinalIgnoreCase)
             .Select(UserMediaEntryDto.FromDomain)
             .ToArray();
 
         await AtomicFileWriter.WriteJsonAsync(storagePath, dtos, JsonOptions, cancellationToken);
+    }
+
+    private Dictionary<string, UserMediaEntry> CloneEntries()
+    {
+        return new Dictionary<string, UserMediaEntry>(entries, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private async Task<Result<T>> CommitAsync<T>(
+        Dictionary<string, UserMediaEntry> candidate,
+        T value,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await SaveAsync(candidate.Values, cancellationToken);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        {
+            return Result<T>.Failure(ApplicationError.Storage("Library could not be saved."));
+        }
+
+        entries.Clear();
+        foreach (var pair in candidate)
+        {
+            entries[pair.Key] = pair.Value;
+        }
+
+        return Result<T>.Success(value);
     }
 
     private static UserMediaEntry ToDomain(UserMediaEntryDto dto)

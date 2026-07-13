@@ -27,6 +27,11 @@ public static class LibraryCsvExporter
 
     private static string Escape(string value)
     {
+        if (value.Length > 0 && value[0] is '=' or '+' or '-' or '@' or '\t' or '\r')
+        {
+            value = $"'{value}";
+        }
+
         if (!value.ContainsAny([',', '"', '\r', '\n']))
         {
             return value;

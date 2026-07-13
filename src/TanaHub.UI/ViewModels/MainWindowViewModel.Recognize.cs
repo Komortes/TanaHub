@@ -79,6 +79,10 @@ public sealed partial class MainWindowViewModel
         IsRecognizing = true;
         RecognitionStatus = "Searching…";
         RecognitionSourcePreviewUri = CreateLocalFileUri(sourcePath);
+        if (sourceName == "Clipboard image" && IsOwnedTemporaryImage(sourcePath))
+        {
+            temporaryRecognitionSourcePath = sourcePath;
+        }
 
         try
         {
@@ -116,7 +120,11 @@ public sealed partial class MainWindowViewModel
                 }
 
                 OnPropertyChanged(nameof(HasRecognitionVariantResults));
-                await SaveBestRecognitionAttemptAsync(matches[0], bestPreview!.Value, sourceName, sourcePath);
+                await SaveBestRecognitionAttemptAsync(
+                    matches[0],
+                    bestPreview!.Value,
+                    sourceName,
+                    temporaryRecognitionSourcePath is null ? sourcePath : null);
                 RecognitionStatus = $"{matches.Count} match{(matches.Count == 1 ? string.Empty : "es")} · powered by trace.moe";
             }
         }
@@ -213,6 +221,7 @@ public sealed partial class MainWindowViewModel
 
     private void ClearRecognitionAttemptState()
     {
+        DeleteTemporaryRecognitionSource();
         RecognitionResults.Clear();
         RecognitionVariantResults.Clear();
         CurrentRecognitionResult = null;
@@ -225,5 +234,37 @@ public sealed partial class MainWindowViewModel
     {
         if (string.IsNullOrWhiteSpace(path) || !Path.IsPathFullyQualified(path)) return null;
         return new Uri(path);
+    }
+
+    private static bool IsOwnedTemporaryImage(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !Path.IsPathFullyQualified(path)) return false;
+
+        var fullPath = Path.GetFullPath(path);
+        var temporaryRoot = Path.GetFullPath(Path.GetTempPath());
+        return fullPath.StartsWith(temporaryRoot, StringComparison.Ordinal)
+               && Path.GetFileName(fullPath).StartsWith("tanahub_paste_", StringComparison.Ordinal);
+    }
+
+    private void DeleteTemporaryRecognitionSource()
+    {
+        if (temporaryRecognitionSourcePath is null) return;
+
+        try
+        {
+            File.Delete(temporaryRecognitionSourcePath);
+        }
+        catch (IOException)
+        {
+            // Best-effort cleanup on the next recognition or app exit.
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Best-effort cleanup on the next recognition or app exit.
+        }
+        finally
+        {
+            temporaryRecognitionSourcePath = null;
+        }
     }
 }

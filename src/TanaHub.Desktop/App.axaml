@@ -194,6 +194,23 @@
       <Setter Property="RenderTransform" Value="scale(0.97)"/>
     </Style>
 
+    <!-- Poster card inner surface — rounded clip + shadow that deepens on hover -->
+    <Style Selector="Border.poster">
+      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="ClipToBounds" Value="True"/>
+      <Setter Property="BoxShadow" Value="0 4 16 0 #2C000000"/>
+      <Setter Property="Transitions">
+        <Setter.Value>
+          <Transitions>
+            <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.14"/>
+          </Transitions>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style Selector="Button.card:pointerover Border.poster">
+      <Setter Property="BoxShadow" Value="0 8 26 0 #48000000, 0 0 0 1 #9B6EF855"/>
+    </Style>
+
     <!-- Row card — borderless, elevation from background contrast + spacing -->
     <Style Selector="Button.row">
       <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceBrush}"/>
@@ -268,6 +285,16 @@
       <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceBrush}"/>
       <Setter Property="CornerRadius" Value="12"/>
       <Setter Property="BoxShadow" Value="0 4 16 0 #2C000000"/>
+      <Setter Property="Transitions">
+        <Setter.Value>
+          <Transitions>
+            <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.14"/>
+          </Transitions>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style Selector="Button.card:pointerover Border.card">
+      <Setter Property="BoxShadow" Value="0 8 26 0 #48000000, 0 0 0 1 #9B6EF855"/>
     </Style>
 
     <!-- Flat list row — dense lists (schedule, search results). No shadow;
@@ -308,6 +335,36 @@
       <Setter Property="Padding" Value="8,4"/>
     </Style>
 
+    <!-- Segmented control — raised group with flat items; selected = accent glow -->
+    <Style Selector="Border.seg-group">
+      <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceRaisedBrush}"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="Padding" Value="3"/>
+      <Setter Property="HorizontalAlignment" Value="Left"/>
+    </Style>
+    <Style Selector="Button.seg">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Foreground" Value="{DynamicResource TanaHubTextSecondaryBrush}"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Padding" Value="12,6"/>
+      <Setter Property="FontSize" Value="12"/>
+    </Style>
+    <Style Selector="Button.seg:pointerover">
+      <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceHoverBrush}"/>
+      <Setter Property="BorderBrush" Value="Transparent"/>
+      <Setter Property="Foreground" Value="{DynamicResource TanaHubTextPrimaryBrush}"/>
+    </Style>
+    <Style Selector="Button.seg.active">
+      <Setter Property="Background" Value="{DynamicResource TanaHubAccentGlowBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource TanaHubAccentLightBrush}"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <Style Selector="Button.seg.active:pointerover">
+      <Setter Property="Background" Value="{DynamicResource TanaHubAccentGlowStrongBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource TanaHubAccentLightBrush}"/>
+    </Style>
+
     <!-- Hairline divider -->
     <Style Selector="Border.divider">
       <Setter Property="Height" Value="1"/>
@@ -326,6 +383,7 @@
     <Style Selector="TextBlock.eyebrow">
       <Setter Property="FontSize" Value="10"/>
       <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="LetterSpacing" Value="1"/>
       <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 

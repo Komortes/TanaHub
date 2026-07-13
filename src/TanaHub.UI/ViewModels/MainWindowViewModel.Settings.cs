@@ -174,12 +174,21 @@ public sealed partial class MainWindowViewModel
         var rows = await BuildExportRowsAsync();
         if (rows is null) return;
 
+        var export = MalXmlLibraryExchange.CreateExport(rows);
+        if (export.ExportedCount == 0)
+        {
+            LibraryExportStatus = "No library entries have a MAL mapping to export.";
+            return;
+        }
+
         var saved = await fileSaveService.SaveTextAsync(
             $"tanahub-mal-library-{DateTimeOffset.Now:yyyy-MM-dd}.xml",
-            MalXmlLibraryExchange.Export(rows), "xml", "application/xml");
+            export.Xml, "xml", "application/xml");
 
         LibraryExportStatus = saved
-            ? $"Exported {rows.Count} MAL XML item(s)."
+            ? export.SkippedCount == 0
+                ? $"Exported {export.ExportedCount} MAL XML item(s)."
+                : $"Exported {export.ExportedCount} MAL XML item(s); skipped {export.SkippedCount} without a MAL mapping."
             : "MAL XML export canceled.";
     }
 
@@ -194,17 +203,13 @@ public sealed partial class MainWindowViewModel
         var importResult = MalXmlLibraryExchange.Import(await reader.ReadToEndAsync());
         if (importResult.IsFailure) { LibraryExportStatus = importResult.Error.Message; return; }
 
-        var imported = 0;
-        foreach (var entry in importResult.Value!)
-        {
-            var upsert = await userLibraryService.UpsertEntryAsync(entry);
-            if (upsert.IsSuccess) imported++;
-        }
+        var mergeResult = await userLibraryService.MergeEntriesAsync(importResult.Value!);
+        if (mergeResult.IsFailure) { LibraryExportStatus = mergeResult.Error.Message; return; }
 
         await LoadLibraryAsync();
-        LibraryExportStatus = imported == 0
+        LibraryExportStatus = mergeResult.Value == 0
             ? "No MAL XML entries found."
-            : $"Imported {imported} MAL XML item(s).";
+            : $"Imported {mergeResult.Value} MAL XML item(s).";
     }
 
     [RelayCommand]
@@ -261,10 +266,16 @@ public sealed partial class MainWindowViewModel
 
         if (result.IsFailure) { LibraryExportStatus = result.Error.Message; return null; }
 
-        var rows = new List<LibraryExportItem>();
-        foreach (var entry in result.Value!.Items)
+        var entries = result.Value!.Items.ToArray();
+        var mediaResults = await BoundedAsyncLoader.RunAsync(
+            entries,
+            MaxCatalogConcurrency,
+            (entry, ct) => mediaCatalogService.GetByIdAsync(entry.MediaId, ct));
+        var rows = new List<LibraryExportItem>(entries.Length);
+        for (var index = 0; index < entries.Length; index++)
         {
-            var media = await mediaCatalogService.GetByIdAsync(entry.MediaId);
+            var entry = entries[index];
+            var media = mediaResults[index];
             rows.Add(new LibraryExportItem(
                 entry.MediaId,
                 media.IsSuccess ? media.Value!.Title.DisplayTitle : entry.MediaId,
@@ -272,7 +283,8 @@ public sealed partial class MainWindowViewModel
                 entry.Progress, entry.Score)
             {
                 Tags = entry.Tags,
-                CustomLists = entry.CustomLists
+                CustomLists = entry.CustomLists,
+                MalId = media.IsSuccess ? media.Value!.MalId : null
             });
         }
 
@@ -318,6 +330,7 @@ public sealed partial class MainWindowViewModel
         RecognitionServicesEnabled = appSettings.RecognitionServicesEnabled;
         PreferredSyncSource = appSettings.PreferredSyncSource;
         catalogSourceSelector.SetSource(PreferredSyncSource);
+        catalogSourceSelector.SetOfflineCacheEnabled(OfflineCacheEnabled);
         NotifySyncSourceSelectionChanged();
         SettingsStorageDetail = $"Settings saved {appSettings.UpdatedAt:yyyy-MM-dd HH:mm}";
         AniListClientId = appSettings.AniListClientId;

@@ -80,6 +80,7 @@ internal sealed class OfflineCatalogCache
         [JsonPropertyName("status")] public string? Status { get; set; }
         [JsonPropertyName("startYear")] public int? StartYear { get; set; }
         [JsonPropertyName("avgScore")] public int? AverageScore { get; set; }
+        [JsonPropertyName("malId")] public int? MalId { get; set; }
         [JsonPropertyName("description")] public string? Description { get; set; }
         [JsonPropertyName("genres")] public List<string>? Genres { get; set; }
         [JsonPropertyName("poster")] public string? Poster { get; set; }
@@ -108,6 +109,7 @@ internal sealed class OfflineCatalogCache
                 Status = item.ReleaseStatus.ToString(),
                 StartYear = item.StartYear,
                 AverageScore = item.AverageScore,
+                MalId = item.MalId,
                 Description = item.Description,
                 Genres = item.Genres.Count > 0 ? [.. item.Genres] : null,
                 Poster = item.Images.PosterUri?.ToString(),
@@ -151,6 +153,7 @@ internal sealed class OfflineCatalogCache
                 {
                     StartYear = StartYear,
                     AverageScore = AverageScore,
+                    MalId = MalId,
                     Description = Description,
                     Genres = genres,
                     Characters = characters,
@@ -166,6 +169,7 @@ internal sealed class OfflineCatalogCache
                 {
                     StartYear = StartYear,
                     AverageScore = AverageScore,
+                    MalId = MalId,
                     Description = Description,
                     Genres = genres,
                     Characters = characters,

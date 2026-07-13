@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Security.Cryptography;
 using TanaHub.Application.Common;
 using TanaHub.Application.Services;
 using TanaHub.Domain.Models;
@@ -49,13 +50,20 @@ public sealed class FileAppSettingsService : IAppSettingsService
                 UpdatedAt = DateTimeOffset.UtcNow
             };
 
-            var onDisk = updated with
+            try
             {
-                AniListClientSecret = LocalSecretProtector.Protect(updated.AniListClientSecret, keyPath),
-                AniListAccessToken = LocalSecretProtector.Protect(updated.AniListAccessToken, keyPath)
-            };
+                var onDisk = updated with
+                {
+                    AniListClientSecret = LocalSecretProtector.Protect(updated.AniListClientSecret, keyPath),
+                    AniListAccessToken = LocalSecretProtector.Protect(updated.AniListAccessToken, keyPath)
+                };
 
-            await AtomicFileWriter.WriteJsonAsync(storagePath, onDisk, JsonOptions, cancellationToken);
+                await AtomicFileWriter.WriteJsonAsync(storagePath, onDisk, JsonOptions, cancellationToken);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or CryptographicException)
+            {
+                return Result<AppSettings>.Failure(ApplicationError.Storage("Settings could not be saved."));
+            }
 
             return Result<AppSettings>.Success(updated);
         }

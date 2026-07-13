@@ -19,6 +19,10 @@ public interface IUserLibraryService
         UserMediaEntry entry,
         CancellationToken cancellationToken = default);
 
+    Task<Result<int>> MergeEntriesAsync(
+        IReadOnlyCollection<UserMediaEntry> entries,
+        CancellationToken cancellationToken = default);
+
     Task<Result<UserMediaEntry>> IncrementProgressAsync(
         string mediaId,
         int amount = 1,

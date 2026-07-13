@@ -18,4 +18,9 @@ public sealed record ApplicationError(string Code, string Message)
     {
         return new("external_service_error", message);
     }
+
+    public static ApplicationError Storage(string message)
+    {
+        return new("storage_error", message);
+    }
 }

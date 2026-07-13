@@ -17,11 +17,29 @@ internal static class AtomicFileWriter
         }
 
         var tempPath = $"{path}.{Guid.NewGuid():N}.tmp";
-        await using (var stream = File.Create(tempPath))
+        try
         {
-            await JsonSerializer.SerializeAsync(stream, value, options, cancellationToken);
-        }
+            await using (var stream = File.Create(tempPath))
+            {
+                await JsonSerializer.SerializeAsync(stream, value, options, cancellationToken);
+            }
 
-        File.Move(tempPath, path, overwrite: true);
+            File.Move(tempPath, path, overwrite: true);
+        }
+        finally
+        {
+            try
+            {
+                File.Delete(tempPath);
+            }
+            catch (IOException)
+            {
+                // Best-effort cleanup; preserve the original write failure.
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Best-effort cleanup; preserve the original write failure.
+            }
+        }
     }
 }

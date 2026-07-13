@@ -18,6 +18,8 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
     private readonly OfflineCatalogCache? offlineCache;
     private readonly ConcurrentDictionary<string, MediaItem> fetchedItems = new(StringComparer.OrdinalIgnoreCase);
 
+    public bool OfflineCacheEnabled { get; set; } = true;
+
     public AniListMediaCatalogService(
         HttpClient httpClient,
         IMediaCatalogService fallbackCatalog,
@@ -56,14 +58,14 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
             }
 
             var media = response.Data?.Page?.Media ?? [];
-            var items = media.Select(ToMediaItem).ToArray();
+            var items = media.Select(item => ToMediaItem(item)).ToArray();
 
             foreach (var item in items)
             {
                 fetchedItems[item.Id] = item;
             }
 
-            if (offlineCache is not null)
+            if (OfflineCacheEnabled && offlineCache is not null)
             {
                 offlineCache.PutRange(items);
                 FireAndForgetFlush(offlineCache);
@@ -99,7 +101,19 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
             return Result<MediaItem>.Success(fetched);
         }
 
-        if (!TryParseAniListId(mediaId, out var id))
+        int? id = null;
+        int? malId = null;
+        string? mediaType = null;
+
+        if (TryParseAniListId(mediaId, out var aniListId))
+        {
+            id = aniListId;
+        }
+        else if (TryParseMalId(mediaId, out var parsedMalId, out mediaType))
+        {
+            malId = parsedMalId;
+        }
+        else
         {
             return await fallbackCatalog.GetByIdAsync(mediaId, cancellationToken);
         }
@@ -108,7 +122,7 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
         {
             var response = await PostGraphQlAsync<AniListMediaData>(
                 MediaQuery,
-                new { id },
+                new { id, idMal = malId, type = mediaType },
                 cancellationToken);
 
             var media = response.Data?.Media;
@@ -117,9 +131,9 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
                 return await fallbackCatalog.GetByIdAsync(mediaId, cancellationToken);
             }
 
-            var item = ToMediaItem(media);
+            var item = ToMediaItem(media, malId is null ? null : mediaId);
             fetchedItems[item.Id] = item;
-            if (offlineCache is not null)
+            if (OfflineCacheEnabled && offlineCache is not null)
             {
                 offlineCache.Put(item);
                 FireAndForgetFlush(offlineCache);
@@ -138,7 +152,7 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
 
     private Task<Result<MediaItem>> TryOfflineOrFallback(string mediaId, CancellationToken cancellationToken)
     {
-        if (offlineCache is not null && offlineCache.TryGet(mediaId, out var cached))
+        if (OfflineCacheEnabled && offlineCache is not null && offlineCache.TryGet(mediaId, out var cached))
             return Task.FromResult(Result<MediaItem>.Success(cached));
         return fallbackCatalog.GetByIdAsync(mediaId, cancellationToken);
     }
@@ -243,6 +257,7 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
                 pageInfo { total }
                 media({{string.Join(", ", mediaArguments)}}) {
                   id
+                  idMal
                   type
                   title { romaji english native }
                   format
@@ -266,7 +281,7 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
         return new GraphQlRequest(graphQl, variables);
     }
 
-    private static MediaItem ToMediaItem(AniListMedia media)
+    private static MediaItem ToMediaItem(AniListMedia media, string? idOverride = null)
     {
         var title = new MediaTitle(
             media.Title?.Romaji ?? media.Title?.English ?? $"AniList #{media.Id}",
@@ -290,12 +305,13 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
 
         if (media.Type == "MANGA")
         {
-            return new Manga($"anilist:{media.Id}", title, format, status)
+            return new Manga(idOverride ?? $"anilist:{media.Id}", title, format, status)
             {
                 ChapterCount = media.Chapters,
                 VolumeCount = media.Volumes,
                 StartYear = media.StartDate?.Year,
                 AverageScore = media.AverageScore,
+                MalId = media.IdMal,
                 Description = media.Description,
                 Genres = media.Genres ?? [],
                 Characters = characters,
@@ -303,12 +319,13 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
             };
         }
 
-        return new Anime($"anilist:{media.Id}", title, format, status)
+        return new Anime(idOverride ?? $"anilist:{media.Id}", title, format, status)
         {
             EpisodeCount = media.Episodes,
             DurationMinutes = media.Duration,
             StartYear = media.StartDate?.Year,
             AverageScore = media.AverageScore,
+            MalId = media.IdMal,
             Description = media.Description,
             Genres = media.Genres ?? [],
             Characters = characters,
@@ -322,6 +339,28 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
         id = 0;
         return mediaId.StartsWith("anilist:", StringComparison.OrdinalIgnoreCase)
             && int.TryParse(mediaId["anilist:".Length..], out id);
+    }
+
+    private static bool TryParseMalId(string mediaId, out int id, out string? mediaType)
+    {
+        id = 0;
+        mediaType = null;
+
+        const string animePrefix = "mal:anime:";
+        const string mangaPrefix = "mal:manga:";
+        if (mediaId.StartsWith(animePrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            mediaType = "ANIME";
+            return int.TryParse(mediaId[animePrefix.Length..], out id) && id > 0;
+        }
+
+        if (mediaId.StartsWith(mangaPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            mediaType = "MANGA";
+            return int.TryParse(mediaId[mangaPrefix.Length..], out id) && id > 0;
+        }
+
+        return false;
     }
 
     private static Uri? ToUri(string? value)
@@ -428,9 +467,10 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
     }
 
     private const string MediaQuery = """
-        query MediaById($id: Int!) {
-          Media(id: $id, isAdult: false) {
+        query MediaById($id: Int, $idMal: Int, $type: MediaType) {
+          Media(id: $id, idMal: $idMal, type: $type, isAdult: false) {
             id
+            idMal
             type
             title { romaji english native }
             format
@@ -504,6 +544,9 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
     {
         [JsonPropertyName("id")]
         public int Id { get; init; }
+
+        [JsonPropertyName("idMal")]
+        public int? IdMal { get; init; }
 
         [JsonPropertyName("type")]
         public string? Type { get; init; }
