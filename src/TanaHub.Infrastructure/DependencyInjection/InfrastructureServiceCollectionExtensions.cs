@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TanaHub.Application.Services;
 using TanaHub.Domain.Enums;
@@ -47,9 +48,33 @@ public static class InfrastructureServiceCollectionExtensions
             provider.GetRequiredService<RoutedMediaCatalogService>());
         services.AddSingleton<ICatalogSourceSelector>(provider =>
             provider.GetRequiredService<RoutedMediaCatalogService>());
-        services.AddSingleton<IUserLibraryService>(_ => new FileUserLibraryService(
-            GetDefaultLibraryPath(),
-            CreateSeedLibraryEntries()));
+        services.AddSingleton<IDbContextFactory<LibraryDbContext>>(_ =>
+        {
+            var options = new DbContextOptionsBuilder<LibraryDbContext>()
+                .UseSqlite($"Data Source={GetDefaultLibraryDbPath()}")
+                .Options;
+            return new SimpleLibraryDbContextFactory(options);
+        });
+        services.AddSingleton<IUserLibraryService>(provider =>
+        {
+            var factory = provider.GetRequiredService<IDbContextFactory<LibraryDbContext>>();
+            using (var db = factory.CreateDbContext())
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(GetDefaultLibraryDbPath())!);
+                db.Database.Migrate();
+                SqliteUserLibraryService.ImportFromJsonIfNeededAsync(db, GetDefaultLibraryPath())
+                    .GetAwaiter().GetResult();
+
+                if (!db.Entries.Any())
+                {
+                    foreach (var seed in CreateSeedLibraryEntries())
+                        db.Entries.Add(SqliteUserLibraryService.ToEntityForSeeding(seed));
+                    db.SaveChanges();
+                }
+            }
+
+            return new SqliteUserLibraryService(factory);
+        });
         services.AddSingleton<IAppSettingsService>(_ => new FileAppSettingsService(
             GetDefaultSettingsPath()));
         services.AddSingleton<IAiringScheduleService>(_ =>
@@ -67,6 +92,8 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IRecognitionInboxService>(_ => new FileRecognitionInboxService(
             GetDefaultRecognitionInboxPath()));
         services.AddSingleton<IRecognitionService>(_ => new TraceMoeService(
+            new HttpClient { Timeout = TimeSpan.FromSeconds(30) }));
+        services.AddSingleton<IArtRecognitionService>(_ => new SauceNaoService(
             new HttpClient { Timeout = TimeSpan.FromSeconds(30) }));
 
         services.AddSingleton<IAniListAuthService>(_ => new AniListOAuthService(
@@ -94,6 +121,21 @@ public static class InfrastructureServiceCollectionExtensions
     {
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         return Path.Combine(appData, "TanaHub", "library.json");
+    }
+
+    private static string GetDefaultLibraryDbPath()
+    {
+        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        return Path.Combine(appData, "TanaHub", "library.db");
+    }
+
+    private sealed class SimpleLibraryDbContextFactory(DbContextOptions<LibraryDbContext> options)
+        : IDbContextFactory<LibraryDbContext>
+    {
+        public LibraryDbContext CreateDbContext() => new(options);
+
+        public Task<LibraryDbContext> CreateDbContextAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(CreateDbContext());
     }
 
     private static string GetDefaultSettingsPath()

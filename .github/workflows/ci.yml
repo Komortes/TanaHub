@@ -27,4 +27,13 @@ jobs:
       - name: Build
         run: dotnet build TanaHub.sln --configuration Release --no-restore
       - name: Test
-        run: dotnet test TanaHub.sln --configuration Release --no-build
+        run: dotnet test TanaHub.sln --configuration Release --no-build --collect:"XPlat Code Coverage"
+      - name: Coverage summary
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          dotnet tool install -g dotnet-reportgenerator-globaltool
+          reportgenerator \
+            -reports:"**/coverage.cobertura.xml" \
+            -targetdir:coverage-report \
+            -reporttypes:MarkdownSummaryGithub
+          cat coverage-report/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"

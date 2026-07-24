@@ -37,6 +37,9 @@ public sealed partial class MainWindowViewModel
     private string aniListClientSecret = string.Empty;
 
     [ObservableProperty]
+    private string sauceNaoApiKey = string.Empty;
+
+    [ObservableProperty]
     private string aniListConnectionStatus = "Not connected";
 
     [ObservableProperty]
@@ -100,6 +103,12 @@ public sealed partial class MainWindowViewModel
     private async Task ToggleRecognitionServicesAsync()
     {
         await SaveSettingsAsync(appSettings with { RecognitionServicesEnabled = !RecognitionServicesEnabled });
+    }
+
+    [RelayCommand]
+    private async Task SaveSauceNaoApiKeyAsync()
+    {
+        await SaveSettingsAsync(appSettings with { SauceNaoApiKey = SauceNaoApiKey });
     }
 
     [RelayCommand]
@@ -335,6 +344,7 @@ public sealed partial class MainWindowViewModel
         SettingsStorageDetail = $"Settings saved {appSettings.UpdatedAt:yyyy-MM-dd HH:mm}";
         AniListClientId = appSettings.AniListClientId;
         AniListClientSecret = appSettings.AniListClientSecret;
+        SauceNaoApiKey = appSettings.SauceNaoApiKey;
         IsAniListConnected = !string.IsNullOrWhiteSpace(appSettings.AniListAccessToken);
         AniListConnectionStatus = IsAniListConnected
             ? $"Connected as {appSettings.AniListUsername}"

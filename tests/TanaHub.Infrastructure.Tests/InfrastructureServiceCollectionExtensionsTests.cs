@@ -28,5 +28,10 @@ public sealed class InfrastructureServiceCollectionExtensionsTests
             descriptor.ServiceType == typeof(IUserLibraryService)
             && descriptor.ImplementationFactory is not null
             && descriptor.Lifetime == ServiceLifetime.Singleton);
+
+        Assert.Contains(services, descriptor =>
+            descriptor.ServiceType == typeof(IArtRecognitionService)
+            && descriptor.ImplementationFactory is not null
+            && descriptor.Lifetime == ServiceLifetime.Singleton);
     }
 }

@@ -16,7 +16,19 @@
           <TextBlock Text="Reverse image search" FontSize="16" FontWeight="Bold"
                      Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
           <TextBlock Text="Identify anime from a screenshot via trace.moe" FontSize="12"
+                     IsVisible="{Binding !IsArtRecognitionMode}"
                      Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+          <TextBlock Text="Identify manga panels or fan art via SauceNAO" FontSize="12"
+                     IsVisible="{Binding IsArtRecognitionMode}"
+                     Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <Button Classes="ghost" Command="{Binding SetRecognitionModeCommand}" CommandParameter="anime">
+            <TextBlock Text="Anime · trace.moe"/>
+          </Button>
+          <Button Classes="ghost" Command="{Binding SetRecognitionModeCommand}" CommandParameter="art">
+            <TextBlock Text="Manga &amp; art · SauceNAO"/>
+          </Button>
         </StackPanel>
         <Border Classes="divider"/>
 
@@ -246,6 +258,49 @@
         </DataTemplate>
       </ItemsControl.ItemTemplate>
     </ItemsControl>
+    </StackPanel>
+
+    <!-- Art recognition results -->
+    <StackPanel Spacing="12" IsVisible="{Binding IsArtRecognitionMode}">
+      <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding !ArtRecognitionResults.Count}">
+        <TextBlock Text="No matches yet — search to see SauceNAO results here." FontSize="12"
+                   Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+      </StackPanel>
+      <ItemsControl ItemsSource="{Binding ArtRecognitionResults}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <WrapPanel Orientation="Horizontal"/>
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:ArtRecognitionResultViewModel">
+            <Border Classes="card" Width="180" Height="280" Margin="0,0,14,14" ClipToBounds="True">
+              <Grid RowDefinitions="160,*,Auto">
+                <Border Background="{DynamicResource TanaHubSurfaceRaisedBrush}">
+                  <controls:RemoteImage SourceUri="{Binding ThumbnailUri}"/>
+                </Border>
+                <StackPanel Grid.Row="1" Margin="11,9,11,0" Spacing="3">
+                  <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold"
+                             Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
+                             TextWrapping="Wrap" MaxLines="2"/>
+                  <TextBlock Text="{Binding AuthorLabel}" FontSize="11"
+                             Foreground="{DynamicResource TanaHubTextMutedBrush}"
+                             IsVisible="{Binding AuthorLabel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                </StackPanel>
+                <Grid Grid.Row="2" Margin="11,4,11,11" ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                  <Border Padding="8,3" Background="{DynamicResource TanaHubAccentBrush}" CornerRadius="4">
+                    <TextBlock Text="{Binding SimilarityLabel}" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                  </Border>
+                  <Button Grid.Column="1" Classes="ghost" HorizontalAlignment="Right"
+                          Command="{Binding OpenSourceCommand}" ToolTip.Tip="Open source">
+                    <material:MaterialIcon Width="14" Height="14" Kind="OpenInNew"/>
+                  </Button>
+                </Grid>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
     </StackPanel>
 
     <!-- Recognition Inbox -->

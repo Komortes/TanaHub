@@ -68,9 +68,41 @@ public sealed class MainWindowViewModelRecognitionTests
             new FakeNotificationService(),
             new FakeCatalogSourceSelector(),
             new FakeRecognitionService(),
+            new FakeArtRecognitionService(),
             new FakeRecognitionInboxService(),
             fileOpenService,
             new FakeAppUpdateService());
+    }
+
+    [Fact]
+    public async Task RecognizeFromFileCommand_UsesArtRecognitionWhenModeIsArt()
+    {
+        var files = new Queue<(Stream? Stream, string MimeType, string SourceName, string? SourcePath)>(
+        [
+            (new MemoryStream([1, 2, 3]), "image/png", "art.png", null)
+        ]);
+        var viewModel = CreateViewModel(new FakeFileOpenService(files));
+        viewModel.SetRecognitionModeCommand.Execute("art");
+
+        await viewModel.RecognizeFromFileCommand.ExecuteAsync(null);
+
+        Assert.Single(viewModel.ArtRecognitionResults);
+        Assert.Equal("Sample Art", viewModel.ArtRecognitionResults[0].Title);
+        Assert.Empty(viewModel.RecognitionResults);
+    }
+
+    [Fact]
+    public void SetRecognitionModeCommand_TogglesIsArtRecognitionMode()
+    {
+        var viewModel = CreateViewModel(new FakeFileOpenService(new()));
+
+        Assert.False(viewModel.IsArtRecognitionMode);
+
+        viewModel.SetRecognitionModeCommand.Execute("art");
+        Assert.True(viewModel.IsArtRecognitionMode);
+
+        viewModel.SetRecognitionModeCommand.Execute("anime");
+        Assert.False(viewModel.IsArtRecognitionMode);
     }
 
     private sealed class FakeMediaCatalogService : IMediaCatalogService
@@ -255,6 +287,25 @@ public sealed class MainWindowViewModelRecognitionTests
             ];
 
             return Task.FromResult(Result<IReadOnlyList<RecognitionMatch>>.Success(matches));
+        }
+    }
+
+    private sealed class FakeArtRecognitionService : IArtRecognitionService
+    {
+        public Task<Result<IReadOnlyList<ArtRecognitionMatch>>> RecognizeAsync(
+            Stream imageStream,
+            string mimeType,
+            string apiKey,
+            CancellationToken cancellationToken = default)
+        {
+            IReadOnlyList<ArtRecognitionMatch> matches =
+            [
+                new(0.9, "Sample Art", "Some Artist",
+                    new Uri("https://www.pixiv.net/artworks/123"),
+                    new Uri("https://img1.saucenao.com/res/thumb.jpg"))
+            ];
+
+            return Task.FromResult(Result<IReadOnlyList<ArtRecognitionMatch>>.Success(matches));
         }
     }
 

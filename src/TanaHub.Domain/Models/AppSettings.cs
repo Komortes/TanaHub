@@ -24,5 +24,7 @@ public sealed record AppSettings
 
     public DateTimeOffset? AniListLastSyncAt { get; init; }
 
+    public string SauceNaoApiKey { get; init; } = string.Empty;
+
     public DateTimeOffset UpdatedAt { get; init; } = DateTimeOffset.UtcNow;
 }

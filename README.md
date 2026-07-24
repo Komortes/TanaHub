@@ -1,6 +1,6 @@
 # TanaHub
 
-A native desktop app for tracking anime and manga. Built with .NET and Avalonia UI — no Electron, no web wrapper.
+A native desktop app for tracking anime and manga. Built with .NET and Avalonia UI — no Electron, no web wrapper. English-only for now, by design.
 
 [![CI](https://github.com/Komortes/TanaHub/actions/workflows/ci.yml/badge.svg)](https://github.com/Komortes/TanaHub/actions/workflows/ci.yml)
 
@@ -21,7 +21,7 @@ A native desktop app for tracking anime and manga. Built with .NET and Avalonia 
 - **Offline cache** — catalog data is cached locally so the app works without a connection
 - **Recommendations** — get local suggestions based on genres in your library
 - **Update checks** — see whether a newer GitHub release is available
-- **Import/export** — dump your library to CSV or MAL XML, and import MAL XML backups
+- **Import/export** — dump your library to CSV or MAL XML, and import MAL XML backups (file-based; there is no live MAL account sync)
 
 ---
 
@@ -34,7 +34,7 @@ A native desktop app for tracking anime and manga. Built with .NET and Avalonia 
 | Anime catalog | AniList GraphQL API |
 | Manga catalog | MangaDex REST API |
 | Anime recognition | trace.moe API |
-| Persistence | JSON files (local) |
+| Persistence | Library: SQLite (EF Core) · Settings/cache: JSON files (local) |
 | Architecture | Clean Architecture — Domain / Application / Infrastructure / UI |
 
 ---
@@ -87,7 +87,7 @@ Release packaging instructions are available in [docs/release.md](docs/release.m
 - [x] Ratings and reviews per title
 - [x] Reading progress tracking for manga (chapter/volume)
 - [x] Library statistics and watch-time charts
-- [x] MAL (MyAnimeList) import/export
+- [x] MAL (MyAnimeList) file-based import/export (no live account sync)
 - [x] Custom lists and tags
 - [x] Recommendations based on your library
 - [x] Auto-update checker

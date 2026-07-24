@@ -160,6 +160,21 @@
           <Border Classes="divider"/>
 
           <StackPanel Spacing="6">
+            <TextBlock Text="SauceNAO API key" FontSize="12" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            <TextBlock Text="Optional — raises the SauceNAO rate limit for manga/art recognition. Leave blank to use the free tier."
+                       FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+              <TextBox Height="34" PasswordChar="●" PlaceholderText="Paste API key here"
+                       Text="{Binding SauceNaoApiKey, Mode=TwoWay}"/>
+              <Button Grid.Column="1" Classes="ghost" Command="{Binding SaveSauceNaoApiKeyCommand}">
+                <TextBlock Text="Save"/>
+              </Button>
+            </Grid>
+          </StackPanel>
+
+          <Border Classes="divider"/>
+
+          <StackPanel Spacing="6">
             <TextBlock Text="Theme" FontSize="12" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
             <StackPanel Orientation="Horizontal" Spacing="7">
               <StackPanel Spacing="2">

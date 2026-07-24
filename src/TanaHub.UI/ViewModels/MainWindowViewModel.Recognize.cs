@@ -33,11 +33,11 @@ public sealed partial class MainWindowViewModel
 
     public bool HasRecognitionInboxItems => RecognitionInboxItems.Count > 0;
     public bool HasRecognitionSourcePreview => RecognitionSourcePreviewUri is not null;
-    public bool HasCurrentRecognitionResult => CurrentRecognitionResult is not null;
-    public bool HasRecognitionVariantResults => RecognitionVariantResults.Count > 0;
+    public bool HasCurrentRecognitionResult => !IsArtRecognitionMode && CurrentRecognitionResult is not null;
+    public bool HasRecognitionVariantResults => !IsArtRecognitionMode && RecognitionVariantResults.Count > 0;
     public bool IsRecognitionHistoryVisible => HasRecognitionInboxItems && IsRecognitionHistoryExpanded;
     public bool IsRecognitionHistoryEmptyVisible => !HasRecognitionInboxItems && IsRecognitionHistoryExpanded;
-    public bool HasRecognitionEmptyMessage => !string.IsNullOrWhiteSpace(RecognitionEmptyMessage);
+    public bool HasRecognitionEmptyMessage => !IsArtRecognitionMode && !string.IsNullOrWhiteSpace(RecognitionEmptyMessage);
 
     partial void OnRecognitionEmptyMessageChanged(string value) =>
         OnPropertyChanged(nameof(HasRecognitionEmptyMessage));
@@ -52,10 +52,14 @@ public sealed partial class MainWindowViewModel
         NotifyRecognitionHistoryVisibilityChanged();
 
     [RelayCommand]
-    private Task RecognizeFromFileAsync() => RunRecognitionAsync(fileOpenService.PickImageAsync);
+    private Task RecognizeFromFileAsync() => IsArtRecognitionMode
+        ? RunArtRecognitionAsync(fileOpenService.PickImageAsync)
+        : RunRecognitionAsync(fileOpenService.PickImageAsync);
 
     [RelayCommand]
-    private Task PasteAndRecognizeAsync() => RunRecognitionAsync(fileOpenService.PasteImageAsync);
+    private Task PasteAndRecognizeAsync() => IsArtRecognitionMode
+        ? RunArtRecognitionAsync(fileOpenService.PasteImageAsync)
+        : RunRecognitionAsync(fileOpenService.PasteImageAsync);
 
     [RelayCommand]
     private void ToggleRecognitionHistory()

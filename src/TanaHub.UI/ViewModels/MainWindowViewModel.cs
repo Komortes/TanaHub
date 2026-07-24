@@ -29,6 +29,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private readonly INotificationService notificationService;
     private readonly ICatalogSourceSelector catalogSourceSelector;
     private readonly IRecognitionService recognitionService;
+    private readonly IArtRecognitionService artRecognitionService;
     private readonly IRecognitionInboxService recognitionInboxService;
     private readonly IFileOpenService fileOpenService;
     private readonly IAppUpdateService appUpdateService;
@@ -50,6 +51,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         INotificationService notificationService,
         ICatalogSourceSelector catalogSourceSelector,
         IRecognitionService recognitionService,
+        IArtRecognitionService artRecognitionService,
         IRecognitionInboxService recognitionInboxService,
         IFileOpenService fileOpenService,
         IAppUpdateService appUpdateService)
@@ -65,6 +67,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         this.notificationService = notificationService;
         this.catalogSourceSelector = catalogSourceSelector;
         this.recognitionService = recognitionService;
+        this.artRecognitionService = artRecognitionService;
         this.recognitionInboxService = recognitionInboxService;
         this.fileOpenService = fileOpenService;
         this.appUpdateService = appUpdateService;

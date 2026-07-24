@@ -55,7 +55,8 @@ public sealed class FileAppSettingsService : IAppSettingsService
                 var onDisk = updated with
                 {
                     AniListClientSecret = LocalSecretProtector.Protect(updated.AniListClientSecret, keyPath),
-                    AniListAccessToken = LocalSecretProtector.Protect(updated.AniListAccessToken, keyPath)
+                    AniListAccessToken = LocalSecretProtector.Protect(updated.AniListAccessToken, keyPath),
+                    SauceNaoApiKey = LocalSecretProtector.Protect(updated.SauceNaoApiKey, keyPath)
                 };
 
                 await AtomicFileWriter.WriteJsonAsync(storagePath, onDisk, JsonOptions, cancellationToken);
@@ -89,7 +90,8 @@ public sealed class FileAppSettingsService : IAppSettingsService
             return loaded with
             {
                 AniListClientSecret = LocalSecretProtector.Unprotect(loaded.AniListClientSecret, keyPath),
-                AniListAccessToken = LocalSecretProtector.Unprotect(loaded.AniListAccessToken, keyPath)
+                AniListAccessToken = LocalSecretProtector.Unprotect(loaded.AniListAccessToken, keyPath),
+                SauceNaoApiKey = LocalSecretProtector.Unprotect(loaded.SauceNaoApiKey, keyPath)
             };
         }
         catch (Exception ex) when (ex is IOException or System.Text.Json.JsonException or UnauthorizedAccessException)

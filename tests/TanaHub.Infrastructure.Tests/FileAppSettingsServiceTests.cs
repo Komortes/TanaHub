@@ -46,6 +46,24 @@ public sealed class FileAppSettingsServiceTests
     }
 
     [Fact]
+    public async Task SaveAsync_RoundTripsSauceNaoApiKeyEncryptedAtRest()
+    {
+        var storagePath = CreateStoragePath();
+        var service = new FileAppSettingsService(storagePath);
+
+        await service.SaveAsync(new AppSettings { SauceNaoApiKey = "sauce-secret" });
+
+        var rawOnDisk = await File.ReadAllTextAsync(storagePath);
+        Assert.DoesNotContain("sauce-secret", rawOnDisk);
+
+        var reloaded = new FileAppSettingsService(storagePath);
+        var result = await reloaded.GetAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("sauce-secret", result.Value!.SauceNaoApiKey);
+    }
+
+    [Fact]
     public async Task SaveAsync_ReturnsStorageErrorWhenParentPathIsAFile()
     {
         var blockedDirectory = CreateStoragePath();
