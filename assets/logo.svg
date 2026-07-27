@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="TanaHub">
+  <title>TanaHub</title>
+
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#17131F"/>
+      <stop offset="1" stop-color="#0B0912"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#C8B8FF"/>
+      <stop offset="0.55" stop-color="#9B6EF8"/>
+      <stop offset="1" stop-color="#7C4FE0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- tile -->
+  <rect x="32" y="32" width="448" height="448" rx="104" fill="url(#tile)"/>
+  <rect x="33" y="33" width="446" height="446" rx="103" fill="none" stroke="#2C2244" stroke-width="2"/>
+
+  <!-- shelf rails -->
+  <rect x="112" y="245" width="288" height="4" rx="2" fill="#3C2E58"/>
+  <rect x="112" y="315" width="288" height="4" rx="2" fill="#3C2E58"/>
+  <rect x="112" y="381" width="288" height="6" rx="3" fill="#4A3A6B"/>
+
+  <!-- spines: row A -->
+  <rect x="112" y="189" width="60" height="50" rx="10" fill="#5B4A8C"/>
+  <rect x="184" y="189" width="36" height="50" rx="10" fill="#8A6FD4"/>
+  <rect x="292" y="189" width="40" height="50" rx="10" fill="#C8B8FF" opacity="0.55"/>
+  <rect x="344" y="189" width="56" height="50" rx="10" fill="#4A3A6B"/>
+
+  <!-- spines: row B -->
+  <rect x="112" y="259" width="44" height="50" rx="10" fill="#7A63BE"/>
+  <rect x="168" y="259" width="52" height="50" rx="10" fill="#4A3A6B"/>
+  <rect x="292" y="259" width="72" height="50" rx="10" fill="#22D3EE"/>
+  <rect x="376" y="259" width="24" height="50" rx="10" fill="#8A6FD4"/>
+
+  <!-- spines: row C -->
+  <rect x="112" y="329" width="28" height="50" rx="10" fill="#8A6FD4"/>
+  <rect x="152" y="329" width="68" height="50" rx="10" fill="#5B4A8C"/>
+  <rect x="292" y="329" width="52" height="50" rx="10" fill="#4A3A6B"/>
+  <rect x="356" y="329" width="44" height="50" rx="10" fill="#7A63BE"/>
+
+  <!-- the "T": shelf top + centre upright -->
+  <rect x="112" y="123" width="288" height="50" rx="14" fill="url(#mark)"/>
+  <rect x="232" y="123" width="48" height="258" rx="14" fill="url(#mark)"/>
+</svg>

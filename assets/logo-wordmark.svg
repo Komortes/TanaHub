@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 220" width="880" height="220" role="img" aria-label="TanaHub">
+  <title>TanaHub</title>
+
+  <defs>
+    <linearGradient id="wtile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#17131F"/>
+      <stop offset="1" stop-color="#0B0912"/>
+    </linearGradient>
+    <linearGradient id="wmark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#C8B8FF"/>
+      <stop offset="0.55" stop-color="#9B6EF8"/>
+      <stop offset="1" stop-color="#7C4FE0"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(0,0) scale(0.4297)">
+    <rect x="32" y="32" width="448" height="448" rx="104" fill="url(#wtile)"/>
+    <rect x="33" y="33" width="446" height="446" rx="103" fill="none" stroke="#2C2244" stroke-width="2"/>
+
+    <rect x="112" y="245" width="288" height="4" rx="2" fill="#3C2E58"/>
+    <rect x="112" y="315" width="288" height="4" rx="2" fill="#3C2E58"/>
+    <rect x="112" y="381" width="288" height="6" rx="3" fill="#4A3A6B"/>
+
+    <rect x="112" y="189" width="60" height="50" rx="10" fill="#5B4A8C"/>
+    <rect x="184" y="189" width="36" height="50" rx="10" fill="#8A6FD4"/>
+    <rect x="292" y="189" width="40" height="50" rx="10" fill="#C8B8FF" opacity="0.55"/>
+    <rect x="344" y="189" width="56" height="50" rx="10" fill="#4A3A6B"/>
+
+    <rect x="112" y="259" width="44" height="50" rx="10" fill="#7A63BE"/>
+    <rect x="168" y="259" width="52" height="50" rx="10" fill="#4A3A6B"/>
+    <rect x="292" y="259" width="72" height="50" rx="10" fill="#22D3EE"/>
+    <rect x="376" y="259" width="24" height="50" rx="10" fill="#8A6FD4"/>
+
+    <rect x="112" y="329" width="28" height="50" rx="10" fill="#8A6FD4"/>
+    <rect x="152" y="329" width="68" height="50" rx="10" fill="#5B4A8C"/>
+    <rect x="292" y="329" width="52" height="50" rx="10" fill="#4A3A6B"/>
+    <rect x="356" y="329" width="44" height="50" rx="10" fill="#7A63BE"/>
+
+    <rect x="112" y="123" width="288" height="50" rx="14" fill="url(#wmark)"/>
+    <rect x="232" y="123" width="48" height="258" rx="14" fill="url(#wmark)"/>
+  </g>
+
+  <text x="248" y="126"
+        font-family="SF Pro Display, Segoe UI Variable, Segoe UI, system-ui, -apple-system, Helvetica Neue, Arial, sans-serif"
+        font-size="92" font-weight="700" letter-spacing="-2.5">
+    <tspan fill="#9B6EF8">Tana</tspan><tspan fill="#22D3EE">Hub</tspan>
+  </text>
+  <text x="252" y="176"
+        font-family="Cascadia Code, JetBrains Mono, Consolas, Courier New, monospace"
+        font-size="26" font-weight="600" letter-spacing="4.5" fill="#6B6080">
+    ANIME &#183; MANGA TRACKER
+  </text>
+</svg>
