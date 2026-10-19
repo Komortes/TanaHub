@@ -44,8 +44,9 @@ function paginate<T>(items: T[], params: Record<string, unknown>): Page<T> {
 /** An isolated in-memory RPC service. No request reaches the user's desktop library. */
 export class MockLibrary {
   readonly requests: RpcRequest[] = [];
-  readonly entries = new Map(initialMedia.slice(0, 4).map((item, index) => [item.id, entry(item, { score: index === 0 ? 9 : null })]));
-  readonly catalog = new Map(initialMedia.map((item) => [item.id, item]));
+  private readonly seedMedia = structuredClone(initialMedia);
+  readonly entries = new Map(this.seedMedia.slice(0, 4).map((item, index) => [item.id, entry(item, { score: index === 0 ? 9 : null })]));
+  readonly catalog = new Map(this.seedMedia.map((item) => [item.id, item]));
   settings: Settings = { theme: 'Nebula dark', notificationsEnabled: true, offlineCacheEnabled: true, recognitionServicesEnabled: true, preferredSyncSource: 'AniList', aniListClientId: '', hasAniListClientSecret: false, hasSauceNaoApiKey: false, isAniListConnected: false, aniListUsername: '', aniListUserId: 0, aniListLastSyncAt: null };
   readonly recognitionHistory = new Map<string, RecognitionHistoryItem>();
   readonly relations = new Map<string, RelatedTitlesResult>();
@@ -192,7 +193,7 @@ export class MockLibrary {
     const from = String(params.from);
     const to = String(params.to);
     const start = new Date(from).getTime();
-    const records = [initialMedia[0], initialMedia[5]].map((item, index) => ({ mediaId: item.id, title: item.title, episode: 4 + index, airingAt: new Date(start + (index + 1) * 3_600_000).toISOString(), format: item.format, releaseStatus: 'Releasing', posterUrl: item.posterUrl, inLibrary: this.entries.has(item.id), status: this.entries.get(item.id)?.status ?? null }));
+    const records = [this.seedMedia[0], this.seedMedia[5]].map((item, index) => ({ mediaId: item.id, title: item.title, episode: 4 + index, airingAt: new Date(start + (index + 1) * 3_600_000).toISOString(), format: item.format, releaseStatus: 'Releasing', posterUrl: item.posterUrl, inLibrary: this.entries.has(item.id), status: this.entries.get(item.id)?.status ?? null }));
     return { from, to, items: records.filter(item => Date.parse(item.airingAt) < Date.parse(to) && (!params.libraryOnly || item.inLibrary)) };
   }
 }

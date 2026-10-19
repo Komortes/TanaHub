@@ -1,5 +1,47 @@
 # Autonomous development progress
 
+## Artwork and signed updater — 19 October 2026
+
+The user authorized continued optimization, commits/push and prereleases, and
+explicitly approved storing the prepared signing key in the Komortes/TanaHub
+Actions secret `TAURI_SIGNING_PRIVATE_KEY`. The secret name is verified; private
+key material stays out of source and logs. The owner-only local backup is ignored.
+
+- Artwork sizes now flow from AniList through bridge DTOs and offline catalog
+  persistence. Cards/list rows select 230px/100px images where screen density
+  permits; original covers remain available for enlargement. One real AniList
+  sample measured 136,267 bytes original, 40,657 preview and 9,488 thumbnail.
+  These are per-image traffic measurements, not a claim about total app speed.
+- A shared viewport loader bounds active loads to four and defers distant covers.
+  Native artwork caching uses allowed HTTPS provider hosts, raster validation,
+  atomic writes, 8 MiB/image and 256 MiB LRU limits. Downloads refresh after 30
+  days while stale saved images remain usable on refresh failure.
+- A native isolated profile loaded real AniList covers, saved Frieren at Watching
+  EP 1/28 with a Unicode note, and retained that state after restart. All 25 cached
+  image files retained their inodes across restart (1,380,155 bytes). Evidence is
+  outside the repository under /private/tmp/tanahub-optimization-qa/.
+- Added official Tauri updater/process plugins with version-bound signatures,
+  separate download/install controls, progress, busy-core protection, sidecar
+  shutdown and recoverable install/restart failures. Linux DEB explains its
+  package-manager update path; AppImage supports in-place updates.
+- Release tooling preserves exact signed archive bytes, independently verifies
+  signatures for all three platforms and publishes monotonic preview/stable feeds
+  on a separate updates branch. Existing published releases remain immutable.
+- Local checks so far: 363 .NET tests, six native tests, 13 release-tooling tests,
+  format, zero-diagnostic frontend build, transport and real self-contained core
+  mutation/restart checks pass. Runtime npm audit reports no known vulnerabilities.
+- Two image queue/lifecycle regressions were reproduced and fixed. The broad
+  browser run then exposed shared mutable fixture objects: size-selection tests
+  leaked mocked provider URLs into later tests. Trace errors confirmed those
+  exact leaked URLs. Each mock service now deep-clones its seed records; 30 focused
+  repetitions pass and the full suite is rerunning. No diagnostic code remains.
+  Signing/release CI and the real packaged upgrade remain pending.
+
+Next: finish the complete browser suite, push reviewed commits, build and verify
+the signed 0.1.2 prerelease, then exercise a real
+upgrade in the disposable native profile. Earlier public versions need a one-time
+0.1.2 install; update packages are complete applications rather than delta patches.
+
 ## 0.1.1 preview publication — 19 October 2026
 
 The user authorized a new prerelease with macOS, Windows and Linux installers,
