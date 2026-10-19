@@ -2,6 +2,21 @@
 
 Changes are recorded here for each release.
 
+## Unreleased — 0.1.2 preview
+
+### Added
+
+- Signed in-app updates with separate download/install steps, progress, version-bound signatures and restart. Supported by macOS, Windows and Linux AppImage; DEB uses the package manager.
+- A 256 MiB persistent artwork cache with bounded downloads, expiry, eviction and saved-image fallback when refresh fails.
+- Signed update manifests, local/optional CI signing and publication of preview/stable update feeds after a complete release is published.
+
+### Improved
+
+- Thumbnail/preview/original cover selection follows rendered size and screen density. Offscreen artwork waits for scrolling, and concurrent image loads are limited to four.
+- Failed smaller images fall back to the original; loading is shared by covers, banners, characters and related titles.
+
+Older 0.1.0/0.1.1 previews require a one-time installation to acquire the updater. See [0.1.2 notes](docs/releases/0.1.2.md) and [updating TanaHub](docs/updating.md).
+
 ## [0.1.1 preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.1) — 2026-10-19
 
 ### Fixed

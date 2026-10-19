@@ -1,13 +1,13 @@
 # Release guide
 
-The primary release target is the Tauri + Svelte client with its self-contained .NET sidecar. Version `0.1.1` is the current preview; `0.1.0` is the first public preview. Creating a tag, uploading source changes and publishing a release are separate maintainer actions.
+The primary release target is the Tauri + Svelte client with its self-contained .NET sidecar. Version `0.1.2` is the current preview; `0.1.0` is the first public preview. Creating a tag, uploading source changes and publishing a release are separate maintainer actions.
 
 ## Version and notes
 
 Keep these versions equal: `Directory.Build.props`, the client `package.json` and npm lockfile, `src-tauri/tauri.conf.json`, `Cargo.toml` and the client package in `Cargo.lock`.
 
 ```sh
-node scripts/check-release-version.mjs v0.1.1
+node scripts/check-release-version.mjs v0.1.2
 node --test scripts/tests/release.test.mjs
 ```
 
@@ -49,7 +49,7 @@ Replace the runtime with `win-x64` or `linux-x64` on those hosts. Output goes to
 
 [Release](../.github/workflows/release.yml) first runs the reusable [CI](../.github/workflows/ci.yml): .NET format/build/tests, frontend build and browser scenarios, transport tests, self-contained core tests, release tooling tests and native Rust checks.
 
-- Manual dispatch on a branch builds downloadable workflow artifacts only.
+- Manual dispatch on a branch builds downloadable workflow artifacts. Enable `create_draft` to create the matching numeric version tag and a draft after every check and package succeeds. The workflow token creates that tag without recursively starting a second Release run; an existing tag is never moved.
 - A matching `v<version>` tag, or dispatch on that tag, builds all three platforms and creates a **draft prerelease** with version-specific notes and checksums.
 - The draft is created only after every platform packages successfully. Reruns can update a draft; an already published release is left unchanged and its publication step is skipped successfully.
 - Build jobs have read-only repository permissions. Only the draft-release job receives `contents: write`.
@@ -65,6 +65,10 @@ same source and installer bytes have already passed the complete workflow. Never
 replace published assets or move the release tag to a different commit.
 
 Workflow definitions follow the [Tauri pipeline guidance](https://v2.tauri.app/distribute/pipelines/github/) and use [GitHub token permissions](https://docs.github.com/en/actions/tutorials/authenticate-with-github_token) scoped by job.
+
+## Signed in-app updates
+
+See [updating TanaHub](updating.md) for the signing key, optional Actions secret, local signing, version-bound signatures and publication of the preview/stable feeds. Installer-only builds stay drafts until the complete signed metadata is verified and uploaded. Existing 0.1.0/0.1.1 installers need a one-time upgrade to acquire the updater.
 
 ## Signing and validation limits
 

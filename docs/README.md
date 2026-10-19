@@ -10,8 +10,9 @@
 | [Tauri migration](tauri-migration.md) | Implemented workflows, architecture and native validation limits |
 | [Bridge protocol](../src/TanaHub.Bridge/README.md) | Requests, responses and boundary validation |
 | [Smoke test](smoke-test.md) | Manual platform and user-flow verification |
+| [Updating TanaHub](updating.md) | In-app updates, artwork cache and signing update packages |
 | [Release guide](release.md) | Versioning, packaging, draft releases, checksums and rollback |
-| [0.1.1 preview notes](releases/0.1.1.md) | Reviewable release description and known limits |
+| [0.1.2 preview notes](releases/0.1.2.md) | Reviewable release description and known limits |
 | [Changelog](../CHANGELOG.md) | Release history and user-facing changes |
 | [Security](../SECURITY.md) | Reporting and local-data safeguards |
 | [Architecture decisions](decisions) | Decisions and their historical context |
