@@ -57,7 +57,10 @@ public sealed class OfflineCatalogCacheTests
         {
             var cache = new OfflineCatalogCache(cachePath);
             cache.Put(CreateAnime("anilist:1"));
-            await Assert.ThrowsAnyAsync<IOException>(() => cache.FlushAsync());
+            // Moving a file over a directory reports access denied on Windows and IO failure on Unix.
+            var failure = await Record.ExceptionAsync(() => cache.FlushAsync());
+            Assert.True(failure is IOException or UnauthorizedAccessException,
+                $"Expected a filesystem access failure, got {failure?.GetType().Name ?? "no error"}.");
             Directory.Delete(cachePath);
 
             await cache.FlushAsync();

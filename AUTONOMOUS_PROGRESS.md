@@ -12,6 +12,16 @@ installation guidance and versioned preview notes. Native package builds and CI
 must pass before the draft is published. Publication evidence is recorded below
 once GitHub completes the release workflow.
 
+The first GitHub run exposed two Windows-specific test-harness failures: redirected
+stdin used the Windows console code page for Unicode requests, and moving a cache
+file over a directory reports UnauthorizedAccessException on Windows rather than
+IOException. The production bridge already reads/writes UTF-8. The test harness
+now specifies UTF-8 for all pipes; the cache retry test accepts either documented
+filesystem failure and still proves a subsequent flush persists the pending item.
+The bridge tests also now include the same coverage collector as the other suites.
+No assertions or CI gates were skipped. npm and NuGet vulnerability checks found
+no known vulnerable dependencies in the current lockfile/restored solution.
+
 ## Usability and source-checkout readiness — 19 October 2026
 
 The user resumed autonomous development with the goal of an understandable app
