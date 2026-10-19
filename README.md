@@ -35,7 +35,7 @@ Packages include the .NET runtime. You do not need Node, Rust or a .NET SDK to u
 ### Your first title
 
 1. Open **Discover** and search for an anime or manga.
-2. Choose **Add to library**, set Watching or Reading, then record your progress and personal rating.
+2. Choose **Add to library**, then record your progress and personal rating. Source builds start Watching or Reading with your first episode/chapter; in **0.1.0 Preview**, choose that status manually.
 3. Return to **My library** to filter your collection and continue watching or reading.
 
 See the [user guide](docs/getting-started.md) for imports, exports, backups and optional integrations.

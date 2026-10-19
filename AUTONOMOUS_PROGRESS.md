@@ -1,5 +1,45 @@
 # Autonomous development progress
 
+## New-user workflow audit and fixes — 19 October 2026
+
+The user authorized a fresh application walkthrough, fixes, commits and push.
+Used separate empty browser/native profiles; no personal library, account or
+credentials were accessed. Captured and inspected the current interface through
+the in-app browser and the actual macOS Tauri/WebKit application.
+
+- First progress previously left a new title in Planning while Home claimed
+  nothing was in progress. A zero-to-positive progress action now starts
+  Watching/Reading, including a non-conflicting start date. Explicit statuses,
+  dates and imported tracking retain their existing semantics. Four bridge
+  regressions failed first; SQLite and packaged-process checks cover persistence.
+- Notes, reviews, organization, dates and progress drafts now survive navigation
+  and reload in the same window. Save/Discard remain explicit. Changed saved
+  values invalidate old drafts, removal clears them, and an in-memory fallback
+  keeps the latest edit/discard when session storage writes fail. Drafts are not
+  a library backup and are not guaranteed after closing the window.
+- Catalog add/progress and detail add actions restore keyboard focus to a usable
+  control. Final progress and failed writes retain a sensible target; inactive
+  originating cards cannot take focus away from a title page.
+- Settings explains that update checks use stable releases, reports the absence
+  of a stable release accurately and always offers Browse releases for previews.
+- Added 12 browser cases. Eight regression cases failed before their fixes;
+  the storage-failure case also exposed and corrected stale cached draft recovery.
+  A full-suite run exposed an existing request-count race: the navigation test
+  now waits for the restored debounced search before asserting a no-op click.
+- Final local checks: 137/137 Chromium scenarios, 355/355 .NET tests,
+  9/9 tooling tests, format verification, zero Svelte diagnostics, production
+  frontend/native macOS builds, actual self-contained core and transport checks.
+  All five draft editors also pass at 320px without horizontal overflow.
+- Actual macOS walkthrough: empty library → Discover/search → Add → Return to
+  record episode 1 → Home shows Watching/In progress → notes draft → Back/open
+  restores draft → Save → quit/restart retains status, progress and Unicode note.
+  Screenshots and the detailed local report are in ignored
+  output/playwright/new-user-oct19/. Windows/Linux interactive UI, live OAuth and
+  recognition uploads are outside this run's interactive evidence.
+- Updated setup guidance to distinguish current source behavior from the
+  immutable published 0.1.0 Preview installers. This iteration does not replace
+  the release tag or public installer assets.
+
 ## Repository presentation — 19 October 2026
 
 - Reworked the README around the application: crisp existing SVG wordmark,

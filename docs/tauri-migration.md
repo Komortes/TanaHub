@@ -68,7 +68,14 @@ same profile while editing its library or cached settings.
   remaining counts/time, confirmed reset and record-all secondary actions,
   shared 0–10 rating modal with draft, Save, Cancel and separate Clear. Notes,
   review, tags and lists have compact summaries and editors opened on demand;
-  closing an editor preserves its draft. Start/completion dates have explicit
+  closing an editor preserves its draft. Current source builds also retain text,
+  organization, dates and progress drafts across navigation/reload in the same
+  window, with session storage and an in-memory fallback. Saved values invalidate
+  older drafts; explicit discard/removal clears them. Drafts are not library data
+  until explicitly saved. First positive progress on a Planning entry with zero
+  progress starts Watching/Reading and infers a non-conflicting start date;
+  imports and other chosen statuses retain their existing semantics.
+  Start/completion dates have explicit
   Save/Clear/Discard, local-calendar handling, chronology validation and visible
   empty states. Status changes preserve manually chosen dates. Confirmed removal
   remains available.
