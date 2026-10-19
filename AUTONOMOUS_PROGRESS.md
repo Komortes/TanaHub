@@ -39,11 +39,49 @@ key material stays out of source and logs. The owner-only local backup is ignore
   postcondition raced with the expected immediate rollback after a failed settings
   save. Use a normal user click and retain explicit error/persisted-value assertions;
   12 focused repetitions pass. Superseded runs 39288729059/39288741456 were stopped
-  before packaging; updated source will get complete fresh CI/release checks.
+  before packaging. Fresh checks below pass completely.
 
-Next: verify the signed 0.1.2 prerelease, publish after CI and package validation,
-then exercise a real upgrade in the disposable native profile. Earlier public versions need a one-time
-0.1.2 install; update packages are complete applications rather than delta patches.
+### 0.1.2 publication and real upgrade verification
+
+- Published [0.1.2 Preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.2)
+  at 17:17:33 UTC. Lightweight tag v0.1.2 resolves to the exact tested app source
+  bbb885258b005922a0f46cfca94c48689cdb69fe. No earlier release/tag was replaced.
+- [Main CI](https://github.com/Komortes/TanaHub/actions/runs/39289544108) passes
+  all four jobs. [Release](https://github.com/Komortes/TanaHub/actions/runs/39289543887)
+  passes all eight: four checks, three native packages and draft creation.
+  Each native runner passes 363 .NET tests, six Rust tests, 13 tooling tests,
+  formatting, frontend build and real self-contained core checks. Chromium passes
+  148/148 with no retry/flaky cases in the successful Release run.
+- All 13 published asset sizes and GitHub SHA-256 digests match the exact downloaded
+  files, with all three SHA manifests verified. All three updater payloads pass
+  independent Minisign/package/version verification; the additional DEB signature
+  also verifies. The macOS DMG passes hdiutil verification; app deep/strict codesign,
+  version 0.1.2 and arm64 shell/core checks pass. Its exact CI sidecar also passes
+  real SQLite/RPC mutation, validation, Unicode and restart tests locally.
+- Tauri additionally emits a DEB signature. The draft job's initial total-signature
+  count therefore skipped latest.json. Generated and independently verified that
+  manifest locally, uploaded it to the draft before publication, and preserved all
+  CI payload bytes/signatures. The workflow now checks the three named updater
+  signatures rather than counting unrelated signatures, fixing future releases.
+- [Update channel](https://github.com/Komortes/TanaHub/actions/runs/39292855434)
+  succeeds. Public preview.json announces 0.1.2 with the verified three-platform
+  URLs. Anonymous checks return HTTP 200 for the release page and all 13 assets.
+  The four README installer links belong to that published asset set.
+- A private 0.1.1 bootstrap containing the new updater/key offered the real published
+  0.1.2, downloaded and verified its signature, installed it and automatically
+  relaunched (detached PID 21965 -> 21987). This bootstrap is a test harness, not the
+  old public 0.1.1 installer. Settings shows 0.1.2 and You are up to date afterward.
+  All logical LibraryEntries fields match the pre-update snapshot, including
+  Watching EP 1/28 and the saved Unicode note. All 25 artwork-cache files retain
+  their inode/size after upgrade. The native log is empty and the test app quit.
+- Native screenshots and before/after SQLite/cache snapshots remain outside source
+  under /private/tmp/tanahub-optimization-qa/. No personal library/account was used.
+  Windows/Linux builds and tests pass; interactive installation/updating on those
+  platforms remains unverified. OS signing/notarization limits remain documented.
+
+Next: interactive Windows/AppImage update checks when those environments are
+available. Existing public 0.1.0/0.1.1 installations need a one-time 0.1.2 install;
+subsequent updates download a full signed package and replace the app in place.
 
 ## 0.1.1 preview publication — 19 October 2026
 

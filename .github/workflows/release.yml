@@ -127,8 +127,10 @@ jobs:
           version="${RELEASE_TAG#v}"
           notes="docs/releases/${version}.md"
           test -f "$notes"
-          signatures=$(find artifacts/release -maxdepth 1 -name '*.sig' | wc -l)
-          if test "$signatures" -eq 3; then
+          # Tauri may also sign DEB/MSI installers; only these three feed payloads are required.
+          if test -f "artifacts/release/TanaHub-$version-osx-arm64.app.tar.gz.sig" &&
+             test -f "artifacts/release/TanaHub-$version-win-x64.exe.sig" &&
+             test -f "artifacts/release/TanaHub-$version-linux-x64.AppImage.sig"; then
             node scripts/update-manifest.mjs artifacts/release "$RELEASE_TAG"
           else
             echo 'Update signatures are missing: sign all three packages locally and upload latest.json before publication.'
