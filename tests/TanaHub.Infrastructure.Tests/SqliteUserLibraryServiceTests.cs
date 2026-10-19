@@ -9,6 +9,19 @@ namespace TanaHub.Infrastructure.Tests;
 public sealed class SqliteUserLibraryServiceTests
 {
     [Fact]
+    public async Task FirstProgressPersistsTheStartOfAPlannedTitle()
+    {
+        var dbPath = CreateDbPath();
+        var service = CreateService(dbPath, [new("anilist:1", MediaType.Anime, MediaListStatus.Planning)]);
+        var result = await service.IncrementProgressAsync("anilist:1");
+        Assert.True(result.IsSuccess);
+        var saved = (await CreateService(dbPath).GetEntryAsync("anilist:1")).Value!;
+        Assert.Equal(MediaListStatus.Current, saved.Status);
+        Assert.Equal(1, saved.Progress);
+        Assert.NotNull(saved.StartedAt);
+    }
+
+    [Fact]
     public async Task UpdateStatusAsync_PreservesAnExplicitCompletionDate()
     {
         var completion = DateTimeOffset.UtcNow.AddDays(-20);

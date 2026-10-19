@@ -45,7 +45,7 @@ public sealed partial class BridgeHandler
         var id = MediaId(parameters);
         var progress = RequiredInteger(parameters, "progress", 0, int.MaxValue);
         var entry = RequireSuccess(await library.GetEntryAsync(id, ct));
-        return await MapEntryAsync(RequireSuccess(await library.UpsertEntryAsync(entry with { Progress = progress }, ct)), ct);
+        return await MapEntryAsync(RequireSuccess(await library.UpsertEntryAsync(entry.SetProgress(progress), ct)), ct);
     }
 
     private async Task<LibraryEntryDto> SetReviewAsync(JsonElement parameters, CancellationToken ct)

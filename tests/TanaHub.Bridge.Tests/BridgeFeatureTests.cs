@@ -14,6 +14,62 @@ namespace TanaHub.Bridge.Tests;
 public sealed class BridgeFeatureTests
 {
     [Theory]
+    [InlineData("library.progress", "anilist:1")]
+    [InlineData("library.progress.set", "anilist:1")]
+    [InlineData("library.progress", "anilist:2")]
+    [InlineData("library.progress.set", "anilist:2")]
+    public async Task FirstProgressStartsAPlannedTitleAndMakesItAvailableToContinue(string method, string mediaId)
+    {
+        var fixture = new Fixture();
+        await Call(fixture.Handler, "library.add", new { mediaId });
+        var updated = await Call(fixture.Handler, method, new { mediaId, progress = 1 });
+        Assert.Equal("Watching", updated.GetProperty("status").GetString());
+        Assert.Equal(1, updated.GetProperty("progress").GetInt32());
+        Assert.NotNull(updated.GetProperty("startedAt").GetString());
+        var home = await Call(fixture.Handler, "home.get", new { });
+        Assert.Equal(mediaId, Assert.Single(home.GetProperty("continueItems").EnumerateArray()).GetProperty("mediaId").GetString());
+    }
+
+    [Theory]
+    [InlineData(MediaListStatus.Planning, 1, 2)]
+    [InlineData(MediaListStatus.Planning, 0, 0)]
+    [InlineData(MediaListStatus.Paused, 0, 1)]
+    [InlineData(MediaListStatus.Completed, 0, 1)]
+    [InlineData(MediaListStatus.Dropped, 0, 1)]
+    [InlineData(MediaListStatus.Repeating, 0, 1)]
+    public async Task SettingProgressPreservesAnExplicitStatusAndDates(MediaListStatus status, int before, int progress)
+    {
+        var start = DateTimeOffset.UtcNow.AddDays(-10);
+        var completion = start.AddDays(1);
+        var fixture = new Fixture([new(Anime.Id, MediaType.Anime, status) { Progress = before, StartedAt = start, CompletedAt = completion }]);
+        await Call(fixture.Handler, "library.progress.set", new { mediaId = Anime.Id, progress });
+        var saved = (await fixture.Library.GetEntryAsync(Anime.Id)).Value!;
+        Assert.Equal(status, saved.Status);
+        Assert.Equal(start, saved.StartedAt);
+        Assert.Equal(completion, saved.CompletedAt);
+    }
+
+    [Fact]
+    public async Task StartingProgressPreservesDatesAndDoesNotInventAContradictoryStart()
+    {
+        var start = DateTimeOffset.UtcNow.AddDays(-10);
+        var completion = start.AddDays(1);
+        var fixture = new Fixture([
+            new(Anime.Id, MediaType.Anime, MediaListStatus.Planning) { StartedAt = start, CompletedAt = completion },
+            new(Manga.Id, MediaType.Manga, MediaListStatus.Planning) { CompletedAt = completion }
+        ]);
+        await Call(fixture.Handler, "library.progress.set", new { mediaId = Anime.Id, progress = 1 });
+        await Call(fixture.Handler, "library.progress", new { mediaId = Manga.Id });
+        var anime = (await fixture.Library.GetEntryAsync(Anime.Id)).Value!;
+        var manga = (await fixture.Library.GetEntryAsync(Manga.Id)).Value!;
+        Assert.Equal(start, anime.StartedAt);
+        Assert.Equal(completion, anime.CompletedAt);
+        Assert.Equal(MediaListStatus.Current, manga.Status);
+        Assert.Null(manga.StartedAt);
+        Assert.Equal(completion, manga.CompletedAt);
+    }
+
+    [Theory]
     [InlineData(1_000_001)]
     [InlineData(int.MaxValue)]
     public async Task AbsoluteProgressSupportsTheStoredIntegerRangeAndKeepsOtherFields(int progress)

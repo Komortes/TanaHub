@@ -20,10 +20,16 @@ let restarted;
 try {
   const empty = await bridge.request('library.list', {});
   assert.equal(empty.items.length, 0);
-  const added = await bridge.request('library.add', { mediaId: 'anilist:154587', status: 'Watching' });
+  const added = await bridge.request('library.add', { mediaId: 'anilist:154587' });
   assert.equal(added.media.title, "Frieren: Beyond Journey's End");
+  assert.equal(added.status, 'Planning');
+  const started = await bridge.request('library.progress', { mediaId: added.mediaId });
+  assert.equal(started.status, 'Watching');
+  assert.ok(started.startedAt);
+  const firstHome = await bridge.request('home.get', {});
+  assert.equal(firstHome.continueItems[0].mediaId, added.mediaId);
   await Promise.all([
-    bridge.request('library.progress', { mediaId: added.mediaId, amount: 4 }),
+    bridge.request('library.progress', { mediaId: added.mediaId, amount: 3 }),
     bridge.request('library.score', { mediaId: added.mediaId, score: 9 }),
     bridge.request('library.notes', { mediaId: added.mediaId, notes: 'Продолжить вечером' }),
   ]);

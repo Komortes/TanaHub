@@ -50,10 +50,20 @@ public sealed record UserMediaEntry
             throw new ArgumentOutOfRangeException(nameof(amount), "Progress cannot exceed 2,147,483,647.");
         }
 
+        return SetProgress(Progress + amount);
+    }
+
+    public UserMediaEntry SetProgress(int progress)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(progress);
+        var now = DateTimeOffset.UtcNow;
+        var starting = Status == MediaListStatus.Planning && Progress == 0 && progress > 0;
         return this with
         {
-            Progress = Progress + amount,
-            UpdatedAt = DateTimeOffset.UtcNow
+            Progress = progress,
+            Status = starting ? MediaListStatus.Current : Status,
+            StartedAt = starting && StartedAt is null && (CompletedAt is null || CompletedAt >= now) ? now : StartedAt,
+            UpdatedAt = now
         };
     }
 }
