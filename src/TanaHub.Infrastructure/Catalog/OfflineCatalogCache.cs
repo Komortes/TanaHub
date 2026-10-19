@@ -92,6 +92,7 @@ internal sealed class OfflineCatalogCache
         [JsonPropertyName("poster")] public string? Poster { get; set; }
         [JsonPropertyName("banner")] public string? Banner { get; set; }
         [JsonPropertyName("thumb")] public string? Thumbnail { get; set; }
+        [JsonPropertyName("preview")] public string? Preview { get; set; }
         // Anime
         [JsonPropertyName("episodes")] public int? Episodes { get; set; }
         [JsonPropertyName("duration")] public int? Duration { get; set; }
@@ -121,6 +122,7 @@ internal sealed class OfflineCatalogCache
                 Poster = item.Images.PosterUri?.ToString(),
                 Banner = item.Images.BannerUri?.ToString(),
                 Thumbnail = item.Images.ThumbnailUri?.ToString(),
+                Preview = item.Images.PreviewUri?.ToString(),
                 Characters = item.Characters.Count > 0
                     ? item.Characters.Select(c => new CachedCharDto { N = c.Name, I = c.ImageUri?.ToString(), R = c.Role }).ToList()
                     : null,
@@ -145,7 +147,7 @@ internal sealed class OfflineCatalogCache
             var title = new MediaTitle(Romaji ?? $"#{Id}", English, Native);
             var format = Enum.TryParse<MediaFormat>(Format, out var f) ? f : MediaFormat.Unknown;
             var status = Enum.TryParse<MediaReleaseStatus>(Status, out var s) ? s : MediaReleaseStatus.Unknown;
-            var images = new MediaImages(ToUri(Poster), ToUri(Banner), ToUri(Thumbnail));
+            var images = new MediaImages(ToUri(Poster), ToUri(Banner), ToUri(Thumbnail), ToUri(Preview));
             IReadOnlyList<string> genres = Genres ?? [];
 
             IReadOnlyList<CharacterInfo> characters = Characters?

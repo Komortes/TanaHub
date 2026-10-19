@@ -8,6 +8,25 @@ namespace TanaHub.Infrastructure.Tests;
 public sealed class OfflineCatalogCacheTests
 {
     [Fact]
+    public async Task FlushAsync_PreservesCoverSizesAfterRestart()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "TanaHub.Tests", Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(directory, "catalog.json");
+        var images = new MediaImages(new("https://s4.anilist.co/full.jpg"), ThumbnailUri: new("https://s4.anilist.co/thumb.jpg"), PreviewUri: new("https://s4.anilist.co/card.jpg"));
+        try
+        {
+            var original = new OfflineCatalogCache(path);
+            original.Put(CreateAnime("anilist:1") with { Images = images });
+            await original.FlushAsync();
+            var restarted = new OfflineCatalogCache(path);
+            await restarted.LoadAsync();
+            Assert.True(restarted.TryGet("anilist:1", out var saved));
+            Assert.Equal(images, saved!.Images);
+        }
+        finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
+    }
+
+    [Fact]
     public async Task LoadAsync_CompletesStartupBridgeWithoutPostingToUiContext()
     {
         var directory = Path.Combine(Path.GetTempPath(), "TanaHub.Tests", Guid.NewGuid().ToString("N"));

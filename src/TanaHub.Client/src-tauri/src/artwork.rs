@@ -10,6 +10,7 @@ use tokio::sync::Semaphore;
 
 const MAX_IMAGE: usize = 8 * 1024 * 1024;
 const CACHE_BUDGET: u64 = 256 * 1024 * 1024;
+const MAX_AGE: Duration = Duration::from_secs(30 * 24 * 60 * 60);
 
 // Fetch only provider-owned image hosts. Never turn catalog data into a general HTTP proxy.
 fn allowed(url: &Url) -> bool {
@@ -36,7 +37,12 @@ fn raster(bytes: &[u8]) -> bool {
 }
 
 fn hit(path: &Path) -> bool {
-    let Ok(mut file) = fs::File::open(path) else {
+    let Ok(mut file) = fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(path)
+        .or_else(|_| fs::File::open(path))
+    else {
         return false;
     };
     let Ok(metadata) = file.metadata() else {
@@ -50,7 +56,7 @@ fn hit(path: &Path) -> bool {
     if file.read_exact(&mut header[..count]).is_err() || !raster(&header[..count]) {
         return false;
     }
-    let _ = file.set_modified(SystemTime::now());
+    let _ = file.set_times(fs::FileTimes::new().set_accessed(SystemTime::now()));
     true
 }
 
@@ -67,7 +73,11 @@ fn prune(root: &Path, budget: u64) -> std::io::Result<()> {
             continue;
         }
         size += metadata.len();
-        entries.push((metadata.modified()?, entry.path(), metadata.len()));
+        entries.push((
+            metadata.accessed().or_else(|_| metadata.modified())?,
+            entry.path(),
+            metadata.len(),
+        ));
     }
     entries.sort_by_key(|entry| entry.0);
     for (_, path, length) in entries {
@@ -124,12 +134,41 @@ impl ArtworkCache {
             .await
             .map_err(|_| "Artwork loading stopped.")?;
         let check = path.clone();
-        if tauri::async_runtime::spawn_blocking(move || hit(&check))
-            .await
-            .unwrap_or(false)
-        {
+        let (cached, fresh) = tauri::async_runtime::spawn_blocking(move || {
+            let cached = hit(&check);
+            let age = fs::metadata(&check)
+                .and_then(|m| m.modified())
+                .ok()
+                .and_then(|time| time.elapsed().ok());
+            (cached, cached && age.is_some_and(|age| age < MAX_AGE))
+        })
+        .await
+        .unwrap_or((false, false));
+        if fresh {
             return Ok(Some(path.to_string_lossy().into_owned()));
         }
+        let bytes = match self.download(url).await {
+            Ok(bytes) => bytes,
+            Err(_) if cached => return Ok(Some(path.to_string_lossy().into_owned())),
+            Err(error) => return Err(error),
+        };
+        let root = root.clone();
+        let destination = path.clone();
+        tauri::async_runtime::spawn_blocking(move || -> std::io::Result<()> {
+            fs::create_dir_all(&root)?;
+            let mut temporary = tempfile::NamedTempFile::new_in(&root)?;
+            temporary.write_all(&bytes)?;
+            temporary
+                .persist(destination)
+                .map_err(|error| error.error)?;
+            prune(&root, CACHE_BUDGET)
+        })
+        .await
+        .map_err(|_| "Could not cache artwork.")?
+        .map_err(|_| "Could not cache artwork.")?;
+        Ok(Some(path.to_string_lossy().into_owned()))
+    }
+    async fn download(&self, url: Url) -> Result<Vec<u8>, String> {
         let client = self
             .client
             .as_ref()
@@ -161,27 +200,29 @@ impl ArtworkCache {
         if !raster(&bytes) {
             return Err("Unsupported artwork format.".into());
         }
-        let root = root.clone();
-        let destination = path.clone();
-        tauri::async_runtime::spawn_blocking(move || -> std::io::Result<()> {
-            fs::create_dir_all(&root)?;
-            let mut temporary = tempfile::NamedTempFile::new_in(&root)?;
-            temporary.write_all(&bytes)?;
-            temporary
-                .persist(destination)
-                .map_err(|error| error.error)?;
-            prune(&root, CACHE_BUDGET)
-        })
-        .await
-        .map_err(|_| "Could not cache artwork.")?
-        .map_err(|_| "Could not cache artwork.")?;
-        Ok(Some(path.to_string_lossy().into_owned()))
+        Ok(bytes)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn reading_cached_artwork_keeps_its_download_time_for_expiry() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("cover.img");
+        fs::write(&path, b"\xff\xd8\xffold").unwrap();
+        let original = SystemTime::UNIX_EPOCH + Duration::from_secs(1_000_000);
+        fs::OpenOptions::new()
+            .write(true)
+            .open(&path)
+            .unwrap()
+            .set_modified(original)
+            .unwrap();
+        assert!(hit(&path));
+        assert_eq!(fs::metadata(&path).unwrap().modified().unwrap(), original);
+    }
 
     #[test]
     fn only_provider_https_hosts_and_default_ports_can_be_fetched() {
@@ -225,6 +266,16 @@ mod tests {
             .block_on(restarted.resolve("https://s4.anilist.co/cover.jpg"))
             .unwrap();
         assert_eq!(result, Some(path.to_string_lossy().into_owned()));
+        fs::OpenOptions::new()
+            .write(true)
+            .open(&path)
+            .unwrap()
+            .set_modified(SystemTime::UNIX_EPOCH)
+            .unwrap();
+        let stale = runtime
+            .block_on(restarted.resolve("https://s4.anilist.co/cover.jpg"))
+            .unwrap();
+        assert_eq!(stale, Some(path.to_string_lossy().into_owned()));
         fs::write(&path, b"<html>provider error</html>").unwrap();
         assert!(!hit(&path));
         assert!(!raster(b"<svg xmlns='http://www.w3.org/2000/svg'/>"));
@@ -236,9 +287,15 @@ mod tests {
         let old = root.path().join("old.img");
         let recent = root.path().join("recent.img");
         fs::write(&old, b"\xff\xd8\xffold").unwrap();
-        fs::File::open(&old)
+        fs::OpenOptions::new()
+            .write(true)
+            .open(&old)
             .unwrap()
-            .set_modified(SystemTime::UNIX_EPOCH)
+            .set_times(
+                fs::FileTimes::new()
+                    .set_modified(SystemTime::UNIX_EPOCH)
+                    .set_accessed(SystemTime::UNIX_EPOCH),
+            )
             .unwrap();
         fs::write(&recent, b"\xff\xd8\xffnew").unwrap();
         fs::write(root.path().join("keep.txt"), b"unrelated").unwrap();

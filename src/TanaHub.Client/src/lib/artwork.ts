@@ -22,6 +22,12 @@ async function imageSource(url: string): Promise<string> {
 // Observe before assigning src: browser-native lazy loading may fetch several screens ahead.
 export function artwork(node: HTMLImageElement, initial: Source) {
   let current = initial;
+  let destroyed = false;
+  // Browsers can deliver an image event after its DOM block has been replaced.
+  // Keep this capture guard with the detached node until the browser releases it.
+  node.addEventListener('error', event => {
+    if (destroyed || !node.isConnected || !node.hasAttribute('src')) event.stopImmediatePropagation();
+  }, true);
   let dispose = () => {};
   let rendered = '';
   function render() {
@@ -39,6 +45,7 @@ export function artwork(node: HTMLImageElement, initial: Source) {
   sizeObserver?.observe(node);
   function mount(source: Source) {
     let stopped = false;
+    let queued = false;
     let running = false;
     let finished = false;
     let fallback = false;
@@ -77,7 +84,10 @@ export function artwork(node: HTMLImageElement, initial: Source) {
       node.addEventListener('error', failed, true);
       void assign(source.url);
     };
-    function enqueue() { observer?.disconnect(); pending.push(job); pump(); }
+    function enqueue() {
+      if (stopped || queued) return;
+      queued = true; observer?.disconnect(); pending.push(job); pump();
+    }
     if (source.lazy !== false && typeof IntersectionObserver !== 'undefined') {
       observer = new IntersectionObserver(entries => {
         if (entries.some(entry => entry.isIntersecting)) enqueue();
@@ -98,6 +108,6 @@ export function artwork(node: HTMLImageElement, initial: Source) {
     update(source: Source) {
       current = source; render();
     },
-    destroy() { sizeObserver?.disconnect(); dispose(); },
+    destroy() { destroyed = true; sizeObserver?.disconnect(); dispose(); },
   };
 }
