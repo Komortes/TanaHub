@@ -1,12 +1,13 @@
 <script lang="ts">
+  import { artwork } from '../artwork';
   import { BookOpen } from '@lucide/svelte';
-  let { url, title }: { url: string | null; title: string } = $props();
+  let { url, title, thumbnail, preview }: { url: string | null; title: string; thumbnail?: string | null; preview?: string | null } = $props();
   let failed = $state(false);
   $effect(() => { url; failed = false; });
 </script>
 
 <span class="mini-cover">
-  {#if url && !failed}<img src={url} alt={`Cover of ${title}`} loading="lazy" decoding="async" onerror={() => failed = true} />
+  {#if url && !failed}<img use:artwork={{ url, thumbnail, preview }} alt={`Cover of ${title}`} loading="lazy" decoding="async" onerror={() => failed = true} />
   {:else}<span class="cover-placeholder" role="img" aria-label={`Cover unavailable for ${title}`}><BookOpen size={24} strokeWidth={1.25} /></span>{/if}
 </span>
 

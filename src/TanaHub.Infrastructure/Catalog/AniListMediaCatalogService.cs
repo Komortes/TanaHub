@@ -299,7 +299,8 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
         var images = new MediaImages(
             ToUri(media.CoverImage?.ExtraLarge ?? media.CoverImage?.Large ?? media.CoverImage?.Medium),
             ToUri(media.BannerImage),
-            ToUri(media.CoverImage?.Medium));
+            ToUri(media.CoverImage?.Medium),
+            ToUri(media.CoverImage?.Large));
 
         var characters = media.Characters?.Edges?
             .Where(e => e.Node?.Name?.Full is not null)

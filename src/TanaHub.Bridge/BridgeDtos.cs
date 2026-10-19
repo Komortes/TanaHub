@@ -23,6 +23,8 @@ public sealed record MediaDto(
     public string? Studio { get; init; }
     public int? ChapterCount { get; init; }
     public int? VolumeCount { get; init; }
+    public string? PreviewUrl { get; init; }
+    public string? ThumbnailUrl { get; init; }
     public IReadOnlyList<CharacterDto> Characters { get; init; } = [];
 
     internal static MediaDto From(MediaItem media, Uri? savedPoster = null) => new(
@@ -41,6 +43,8 @@ public sealed record MediaDto(
         media.Genres)
     {
         NativeTitle = media.Title.Native,
+        PreviewUrl = savedPoster is null || savedPoster == media.Images.PosterUri ? media.Images.PreviewUri?.ToString() : null,
+        ThumbnailUrl = savedPoster is null || savedPoster == media.Images.PosterUri ? media.Images.ThumbnailUri?.ToString() : null,
         EpisodeCount = (media as Anime)?.EpisodeCount,
         DurationMinutes = (media as Anime)?.DurationMinutes,
         Studio = (media as Anime)?.Studio,

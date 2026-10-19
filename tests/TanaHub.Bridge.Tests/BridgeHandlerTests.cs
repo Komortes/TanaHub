@@ -12,6 +12,23 @@ namespace TanaHub.Bridge.Tests;
 
 public sealed class BridgeHandlerTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task LibraryCoverVariantsMatchTheDisplayedPoster(bool hasCustomPoster)
+    {
+        var item = Violet with { Images = new(new("https://example.test/full.jpg"), ThumbnailUri: new("https://example.test/thumb.jpg"), PreviewUri: new("https://example.test/card.jpg")) };
+        var library = new InMemoryUserLibraryService([new(item.Id, MediaType.Anime, MediaListStatus.Planning) { PosterUri = hasCustomPoster ? new("https://example.test/custom.jpg") : item.Images.PosterUri }]);
+        var handler = new BridgeHandler(new OfflineCatalog(), library, _ => item);
+        using var response = JsonDocument.Parse(await handler.HandleAsync("""
+            {"id":"images","method":"library.list","params":{}}
+            """));
+        var media = response.RootElement.GetProperty("result").GetProperty("items")[0].GetProperty("media");
+        Assert.Equal(hasCustomPoster ? "https://example.test/custom.jpg" : "https://example.test/full.jpg", media.GetProperty("posterUrl").GetString());
+        Assert.Equal(hasCustomPoster ? null : "https://example.test/thumb.jpg", media.GetProperty("thumbnailUrl").GetString());
+        Assert.Equal(hasCustomPoster ? null : "https://example.test/card.jpg", media.GetProperty("previewUrl").GetString());
+    }
+
     private static readonly Anime Violet = new("anilist:21827", new("Violet Evergarden"), MediaFormat.Tv, MediaReleaseStatus.Finished)
     {
         EpisodeCount = 13,

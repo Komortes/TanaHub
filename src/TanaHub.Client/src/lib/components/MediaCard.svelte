@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { artwork } from '../artwork';
   import { tick } from 'svelte';
   import { Plus, Star, BookOpen, Play } from '@lucide/svelte';
   import { formatLabel, statusLabel, unitLabel, maxProgress } from '../types';
@@ -19,7 +20,7 @@
       }
     }
   }
-  $effect(() => { media.posterUrl; failed = false; });
+  $effect(() => { media.posterUrl; media.previewUrl; media.thumbnailUrl; failed = false; });
   const hasTotal = $derived(media.totalUnits !== null && media.totalUnits > 0);
   const progressRatio = $derived(hasTotal ? Math.max(0, Math.min(1, (entry?.progress ?? 0) / media.totalUnits!)) : 0);
   const metadata = $derived([
@@ -32,7 +33,7 @@
 <article bind:this={card} class="media-card" class:list-card={layout === 'list'} aria-label={media.title}>
   <button class="poster" onclick={onOpen} aria-label={`Open ${media.title}`}>
     {#if media.posterUrl && !failed}
-      <img src={media.posterUrl} alt={`Cover of ${media.title}`} loading="lazy" decoding="async" onerror={() => failed = true} />
+      <img use:artwork={{ url: media.posterUrl, thumbnail: media.thumbnailUrl, preview: media.previewUrl }} alt={`Cover of ${media.title}`} loading="lazy" decoding="async" onerror={() => failed = true} />
     {:else}
       <div class="cover-fallback"><BookOpen size={32} strokeWidth={1.25} /><span>{media.title}</span></div>
     {/if}

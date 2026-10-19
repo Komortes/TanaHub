@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { artwork } from '../artwork';
   import { untrack } from 'svelte';
   import { ArrowUpRight, BookOpen, RefreshCw } from '@lucide/svelte';
   import { featureApi } from '../feature-api';
@@ -59,7 +60,7 @@
       <div class="related-grid">
         {#each group.titles as title (`${title.mediaId}:${title.relation}`)}
           <button class="related-title" onclick={() => onOpen(title.mediaId)} disabled={busy} title={title.title} aria-label={`Open ${title.title}, ${labels[title.relation] ?? 'Related title'}, ${metadata(title)}`}>
-            <span class="relation-poster">{#if title.posterUrl && !failedPosters.includes(title.mediaId)}<img src={title.posterUrl} alt="" loading="lazy" onerror={() => failedPosters = [...failedPosters, title.mediaId]} />{:else}<BookOpen size={18} />{/if}</span>
+            <span class="relation-poster">{#if title.posterUrl && !failedPosters.includes(title.mediaId)}<img use:artwork={{ url: title.posterUrl }} alt="" loading="lazy" onerror={() => failedPosters = [...failedPosters, title.mediaId]} />{:else}<BookOpen size={18} />{/if}</span>
             <span class="relation-info"><span class="relation-kind">{labels[title.relation] ?? 'Related title'}</span><strong>{title.title}</strong><span class="relation-meta" title={`${metadata(title)}${title.source ? ` · ${title.source}` : ''}`}>{metadata(title)}{#if title.source}<span class="relation-source"> · {title.source}</span>{/if}</span></span>
             <ArrowUpRight size={14} />
           </button>

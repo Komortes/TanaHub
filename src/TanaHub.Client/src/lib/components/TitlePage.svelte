@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { artwork } from '../artwork';
   import { tick } from 'svelte';
   import { ArrowLeft, ArrowUpRight, BookOpen, Calendar, Check, Clock3, Copy, Maximize2, Plus, Star, Tv, Users } from '@lucide/svelte';
   import { formatLabel } from '../types';
@@ -78,9 +79,9 @@
 <article bind:this={article} class="title-page" aria-labelledby="title-page-heading">
   <button class="back-button" onclick={onClose} disabled={busy || saving}><ArrowLeft size={16} />Back</button>
   <header class="title-header" class:has-banner={!!media.bannerUrl && !failedBanner}>
-    {#if media.bannerUrl && !failedBanner}<img class="title-banner" src={media.bannerUrl} alt="" onerror={() => failedBanner = true} />{/if}
+    {#if media.bannerUrl && !failedBanner}<img class="title-banner" use:artwork={{ url: media.bannerUrl, lazy: false }} alt="" onerror={() => failedBanner = true} />{/if}
     <div class="title-summary">
-      {#if media.posterUrl && !failedPoster}<button class="title-poster poster-zoom" aria-label={`Enlarge cover of ${media.title}`} onclick={() => coverOpen = true}><img src={media.posterUrl} alt={`Cover of ${media.title}`} onerror={() => { failedPoster = true; coverOpen = false; }} /><span class="zoom-hint"><Maximize2 size={14} />Enlarge</span></button>{:else}<div class="title-poster"><BookOpen size={34} strokeWidth={1.25} /></div>{/if}
+      {#if media.posterUrl && !failedPoster}<button class="title-poster poster-zoom" aria-label={`Enlarge cover of ${media.title}`} onclick={() => coverOpen = true}><img use:artwork={{ url: media.posterUrl, lazy: false }} alt={`Cover of ${media.title}`} onerror={() => { failedPoster = true; coverOpen = false; }} /><span class="zoom-hint"><Maximize2 size={14} />Enlarge</span></button>{:else}<div class="title-poster"><BookOpen size={34} strokeWidth={1.25} /></div>{/if}
       <div class="title-identity">
         <div class="title-eyebrow"><span>{#if media.type === 'Anime'}<Tv size={12} />{:else}<BookOpen size={12} />{/if}{media.type}</span>{#if media.format !== 'Unknown'}<span>{formatLabel(media.format)}</span>{/if}{#if media.year}<span class="mono"><Calendar size={12} />{media.year}</span>{/if}</div>
         <h1 id="title-page-heading" tabindex="-1" use:focusTitle>{media.title}</h1>
@@ -101,7 +102,7 @@
     <div class="title-main">
       {#if entry}<TitleTracking {media} {entry} {busy} readOnly={loading || !libraryReady} {onProgress} {onProgressSet} {onScore} {onStatus} />{/if}
       <section class="content-panel synopsis" aria-labelledby="synopsis-heading"><h2 id="synopsis-heading">Synopsis</h2>{#if description}<p id="title-synopsis" class:folded={!expandedSynopsis && description.length > 600}>{description}</p>{#if description.length > 600}<button class="synopsis-toggle" aria-expanded={expandedSynopsis} aria-controls="title-synopsis" onclick={() => expandedSynopsis = !expandedSynopsis}>{expandedSynopsis ? 'Show less' : 'Show more'}</button>{/if}{:else if loading}<div class="synopsis-skeleton" aria-hidden="true"><span></span><span></span><span></span></div>{:else}<p class="no-description">This source has no synopsis for this title.</p>{/if}</section>
-      {#if characters.length}<section class="content-panel characters" aria-labelledby="characters-heading"><div class="section-heading"><h2 id="characters-heading">Characters</h2><span><Users size={13} /><span class="mono">{characters.length}</span></span></div><div class="character-grid">{#each characters as character, index (`${character.name}:${index}`)}<div class="character"><div class="character-image">{#if character.imageUrl && !failedCharacters.includes(character.imageUrl)}<img src={character.imageUrl} alt="" loading="lazy" onerror={() => failedCharacters = [...failedCharacters, character.imageUrl!]} />{:else}<Users size={20} />{/if}</div><div><h3>{character.name}</h3><span>{formatLabel(character.role)}</span></div></div>{/each}</div></section>{/if}
+      {#if characters.length}<section class="content-panel characters" aria-labelledby="characters-heading"><div class="section-heading"><h2 id="characters-heading">Characters</h2><span><Users size={13} /><span class="mono">{characters.length}</span></span></div><div class="character-grid">{#each characters as character, index (`${character.name}:${index}`)}<div class="character"><div class="character-image">{#if character.imageUrl && !failedCharacters.includes(character.imageUrl)}<img use:artwork={{ url: character.imageUrl }} alt="" loading="lazy" onerror={() => failedCharacters = [...failedCharacters, character.imageUrl!]} />{:else}<Users size={20} />{/if}</div><div><h3>{character.name}</h3><span>{formatLabel(character.role)}</span></div></div>{/each}</div></section>{/if}
       {#if entry}<TitleJournal {entry} busy={busy || loading || !libraryReady} {onNotes} {onReview} {onOrganization} {onDates} {onRemove} />{/if}
       <TitleRelations mediaId={media.id} {loading} {busy} onOpen={onOpenRelated} />
     </div>

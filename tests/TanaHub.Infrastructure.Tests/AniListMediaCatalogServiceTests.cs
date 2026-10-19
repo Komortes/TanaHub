@@ -8,6 +8,20 @@ namespace TanaHub.Infrastructure.Tests;
 public sealed class AniListMediaCatalogServiceTests
 {
     [Fact]
+    public async Task GetByIdAsync_RetainsAllCoverSizesForDifferentDisplaySizes()
+    {
+        var handler = new CapturingHandler("""
+            {"data":{"Media":{"id":1,"type":"ANIME","title":{"romaji":"Title"},"genres":[],"coverImage":{"extraLarge":"https://s4.anilist.co/full.jpg","large":"https://s4.anilist.co/card.jpg","medium":"https://s4.anilist.co/thumb.jpg"}}}}
+            """);
+        var service = new AniListMediaCatalogService(new HttpClient(handler), new InMemoryMediaCatalogService([]));
+        var result = await service.GetByIdAsync("anilist:1");
+        Assert.True(result.IsSuccess);
+        Assert.Equal("https://s4.anilist.co/full.jpg", result.Value!.Images.PosterUri?.ToString());
+        Assert.Equal("https://s4.anilist.co/card.jpg", result.Value.Images.PreviewUri?.ToString());
+        Assert.Equal("https://s4.anilist.co/thumb.jpg", result.Value.Images.ThumbnailUri?.ToString());
+    }
+
+    [Fact]
     public async Task GetByIdAsync_ResolvesImportedMalIdAndKeepsLibraryKey()
     {
         var handler = new CapturingHandler("""

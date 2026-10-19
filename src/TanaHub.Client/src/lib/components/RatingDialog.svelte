@@ -55,7 +55,7 @@
   <form class="rating-panel" onsubmit={(event) => { event.preventDefault(); void save(); }} aria-busy={saving}>
     <header class="dialog-heading"><h2 id="rating-heading">Your rating</h2><button type="button" class="icon-button" aria-label="Close rating" onclick={onClose} disabled={saving}><X size={18} /></button></header>
     <div class="rating-body">
-    <div class="rated-title"><div class="rating-cover"><MiniCover url={entry.media.posterUrl} title={entry.media.title} /></div><div><p id="rating-title" class="rating-title" title={entry.media.title}>{entry.media.title}</p><span>Only visible in your library</span></div></div>
+    <div class="rated-title"><div class="rating-cover"><MiniCover url={entry.media.posterUrl} thumbnail={entry.media.thumbnailUrl} preview={entry.media.previewUrl} title={entry.media.title} /></div><div><p id="rating-title" class="rating-title" title={entry.media.title}>{entry.media.title}</p><span>Only visible in your library</span></div></div>
     <div class="score-preview" aria-live="polite" aria-atomic="true"><div class="rating-value"><Star size={24} fill={value === null ? 'none' : 'currentColor'} strokeWidth={1.7} /><strong class="mono">{value ?? '—'}</strong><span class="mono">/ 10</span></div><p class="rating-label">{ratingLabel(value)}</p></div>
     <div class="score-control">
       <button type="button" class="score-step" aria-label="Decrease rating" disabled={saving || value === 0} onclick={() => choose(Math.max(0, (value ?? 1) - 1))}><Minus size={18} /></button>

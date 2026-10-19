@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { artwork } from '../artwork';
   import { X, ImageOff } from '@lucide/svelte';
   import { modal } from '../modal';
   let { url, title, onClose }: { url: string; title: string; onClose: () => void } = $props();
@@ -8,7 +9,7 @@
 <dialog use:modal class="cover-lightbox" aria-label={`Cover of ${title}`} oncancel={onClose} onclick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
   <div class="cover-viewer">
     <button class="close-cover" aria-label="Close cover" onclick={onClose}><X size={20} /></button>
-    {#if failed}<div class="image-error" role="status"><ImageOff size={32} /><p>This cover could not be loaded.</p></div>{:else}<img src={url} alt={`Cover of ${title}`} onerror={() => failed = true} />{/if}
+    {#if failed}<div class="image-error" role="status"><ImageOff size={32} /><p>This cover could not be loaded.</p></div>{:else}<img use:artwork={{ url, lazy: false }} alt={`Cover of ${title}`} onerror={() => failed = true} />{/if}
     <p class="cover-caption">{title}</p>
   </div>
 </dialog>

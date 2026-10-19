@@ -9,6 +9,8 @@ export interface Media {
   title: string;
   romaji: string;
   posterUrl: string | null;
+  previewUrl?: string | null;
+  thumbnailUrl?: string | null;
   bannerUrl: string | null;
   format: string;
   releaseStatus: string;

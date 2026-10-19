@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { artwork } from '../artwork';
   import { untrack } from 'svelte';
   import { X, Star, Plus, BookOpen, Trash2, Check } from '@lucide/svelte';
   import { modal } from '../modal';
@@ -25,7 +26,7 @@
   <div class="detail-content">
     <button class="icon-button close-button" aria-label="Close details" onclick={onClose} disabled={busy}><X size={20} /></button>
     <div class="detail-top">
-      <div class="detail-poster">{#if media.posterUrl && !failed}<img src={media.posterUrl} alt={`Cover of ${media.title}`} onerror={() => failed = true} />{:else}<BookOpen size={44} strokeWidth={1.25} />{/if}</div>
+      <div class="detail-poster">{#if media.posterUrl && !failed}<img use:artwork={{ url: media.previewUrl ?? media.posterUrl, fallback: media.posterUrl, lazy: false }} alt={`Cover of ${media.title}`} onerror={() => failed = true} />{:else}<BookOpen size={44} strokeWidth={1.25} />{/if}</div>
       <div class="detail-summary">
         <h2 id="detail-title">{media.title}</h2>
         {#if media.romaji !== media.title}<p class="romaji">{media.romaji}</p>{/if}
