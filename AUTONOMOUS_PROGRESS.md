@@ -1,5 +1,18 @@
 # Autonomous development progress
 
+## 0.1.3 release preparation — 19 October 2026
+
+The user requested a new prerelease with startup update checks, installers for
+macOS/Windows/Linux, CI verification and current README downloads. Version 0.1.3
+is synchronized across .NET, npm, Tauri and Cargo manifests/lockfiles. README,
+installation/update guides and release notes describe the startup notice and
+the one-time manual Settings upgrade from 0.1.2.
+
+The feature commits already pass all four jobs in
+[CI 39296929076](https://github.com/Komortes/TanaHub/actions/runs/39296929076),
+including 156 browser scenarios and native checks on all three operating systems.
+Packaging and publication of 0.1.3 are pending; published 0.1.2 assets remain intact.
+
 ## Startup update checks and notification — 19 October 2026
 
 The user requested automatic update discovery on launch, a clear notification

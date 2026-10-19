@@ -1,6 +1,6 @@
 [package]
 name = "tanahub-client"
-version = "0.1.2"
+version = "0.1.3"
 description = "TanaHub desktop application"
 authors = ["TanaHub"]
 edition = "2021"

@@ -1,13 +1,13 @@
 # Release guide
 
-The primary release target is the Tauri + Svelte client with its self-contained .NET sidecar. Version `0.1.2` is the current preview; `0.1.0` is the first public preview. Creating a tag, uploading source changes and publishing a release are separate maintainer actions.
+The primary release target is the Tauri + Svelte client with its self-contained .NET sidecar. Version `0.1.3` is the current preview; `0.1.0` is the first public preview. Creating a tag, uploading source changes and publishing a release are separate maintainer actions.
 
 ## Version and notes
 
 Keep these versions equal: `Directory.Build.props`, the client `package.json` and npm lockfile, `src-tauri/tauri.conf.json`, `Cargo.toml` and the client package in `Cargo.lock`.
 
 ```sh
-node scripts/check-release-version.mjs v0.1.2
+node scripts/check-release-version.mjs v0.1.3
 node --test scripts/tests/release.test.mjs
 ```
 

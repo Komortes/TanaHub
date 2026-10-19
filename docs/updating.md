@@ -1,9 +1,10 @@
 # Updating TanaHub
 
-Version 0.1.2 introduces in-app updates. Install it once if you use an older preview;
-0.1.0 and 0.1.1 cannot acquire an updater through their old update checker.
+Version 0.1.3 checks for updates automatically at startup. In 0.1.2, use the manual
+check in Settings to upgrade. Install the latest preview once if you use 0.1.0 or
+0.1.1; those versions cannot acquire an updater through their old checker.
 
-In the desktop app, open **Settings → Check for updates**. Choose **Download update**,
+Use the startup notice or open **Settings → Check for updates**. Choose **Download update**,
 then **Install and restart** after saving your edits. The package and its version
 are checked against the publisher's signing key before installation. The preview
 channel includes newer previews and stable releases.
@@ -28,11 +29,10 @@ Update signatures are separate from OS signing: these previews remain ad-hoc
 signed/not notarized on macOS and unsigned on Windows. Back up your app-data folder
 with TanaHub closed before trying a preview.
 
-## Startup notifications (unreleased)
+## Startup notifications
 
-The next preview checks for updates in the background once per launch on supported
-macOS, Windows and Linux AppImage packages. This feature is available from `main`;
-the published 0.1.2 installers retain their manual Settings check.
+Starting with 0.1.3, supported macOS, Windows and Linux AppImage packages check
+for updates in the background once per launch.
 
 When a newer version is available, a notice appears above the current page with
 **Download update** and **Later**. Downloading does not start automatically. After
@@ -76,7 +76,7 @@ routes:
    and run, from the repository root:
 
    ```sh
-   node scripts/sign-release.mjs artifacts/release-ready /absolute/private/tanahub.key v0.1.2
+   node scripts/sign-release.mjs artifacts/release-ready /absolute/private/tanahub.key v0.1.3
    ```
 
    This signs the macOS app archive, Windows EXE and Linux AppImage, binds their
