@@ -2,6 +2,31 @@
 
 ## New-user workflow audit and fixes — 19 October 2026
 
+### Additional import walkthrough
+
+The actual macOS file dialogs successfully exported CSV/MAL XML. Reimporting that
+XML then exposed two further defects: preview displayed a raw MAL ID, and an
+existing AniList entry gained a second library record for the same MAL title.
+
+- The parser now exposes XML title/count metadata while retaining its original
+  tracking-only API. Preview uses those names without saving anything; apply
+  persists missing metadata before the SQLite merge, so names survive restart
+  without remote requests. A failed metadata flush leaves the library unchanged
+  and reports a retryable storage error; retry also flushes previously staged data.
+- Preview/apply match already tracked entries by known MAL ID and media type.
+  Local notes, reviews, tags/lists, artwork and dates remain protected. Duplicate
+  XML rows are coalesced; existing duplicate library records are not auto-deleted.
+- Fixed singular title/episode/chapter copy in import/export, cards and statistics.
+- Four further bridge scenarios cover export/reimport, offline names, failed
+  persistence/retry/restart and identical anime/manga MAL numbers. Two original
+  defects and the staged-cache retry regression were reproduced by failing tests.
+- Final local total: 359 .NET tests and 137 browser scenarios pass; format and
+  frontend checks pass. Rebuilt the macOS app and reran the packaged core test,
+  including imported Unicode names/counts surviving an actual process restart.
+- In a fresh native profile, added Frieren, imported the earlier XML using the
+  native picker, confirmed its readable preview and verified exactly one canonical
+  title remained with the imported progress. Captures 10–12 are in the local report.
+
 The user authorized a fresh application walkthrough, fixes, commits and push.
 Used separate empty browser/native profiles; no personal library, account or
 credentials were accessed. Captured and inspected the current interface through

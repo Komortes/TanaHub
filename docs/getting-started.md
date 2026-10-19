@@ -48,6 +48,8 @@ From an empty library, **Import a list** opens **Settings → Your library data*
 
 Both imports can replace progress, status, scores, notes and tracking dates for matching titles. Reviews, tags and custom lists are preserved. Other local titles are retained. Review the confirmation before proceeding.
 
+Current source builds retain titles and episode/chapter totals supplied by MAL XML, including offline and after restarting. An import matches an already tracked title when its local metadata has the same MAL ID and media type, preventing duplicates when reimporting an export. Existing duplicates are not removed automatically. These improvements are newer than the published 0.1.0 Preview.
+
 ## Export and backup
 
 **Export CSV** creates a readable copy of the library. TanaHub does not import CSV. **Export MAL XML** creates an exchange file for titles with a MyAnimeList mapping; the export reports skipped titles without that mapping.

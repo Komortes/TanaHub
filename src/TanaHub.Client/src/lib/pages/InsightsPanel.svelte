@@ -5,11 +5,11 @@
   const percent = (ratio: number) => `${Math.round(ratio * 100)}%`;
   const watchTime = (minutes: number) => minutes >= 60 ? `${Math.floor(minutes / 60).toLocaleString()}h ${minutes % 60}m` : `${minutes}m`;
   const metrics = $derived([
-    { label: 'Completion', value: percent(insights.completionRate), detail: `${insights.completedEntries} of ${insights.totalEntries} titles finished`, icon: CircleCheck, color: 'var(--green)' },
+    { label: 'Completion', value: percent(insights.completionRate), detail: `${insights.completedEntries} of ${insights.totalEntries} ${insights.totalEntries === 1 ? 'title' : 'titles'} finished`, icon: CircleCheck, color: 'var(--green)' },
     { label: 'Backlog', value: insights.backlogEntries.toLocaleString(), detail: 'Titles saved for later', icon: Layers, color: 'var(--lavender)' },
-    { label: 'Dropped', value: percent(insights.droppedRatio), detail: `${insights.droppedEntries} titles dropped`, icon: CircleSlash, color: 'var(--red)' },
+    { label: 'Dropped', value: percent(insights.droppedRatio), detail: `${insights.droppedEntries} ${insights.droppedEntries === 1 ? 'title' : 'titles'} dropped`, icon: CircleSlash, color: 'var(--red)' },
     { label: 'Average rating', value: insights.averageScore === null ? '—' : `${insights.averageScore.toFixed(1)} / 10`, detail: 'Your personal ratings', icon: Star, color: 'var(--amber)' },
-    { label: 'Watch time', value: watchTime(insights.estimatedWatchMinutes), detail: `${insights.episodesWatched.toLocaleString()} episodes watched · estimated`, icon: Clock3, color: 'var(--cyan)' },
+    { label: 'Watch time', value: watchTime(insights.estimatedWatchMinutes), detail: `${insights.episodesWatched.toLocaleString()} ${insights.episodesWatched === 1 ? 'episode' : 'episodes'} watched · estimated`, icon: Clock3, color: 'var(--cyan)' },
     { label: 'Chapters read', value: insights.chaptersRead.toLocaleString(), detail: 'Across your manga library', icon: BookOpen, color: 'var(--lavender)' },
   ]);
   const charts = $derived([

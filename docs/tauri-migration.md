@@ -121,6 +121,11 @@ AniList import is explicitly one-way, names the fields it can replace and requir
 confirmation. Client ID drafts survive unrelated preference saves; changing the
 ID requires its own secret instead of reusing credentials from the previous ID.
 MAL XML previews carry the same replacement explanation.
+The XML parser also returns sparse source metadata without changing its existing
+tracking-only API. Preview/apply match known local MAL IDs together with media
+type, preserve existing local-only fields and retain XML names/totals without
+remote hydration. Imported metadata is flushed before the library merge; failed
+flushes remain retryable. No existing duplicate records are deleted automatically.
 
 Use `npm run doctor` in the client directory before installing dependencies when
 setting up a source checkout. The [user guide](getting-started.md) covers the first

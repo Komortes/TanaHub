@@ -311,6 +311,87 @@ public sealed class BridgeFeatureTests
     }
 
     [Fact]
+    public async Task MalRoundTripUpdatesTheExistingAniListEntryWithoutCreatingADuplicate()
+    {
+        var fixture = new Fixture([new(Anime.Id, MediaType.Anime, MediaListStatus.Current)
+        {
+            Progress = 3, Notes = "Local note", Review = "Local review", Tags = ["Favourite"]
+        }]);
+        var export = await Call(fixture.Handler, "library.export", new { format = "malXml" });
+        var xml = export.GetProperty("text").GetString()!.Replace("<my_watched_episodes>3", "<my_watched_episodes>7");
+        var preview = await Call(fixture.Handler, "library.import.preview", new { xml });
+        var item = Assert.Single(preview.GetProperty("items").EnumerateArray());
+        Assert.Equal(Anime.Id, item.GetProperty("mediaId").GetString());
+        Assert.Equal(Anime.Title.DisplayTitle, item.GetProperty("media").GetProperty("title").GetString());
+        Assert.Equal(3, (await fixture.Library.GetEntryAsync(Anime.Id)).Value!.Progress);
+        await Call(fixture.Handler, "library.import.apply", new { xml });
+        await Call(fixture.Handler, "library.import.apply", new { xml });
+        var entry = Assert.Single((await fixture.Library.GetEntriesAsync(new UserLibraryQuery())).Value!.Items);
+        Assert.Equal(Anime.Id, entry.MediaId);
+        Assert.Equal(7, entry.Progress);
+        Assert.Equal("Local note", entry.Notes);
+        Assert.Equal("Local review", entry.Review);
+        Assert.Equal("Favourite", Assert.Single(entry.Tags));
+    }
+
+    [Fact]
+    public async Task MalImportUsesXmlTitlesForAnEmptyOfflineLibrary()
+    {
+        const string xml = "<myanimelist><anime><series_animedb_id>999</series_animedb_id><series_title>История &amp; звёзды</series_title><series_episodes>12</series_episodes><my_watched_episodes>2</my_watched_episodes></anime></myanimelist>";
+        var fixture = new Fixture();
+        var preview = await Call(fixture.Handler, "library.import.preview", new { xml });
+        Assert.Equal("История & звёзды", Assert.Single(preview.GetProperty("items").EnumerateArray()).GetProperty("media").GetProperty("title").GetString());
+        Assert.Empty((await fixture.Library.GetEntriesAsync(new UserLibraryQuery())).Value!.Items);
+        await Call(fixture.Handler, "library.import.apply", new { xml });
+        var listed = await Call(fixture.Handler, "library.list", new { });
+        var media = Assert.Single(listed.GetProperty("items").EnumerateArray()).GetProperty("media");
+        Assert.Equal("История & звёзды", media.GetProperty("title").GetString());
+        Assert.Equal(12, media.GetProperty("totalUnits").GetInt32());
+    }
+
+    [Fact]
+    public async Task MalImportMetadataIsPersistedBeforeEntriesAndAvailableAfterRestart()
+    {
+        const string xml = "<myanimelist><manga><manga_mangadb_id>999</manga_mangadb_id><manga_title>Local manga</manga_title></manga></myanimelist>";
+        var library = new InMemoryUserLibraryService();
+        var saved = new Dictionary<string, MediaItem>();
+        var staged = new Dictionary<string, MediaItem>();
+        var failOnce = true;
+        var handler = new BridgeHandler(new UnexpectedCatalog(), library, id => staged.GetValueOrDefault(id), persistImportedMedia: async (items, ct) =>
+        {
+            Assert.Empty((await library.GetEntriesAsync(new UserLibraryQuery(), ct)).Value!.Items);
+            foreach (var item in items) staged[item.Id] = item;
+            if (failOnce) { failOnce = false; throw new IOException("Test cache unavailable"); }
+            foreach (var item in staged.Values) saved[item.Id] = item;
+        });
+        await Call(handler, "library.import.preview", new { xml });
+        Assert.Empty(saved);
+        Assert.Empty(staged);
+        var error = await Error(handler, "library.import.apply", new { xml });
+        Assert.Equal("storage_error", error.GetProperty("code").GetString());
+        Assert.Contains("Your library has not changed", error.GetProperty("message").GetString());
+        Assert.Empty((await library.GetEntriesAsync(new UserLibraryQuery())).Value!.Items);
+        await Call(handler, "library.import.apply", new { xml });
+        var restarted = new BridgeHandler(new UnexpectedCatalog(), library, id => saved.GetValueOrDefault(id));
+        var entry = await Call(restarted, "library.get", new { mediaId = "mal:manga:999" });
+        Assert.Equal("Local manga", entry.GetProperty("media").GetProperty("title").GetString());
+    }
+
+    [Fact]
+    public async Task MalIdentityIncludesMediaTypeWhenAnimeAndMangaShareTheSameNumber()
+    {
+        const string xml = "<myanimelist><anime><series_animedb_id>10</series_animedb_id><my_watched_episodes>7</my_watched_episodes></anime><manga><manga_mangadb_id>10</manga_mangadb_id><my_read_chapters>9</my_read_chapters></manga></myanimelist>";
+        var fixture = new Fixture([
+            new(Anime.Id, MediaType.Anime, MediaListStatus.Planning),
+            new(Manga.Id, MediaType.Manga, MediaListStatus.Planning)
+        ], [Anime, Manga with { MalId = 10 }]);
+        await Call(fixture.Handler, "library.import.apply", new { xml });
+        Assert.Equal(2, (await fixture.Library.GetEntriesAsync(new UserLibraryQuery())).Value!.Items.Count);
+        Assert.Equal(7, (await fixture.Library.GetEntryAsync(Anime.Id)).Value!.Progress);
+        Assert.Equal(9, (await fixture.Library.GetEntryAsync(Manga.Id)).Value!.Progress);
+    }
+
+    [Fact]
     public async Task XmlPreviewIsReadOnlyAndApplyPreservesLocalNotesOrganizationAndReview()
     {
         const string xml = "<myanimelist>\n<anime><series_animedb_id>10</series_animedb_id><my_watched_episodes>7</my_watched_episodes><my_score>8</my_score><my_status>Completed</my_status></anime>\n</myanimelist>";

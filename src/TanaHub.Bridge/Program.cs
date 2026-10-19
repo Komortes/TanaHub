@@ -39,7 +39,12 @@ internal static class Program
                 id => cache.TryGet(id, out var item) ? item : null,
                 provider.GetRequiredService<InMemoryMediaCatalogService>(),
                 Console.Error,
-                provider);
+                provider,
+                async (items, ct) =>
+                {
+                    cache.PutRange(items);
+                    await cache.FlushAsync(ct);
+                });
             await BridgeProtocol.RunAsync(handler, Console.In, Console.Out, cancellation.Token);
             return 0;
         }

@@ -4,6 +4,7 @@ using TanaHub.Application.Export;
 using TanaHub.Application.Queries;
 using TanaHub.Application.Services;
 using TanaHub.Domain.Models;
+using TanaHub.Domain.Enums;
 
 namespace TanaHub.Bridge;
 
@@ -113,21 +114,64 @@ public sealed partial class BridgeHandler
 
     private async Task<object> PreviewImportAsync(JsonElement parameters, CancellationToken ct)
     {
-        var parsed = RequireSuccess(MalXmlLibraryExchange.Import(RequiredText(parameters, "xml", 4 * 1024 * 1024)));
+        var document = RequireSuccess(MalXmlLibraryExchange.ImportDocument(RequiredText(parameters, "xml", 4 * 1024 * 1024)));
+        var parsed = await MatchImportAsync(document, await AllEntriesAsync(ct), ct);
+        var metadata = document.Media.DistinctBy(item => item.Id).ToDictionary(item => item.Id, StringComparer.OrdinalIgnoreCase);
         var items = new List<LibraryEntryDto>();
-        foreach (var entry in parsed.Take(100)) items.Add(await MapEntryAsync(entry, ct));
+        foreach (var entry in parsed.Take(100))
+        {
+            var item = await MapEntryAsync(entry, ct);
+            if (await FindLocalMediaAsync(entry.MediaId, ct) is null && metadata.TryGetValue(entry.MediaId, out var media))
+                item = item with { Media = MediaDto.From(media) };
+            items.Add(item);
+        }
         return new { items, count = parsed.Count };
     }
 
     private async Task<object> ApplyImportAsync(JsonElement parameters, CancellationToken ct)
     {
-        var parsed = RequireSuccess(MalXmlLibraryExchange.Import(RequiredText(parameters, "xml", 4 * 1024 * 1024)));
+        var document = RequireSuccess(MalXmlLibraryExchange.ImportDocument(RequiredText(parameters, "xml", 4 * 1024 * 1024)));
         // MAL import supplies tracking fields only. Preserve local notes, artwork and dates absent from the XML.
         var existing = (await AllEntriesAsync(ct)).ToDictionary(entry => entry.MediaId, StringComparer.OrdinalIgnoreCase);
+        var parsed = await MatchImportAsync(document, existing.Values, ct);
         var merged = parsed.Select(entry => existing.TryGetValue(entry.MediaId, out var saved)
             ? entry with { Notes = saved.Notes, PosterUri = saved.PosterUri, StartedAt = saved.StartedAt, CompletedAt = saved.CompletedAt }
             : entry).ToArray();
+        var importedIds = merged.Select(entry => entry.MediaId).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var metadata = new List<MediaItem>();
+        foreach (var media in document.Media.DistinctBy(item => item.Id))
+            if (importedIds.Contains(media.Id) && await FindLocalMediaAsync(media.Id, ct) is null) metadata.Add(media);
+        // Persist imported titles before the library mutation so a cache-write failure is retryable.
+        // Also flush a staged cache from a previous failed attempt, even when it
+        // already supplies all titles to this retry's local metadata lookup.
+        try
+        {
+            if (persistImportedMedia is not null) await persistImportedMedia(metadata, ct);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            throw new BridgeException("storage_error", "Could not save imported title details. Your library has not changed. Try again.");
+        }
+        foreach (var media in metadata) sessionMedia[media.Id] = media;
         return new { importedCount = RequireSuccess(await library.MergeEntriesAsync(merged, ct)) };
+    }
+
+    private async Task<IReadOnlyList<UserMediaEntry>> MatchImportAsync(MalXmlImportDocument document,
+        IEnumerable<UserMediaEntry> savedEntries, CancellationToken ct)
+    {
+        var existing = savedEntries.ToDictionary(entry => entry.MediaId, StringComparer.OrdinalIgnoreCase);
+        var mapped = new Dictionary<(MediaType, int), string>();
+        foreach (var saved in existing.Values)
+        {
+            var media = await FindLocalMediaAsync(saved.MediaId, ct);
+            if (media?.MalId is > 0) mapped.TryAdd((saved.MediaType, media.MalId.Value), saved.MediaId);
+        }
+        var metadata = document.Media.DistinctBy(item => item.Id).ToDictionary(item => item.Id, StringComparer.OrdinalIgnoreCase);
+        return document.Entries.Select(entry => !existing.ContainsKey(entry.MediaId)
+            && metadata.TryGetValue(entry.MediaId, out var media) && media.MalId is > 0
+            && mapped.TryGetValue((entry.MediaType, media.MalId.Value), out var id)
+                ? new UserMediaEntry(id, entry.MediaType, entry.Status) { Progress = entry.Progress, Score = entry.Score }
+                : entry).GroupBy(entry => entry.MediaId, StringComparer.OrdinalIgnoreCase).Select(group => group.Last()).ToArray();
     }
 
     private static IReadOnlyList<string> StringList(JsonElement parameters, string name, IReadOnlyList<string> fallback)

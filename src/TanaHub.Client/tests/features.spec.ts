@@ -309,11 +309,11 @@ test('Settings exports a usable CSV and previews XML before the explicit import 
   expect(await readFile((await download.path())!, 'utf8')).toContain('title,progress');
   const xml = '<myanimelist><anime><series_animedb_id>52991</series_animedb_id><series_title>Оцінка 🌙</series_title></anime></myanimelist>';
   await page.getByLabel('Import MAL XML', { exact: true }).setInputFiles({ name: 'my-list.xml', mimeType: 'application/xml', buffer: Buffer.from(xml) });
-  await expect(page.getByText('1 titles in my-list.xml', { exact: true })).toBeVisible();
+  await expect(page.getByText('1 title in my-list.xml', { exact: true })).toBeVisible();
   expect(library.requests.some(request => request.method === 'library.import.apply')).toBe(false);
   expect(library.requests.find(request => request.method === 'library.import.preview')?.params.xml).toBe(xml);
-  await page.getByRole('button', { name: 'Import 1 titles', exact: true }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Imported 1 titles' })).toBeVisible();
+  await page.getByRole('button', { name: 'Import 1 title', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Imported 1 title' })).toBeVisible();
   expect(library.requests.some(request => request.method === 'library.import.apply')).toBe(true);
   await page.getByRole('button', { name: 'Check for updates', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Version 0.2.0 is available' })).toBeVisible();

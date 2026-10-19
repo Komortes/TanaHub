@@ -14,7 +14,8 @@ public sealed partial class BridgeHandler(
     Func<string, MediaItem?>? cachedMedia = null,
     IMediaCatalogService? localCatalog = null,
     TextWriter? diagnostics = null,
-    IServiceProvider? services = null)
+    IServiceProvider? services = null,
+    Func<IReadOnlyCollection<MediaItem>, CancellationToken, Task>? persistImportedMedia = null)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private readonly Dictionary<string, MediaItem> sessionMedia = new(StringComparer.OrdinalIgnoreCase);

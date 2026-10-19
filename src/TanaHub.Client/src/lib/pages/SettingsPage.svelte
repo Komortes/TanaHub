@@ -21,6 +21,7 @@
   let confirmAniListImport = $state(false);
   let aniListImportButton = $state<HTMLButtonElement>();
   let confirmImportButton = $state<HTMLButtonElement>();
+  const titleCount = (count: number) => `${count} ${count === 1 ? 'title' : 'titles'}`;
   const importWarning = 'Existing titles may have progress, status, scores, notes and dates replaced. Reviews, tags and custom lists are kept.';
   const disabled = $derived(!!busy || !!localBusy || loading);
   const clientIdChanged = $derived(clientId.trim() !== (data?.aniListClientId ?? '').trim());
@@ -60,7 +61,7 @@
       const result = await featureApi.export(format);
       if (!result.exportedCount) { message = format === 'malXml' ? 'No entries have a MAL mapping to export.' : 'Your library is empty.'; return; }
       const saved = await saveExport(result.text, result.fileName, result.mimeType);
-      message = saved ? `Exported ${result.exportedCount} titles${result.skippedCount ? ` · ${result.skippedCount} without a MAL mapping skipped` : ''}` : 'Export cancelled';
+      message = saved ? `Exported ${titleCount(result.exportedCount)}${result.skippedCount ? ` · ${result.skippedCount} without a MAL mapping skipped` : ''}` : 'Export cancelled';
     });
   }
   async function pickImport(event: Event) {
@@ -111,7 +112,7 @@
         </div>
         {#if data.isAniListConnected}
           <p class="hint">Import is one-way. Local changes are not sent to AniList. Disconnecting keeps your local library.</p>
-          {#if confirmAniListImport}<div class="import-preview" role="group" aria-label="Confirm AniList import"><strong>Import your anime and manga from AniList?</strong><p class="hint">{importWarning}</p><p class="hint">You can export a copy from Your library data before importing.</p><div class="actions"><button bind:this={confirmImportButton} class="primary-button" disabled={disabled} onclick={() => void run('sync', async () => { const result = await onSync(); confirmAniListImport = false; message = `Imported ${result.importedCount} titles`; })}>{localBusy === 'sync' ? 'Importing…' : 'Import now'}</button><button class="text-button" disabled={disabled} onclick={cancelAniListImport}>Cancel</button></div></div>{/if}
+          {#if confirmAniListImport}<div class="import-preview" role="group" aria-label="Confirm AniList import"><strong>Import your anime and manga from AniList?</strong><p class="hint">{importWarning}</p><p class="hint">You can export a copy from Your library data before importing.</p><div class="actions"><button bind:this={confirmImportButton} class="primary-button" disabled={disabled} onclick={() => void run('sync', async () => { const result = await onSync(); confirmAniListImport = false; message = `Imported ${titleCount(result.importedCount)}`; })}>{localBusy === 'sync' ? 'Importing…' : 'Import now'}</button><button class="text-button" disabled={disabled} onclick={cancelAniListImport}>Cancel</button></div></div>{/if}
         {/if}
         {@render feedback('anilist')}
       </section>
@@ -125,7 +126,7 @@
       <section class="panel" aria-labelledby="library-data-heading"><h2 id="library-data-heading" tabindex="-1">Your library data</h2><p class="hint">Take your collection with you or bring in a MyAnimeList export.</p>
         <div class="actions"><button class="ghost-button" disabled={disabled} onclick={() => void exportLibrary('csv')}><Download size={15} />Export CSV</button><button class="ghost-button" disabled={disabled} onclick={() => void exportLibrary('malXml')}><Download size={15} />Export MAL XML</button></div>
         <label class="import-button ghost-button" class:disabled><Upload size={15} />Import MAL XML<input aria-label="Import MAL XML" type="file" accept=".xml,application/xml,text/xml" disabled={disabled} onchange={(event) => void pickImport(event)} /></label>
-        {#if preview}<div class="import-preview"><strong>{preview.count} titles in {importName}</strong><p class="hint">{importWarning}</p><ul>{#each preview.items.slice(0, 5) as entry}<li>{entry.media.title} <span>{entry.progress} {entry.mediaType === 'Manga' ? 'chapters' : 'episodes'}</span></li>{/each}</ul>{#if preview.count > 5}<p class="hint">And {preview.count - 5} more titles.</p>{/if}<div class="actions"><button class="primary-button" disabled={disabled || !preview.count} onclick={() => void run('import', async () => { const result = await featureApi.importApply(importXml); preview = null; importXml = ''; onLibraryChanged(); message = `Imported ${result.importedCount} titles`; })}>Import {preview.count} titles</button><button class="text-button" disabled={disabled} onclick={() => { preview = null; importXml = ''; }}>Cancel</button></div></div>{/if}
+        {#if preview}<div class="import-preview"><strong>{titleCount(preview.count)} in {importName}</strong><p class="hint">{importWarning}</p><ul>{#each preview.items.slice(0, 5) as entry}<li>{entry.media.title} <span>{entry.progress} {entry.mediaType === 'Manga' ? entry.progress === 1 ? 'chapter' : 'chapters' : entry.progress === 1 ? 'episode' : 'episodes'}</span></li>{/each}</ul>{#if preview.count > 5}<p class="hint">And {preview.count - 5} more titles.</p>{/if}<div class="actions"><button class="primary-button" disabled={disabled || !preview.count} onclick={() => void run('import', async () => { const result = await featureApi.importApply(importXml); preview = null; importXml = ''; onLibraryChanged(); message = `Imported ${titleCount(result.importedCount)}`; })}>Import {titleCount(preview.count)}</button><button class="text-button" disabled={disabled} onclick={() => { preview = null; importXml = ''; }}>Cancel</button></div></div>{/if}
         {@render feedback('library')}
       </section>
       <section class="panel update-panel"><h2>About TanaHub</h2><p class="hint">TanaHub · {update?.currentVersion ?? '0.1.0'}</p><p class="hint">Checks stable releases. For preview builds and installers, browse all releases.</p><button class="ghost-button" disabled={disabled} onclick={() => void run('updates', async () => { update = await featureApi.updates(); message = update.isUpdateAvailable ? `Version ${update.latestRelease?.version} is available` : update.latestRelease ? 'You are up to date' : 'No stable release yet. Preview builds are available under Browse releases.'; })}><RefreshCw size={15} />{localBusy === 'updates' ? 'Checking…' : 'Check for updates'}</button>{#if update?.latestRelease}<button class="text-button" onclick={() => void run('open', () => featureApi.openExternal(update!.latestRelease!.releaseUrl))}>View release <ExternalLink size={13} /></button>{/if}<button class="text-button" disabled={disabled} onclick={() => void run('open', () => featureApi.openExternal('https://github.com/Komortes/TanaHub/releases'))}>Browse releases <ExternalLink size={13} /></button>{@render feedback('about')}</section>

@@ -25,7 +25,7 @@
   const metadata = $derived([
     media.format !== 'Unknown' ? formatLabel(media.format) : media.type,
     media.year,
-    hasTotal ? `${media.totalUnits} ${media.type === 'Manga' ? 'chapters' : 'episodes'}` : null,
+    hasTotal ? `${media.totalUnits} ${media.type === 'Manga' ? media.totalUnits === 1 ? 'chapter' : 'chapters' : media.totalUnits === 1 ? 'episode' : 'episodes'}` : null,
   ].filter(Boolean).join(' · '));
 </script>
 

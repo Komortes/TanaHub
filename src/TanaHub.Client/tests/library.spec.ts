@@ -226,9 +226,9 @@ for (const transfer of ['sync', 'import'] as const) {
     }
     else {
       await page.getByLabel('Import MAL XML', { exact: true }).setInputFiles({ name: 'updated-list.xml', mimeType: 'application/xml', buffer: Buffer.from('<myanimelist></myanimelist>') });
-      await page.getByRole('button', { name: 'Import 1 titles', exact: true }).click();
+      await page.getByRole('button', { name: 'Import 1 title', exact: true }).click();
     }
-    await expect(page.getByRole('status').filter({ hasText: 'Imported 1 titles' })).toBeVisible();
+    await expect(page.getByRole('status').filter({ hasText: 'Imported 1 title' })).toBeVisible();
     const lookupsBeforeReturn = library.requests.filter(request => request.method === 'library.lookup').length;
     await navigation.getByRole('button', { name: 'Discover', exact: true }).click();
     await expect(card.getByRole('button', { name: `Rate ${frieren}`, exact: true })).toContainText('6');

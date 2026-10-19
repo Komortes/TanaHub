@@ -55,9 +55,17 @@ public static class MalXmlLibraryExchange
 
     public static Result<IReadOnlyList<UserMediaEntry>> Import(string xml)
     {
+        var document = ImportDocument(xml);
+        return document.IsSuccess
+            ? Result<IReadOnlyList<UserMediaEntry>>.Success(document.Value!.Entries)
+            : Result<IReadOnlyList<UserMediaEntry>>.Failure(document.Error);
+    }
+
+    public static Result<MalXmlImportDocument> ImportDocument(string xml)
+    {
         if (string.IsNullOrWhiteSpace(xml))
         {
-            return Result<IReadOnlyList<UserMediaEntry>>.Failure(
+            return Result<MalXmlImportDocument>.Failure(
                 ApplicationError.Validation("MAL XML is empty."));
         }
 
@@ -65,6 +73,7 @@ public static class MalXmlLibraryExchange
         {
             var document = XDocument.Parse(xml);
             var entries = new List<UserMediaEntry>();
+            var media = new List<MediaItem>();
 
             foreach (var anime in document.Descendants("anime"))
             {
@@ -73,6 +82,11 @@ public static class MalXmlLibraryExchange
                     continue;
                 }
 
+                media.Add(new Anime($"mal:anime:{id}", new MediaTitle(ReadTitle(anime, "series_title", $"MyAnimeList anime #{id}")), MediaFormat.Unknown, MediaReleaseStatus.Unknown)
+                {
+                    MalId = id,
+                    EpisodeCount = Positive(ReadInt(anime, "series_episodes"))
+                });
                 entries.Add(new UserMediaEntry($"mal:anime:{id}", MediaType.Anime, FromMalStatus(ReadText(anime, "my_status")))
                 {
                     Progress = Math.Max(0, ReadInt(anime, "my_watched_episodes") ?? 0),
@@ -89,6 +103,12 @@ public static class MalXmlLibraryExchange
                     continue;
                 }
 
+                media.Add(new Manga($"mal:manga:{id}", new MediaTitle(ReadTitle(manga, "manga_title", $"MyAnimeList manga #{id}")), MediaFormat.Manga, MediaReleaseStatus.Unknown)
+                {
+                    MalId = id,
+                    ChapterCount = Positive(ReadInt(manga, "manga_chapters")),
+                    VolumeCount = Positive(ReadInt(manga, "manga_volumes"))
+                });
                 entries.Add(new UserMediaEntry($"mal:manga:{id}", MediaType.Manga, FromMalStatus(ReadText(manga, "my_status")))
                 {
                     Progress = Math.Max(0, ReadInt(manga, "my_read_chapters") ?? 0),
@@ -96,11 +116,11 @@ public static class MalXmlLibraryExchange
                 });
             }
 
-            return Result<IReadOnlyList<UserMediaEntry>>.Success(entries);
+            return Result<MalXmlImportDocument>.Success(new(entries, media));
         }
         catch (Exception ex) when (ex is System.Xml.XmlException or FormatException or InvalidOperationException)
         {
-            return Result<IReadOnlyList<UserMediaEntry>>.Failure(
+            return Result<MalXmlImportDocument>.Failure(
                 ApplicationError.Validation("MAL XML could not be parsed."));
         }
     }
@@ -156,6 +176,14 @@ public static class MalXmlLibraryExchange
         };
     }
 
+    private static int? Positive(int? value) => value > 0 ? value : null;
+
+    private static string ReadTitle(XContainer element, string name, string fallback)
+    {
+        var title = ReadText(element, name)?.Trim();
+        return string.IsNullOrEmpty(title) ? fallback : title[..Math.Min(title.Length, 1000)];
+    }
+
     private static string? ReadText(XContainer element, string name)
     {
         return element.Element(name)?.Value;
@@ -173,3 +201,5 @@ public static class MalXmlLibraryExchange
 }
 
 public sealed record MalXmlExportDocument(string Xml, int ExportedCount, int SkippedCount);
+
+public sealed record MalXmlImportDocument(IReadOnlyList<UserMediaEntry> Entries, IReadOnlyList<MediaItem> Media);

@@ -34,6 +34,11 @@ try {
     bridge.request('library.notes', { mediaId: added.mediaId, notes: 'Продолжить вечером' }),
   ]);
   await assert.rejects(bridge.request('library.score', { mediaId: added.mediaId, score: 11 }), /score|оцен|0.*10/i);
+  const xml = '<myanimelist><manga><manga_mangadb_id>999999999</manga_mangadb_id><manga_title>История &amp; звёзды</manga_title><manga_chapters>52</manga_chapters></manga></myanimelist>';
+  const preview = await bridge.request('library.import.preview', { xml });
+  assert.equal(preview.items[0].media.title, 'История & звёзды');
+  assert.equal((await bridge.request('library.list', {})).totalCount, 1);
+  await bridge.request('library.import.apply', { xml });
   bridge.close();
   restarted = new BridgeRpc(binary);
   const saved = await restarted.request('library.get', { mediaId: added.mediaId });
@@ -41,6 +46,9 @@ try {
   assert.equal(saved.score, 9);
   assert.equal(saved.notes, 'Продолжить вечером');
   assert.equal(saved.status, 'Watching');
+  const imported = await restarted.request('library.get', { mediaId: 'mal:manga:999999999' });
+  assert.equal(imported.media.title, 'История & звёзды');
+  assert.equal(imported.media.totalUnits, 52);
   await restarted.request('library.progress.set', { mediaId: added.mediaId, progress: 2147483647 });
   await assert.rejects(restarted.request('library.progress', { mediaId: added.mediaId, amount: 1 }), /range|progress/i);
   const summary = await restarted.request('home.get', {});
