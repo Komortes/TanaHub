@@ -16,6 +16,7 @@
   import type { Entry, Layout, Media, MediaType, PageName, Status } from './lib/types';
   import { mediaKey } from './lib/types';
   import { clearDrafts } from './lib/drafts';
+  import { desktopUpdates } from './lib/desktop-updates.svelte';
 
   function preferences(): { layout: Layout; coverSize: number } {
     try {
@@ -120,7 +121,7 @@
     if (location.hash) applyRoute(); else history.replaceState({ tanahub: true }, '', '#library');
     window.addEventListener('popstate', applyRoute);
     document.addEventListener('click', focusActivatedButton, true);
-    return () => { window.removeEventListener('popstate', applyRoute); document.removeEventListener('click', focusActivatedButton, true); clearTimeout(toastTimeout); };
+    return () => { desktopUpdates.dispose(); window.removeEventListener('popstate', applyRoute); document.removeEventListener('click', focusActivatedButton, true); clearTimeout(toastTimeout); };
   });
   function focusActivatedButton(event: MouseEvent) {
     // WebKit and accessibility activation may click a button without focusing it.
