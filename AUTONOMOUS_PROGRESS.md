@@ -1,5 +1,51 @@
 # Autonomous development progress
 
+## New-user journey and artwork recovery — 20 October 2026
+
+The user requested another first-use audit, photo/cover loading fixes and
+commits/push. These client fixes are unreleased; published 0.1.3 packages and
+download links remain unchanged.
+
+- Started the published macOS app with an empty isolated profile. Discover loaded
+  real AniList covers, Attack on Titan opened with its banner, original cover,
+  six character photos and related titles. Adding it, recording episode 1 and a
+  Unicode note survived navigation and restart. All 23 previously cached images
+  retained their inode/size; Home added seven more. The native log was empty.
+- Reproduced hidden collection cards occupying image slots ahead of visible
+  details, including zero-width resize choosing originals. Pending hidden work
+  now waits until the collection is visible again; running work completes within
+  the four-load limit. Back resumes covers. Related-title refresh now retries
+  failed images whether their URL stays the same or changes.
+- Title headers select preview/thumbnail sizes by rendered width and screen
+  density. Enlarging still requests the original. The viewer reserves a usable
+  loading frame, explains failures and offers Retry cover. A shared header/image
+  failure keeps the viewer open; retry and dismissal retain usable keyboard focus.
+- Native slow-network testing exposed a metadata race that closed an open cover
+  as full title details arrived. A delayed-detail regression reproduces it; the
+  viewer now closes only when the original image URL changes. The corrected
+  native release build shows Loading cover, stays open after details arrive,
+  displays the original and returns focus to Enlarge on Escape. All six real
+  character photos load; every LibraryEntries field remains unchanged.
+- Ten new browser scenarios cover queue visibility/resume, related-cover refresh,
+  320/1440px pending originals, preview selection, failed/shared originals, retry,
+  focus and delayed metadata. Gated image tests wait for DOMContentLoaded so
+  navigation does not wait for the intentionally blocked images.
+- Frontend build has zero errors/warnings. The macOS arm64 app builds and passes
+  deep/strict codesign verification. Independent read-only review found a shared
+  header failure dismissing the viewer; it is fixed and covered by two tests.
+  Final review of the metadata guard found no actionable defects.
+- The final browser run passes 166/166 scenarios in 1.6 minutes without retries.
+  An earlier run completed 164 but could not write two teardown traces because
+  the disk was full. Removed regenerable Cargo compiler caches, retained the
+  verified app/evidence, and repeated the complete suite successfully.
+- Fresh native screenshots, controlled browser screenshots, regression logs and
+  JSON persistence/cache reports are outside source under
+  /private/tmp/tanahub-journey-20261019/. Test profiles are isolated; the temporary
+  slow-network proxy affected only the test child and stopped when it quit.
+
+No dependency, permission, backend, database schema or signing-key change was
+introduced. Windows/Linux interactive rendering remains unverified locally.
+
 ## 0.1.3 publication and native upgrade — 19 October 2026
 
 Published [0.1.3 Preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.3)

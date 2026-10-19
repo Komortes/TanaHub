@@ -74,9 +74,9 @@ for (const collection of ['library', 'discover'] as const) {
     try {
       if (collection === 'discover') {
         // A new user enters discovery from the empty library.
-        await page.goto('/');
+        await page.goto('/', { waitUntil: 'domcontentloaded' });
         await page.getByRole('button', { name: 'Discover titles', exact: true }).click();
-      } else await page.goto('/');
+      } else await page.goto('/', { waitUntil: 'domcontentloaded' });
       const cards = page.getByRole('article');
       await expect(cards).toHaveCount(collection === 'library' ? 48 : 24);
       await expect.poll(() => images.requests.length).toBe(4);
@@ -129,7 +129,7 @@ for (const changedUrl of [false, true]) {
     library.relations.set(parentId, { ...result, titles: [{ ...result.titles[0], posterUrl: oldUrl }] });
     const images = await controlImages(page);
     try {
-      await page.goto(`/#title/${encodeURIComponent(parentId)}`);
+      await page.goto(`/#title/${encodeURIComponent(parentId)}`, { waitUntil: 'domcontentloaded' });
       const related = page.getByRole('button', { name: /^Open Frieren: The Next Journey,/ });
       await related.scrollIntoViewIfNeeded();
       await expect.poll(() => images.requests.length).toBe(1);

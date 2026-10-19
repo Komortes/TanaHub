@@ -2,6 +2,19 @@
 
 Changes are recorded here for each release.
 
+## Unreleased
+
+### Fixed
+
+- Hidden catalog/library cards stop taking new image-loading slots while a title is open. Visible artwork loads next, and returning to the collection resumes its covers without exceeding four concurrent loads.
+- Refreshing related titles retries failed covers, including when their image URL has not changed.
+- Enlarged covers retain a usable loading frame and offer Retry cover after a failure. Shared header/original failures keep the viewer open; retry and dismissal preserve keyboard focus.
+- Background title-detail refreshes no longer dismiss an enlarged cover when its original image URL is unchanged.
+
+### Improved
+
+- Small title-header covers now choose thumbnails or previews according to their rendered size and screen density. Enlarge still loads the original.
+
 ## [0.1.3 preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.3) — 2026-10-19
 
 ### Added

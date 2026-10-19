@@ -13,6 +13,7 @@
   let { media, entry, loading = false, libraryReady = true, busy = false, loadError = '', onClose, onAdd, onProgress, onProgressSet, onScore, onStatus, onNotes, onReview, onOrganization, onDates, onRemove, onOpenRelated, onRetry }:
     { media: Media; entry?: Entry; loading?: boolean; libraryReady?: boolean; busy?: boolean; loadError?: string; onClose: () => void; onAdd: () => Promise<void>; onProgress: () => Promise<void>; onProgressSet: (progress: number) => Promise<void>; onScore: (score: number | null) => Promise<void>; onStatus: (status: Status) => Promise<void>; onNotes: (notes: string) => Promise<void>; onReview: (review: string) => Promise<void>; onOrganization: (tags: string[], lists: string[]) => Promise<void>; onDates: (startedAt: string | null, completedAt: string | null) => Promise<void>; onRemove: () => Promise<void>; onOpenRelated: (id: string) => void; onRetry?: () => void } = $props();
   let failedPoster = $state(false);
+  let previousPoster: string | null | undefined;
   let failedBanner = $state(false);
   let failedCharacters = $state<string[]>([]);
   let saving = $state(false);
@@ -35,10 +36,23 @@
     ...(media.type === 'Anime' ? [{ label: 'Episodes', value: media.episodeCount ?? media.totalUnits }, { label: 'Episode length', value: media.durationMinutes ? `${media.durationMinutes} min` : null }, { label: 'Studio', value: media.studio }] : [{ label: 'Chapters', value: media.chapterCount ?? media.totalUnits }, { label: 'Volumes', value: media.volumeCount }]),
     { label: 'Native title', value: media.nativeTitle },
   ].filter(item => item.value !== null && item.value !== undefined && item.value !== '' && item.value !== 'Unknown'));
-  $effect(() => { media.posterUrl; failedPoster = false; coverOpen = false; });
+  $effect(() => {
+    const poster = media.posterUrl;
+    media.previewUrl; media.thumbnailUrl;
+    failedPoster = false;
+    if (poster !== previousPoster) { previousPoster = poster; coverOpen = false; }
+  });
   $effect(() => { media.bannerUrl; failedBanner = false; });
   $effect(() => { media.id; failedCharacters = []; actionError = ''; expandedSynopsis = false; copied = false; copyBusy = false; convenienceError = ''; convenienceVersion += 1; return () => { clearTimeout(copyTimer); convenienceVersion += 1; }; });
   function focusTitle(node: HTMLElement) { node.focus({ preventScroll: true }); }
+  async function closeCover() {
+    coverOpen = false;
+    await tick();
+    // The original opener may have disappeared after a header image failure.
+    if (article?.isConnected && document.activeElement === document.body) {
+      (article.querySelector<HTMLElement>('.poster-zoom') ?? article.querySelector<HTMLElement>('#title-page-heading'))?.focus({ preventScroll: true });
+    }
+  }
   async function add() {
     if (busy || saving) return;
     saving = true;
@@ -81,7 +95,7 @@
   <header class="title-header" class:has-banner={!!media.bannerUrl && !failedBanner}>
     {#if media.bannerUrl && !failedBanner}<img class="title-banner" use:artwork={{ url: media.bannerUrl, lazy: false }} alt="" onerror={() => failedBanner = true} />{/if}
     <div class="title-summary">
-      {#if media.posterUrl && !failedPoster}<button class="title-poster poster-zoom" aria-label={`Enlarge cover of ${media.title}`} onclick={() => coverOpen = true}><img use:artwork={{ url: media.posterUrl, lazy: false }} alt={`Cover of ${media.title}`} onerror={() => { failedPoster = true; coverOpen = false; }} /><span class="zoom-hint"><Maximize2 size={14} />Enlarge</span></button>{:else}<div class="title-poster"><BookOpen size={34} strokeWidth={1.25} /></div>{/if}
+      {#if media.posterUrl && !failedPoster}<button class="title-poster poster-zoom" aria-label={`Enlarge cover of ${media.title}`} onclick={() => coverOpen = true}><img use:artwork={{ url: media.posterUrl, preview: media.previewUrl, thumbnail: media.thumbnailUrl, lazy: false }} alt={`Cover of ${media.title}`} onerror={() => failedPoster = true} /><span class="zoom-hint"><Maximize2 size={14} />Enlarge</span></button>{:else}<div class="title-poster"><BookOpen size={34} strokeWidth={1.25} /></div>{/if}
       <div class="title-identity">
         <div class="title-eyebrow"><span>{#if media.type === 'Anime'}<Tv size={12} />{:else}<BookOpen size={12} />{/if}{media.type}</span>{#if media.format !== 'Unknown'}<span>{formatLabel(media.format)}</span>{/if}{#if media.year}<span class="mono"><Calendar size={12} />{media.year}</span>{/if}</div>
         <h1 id="title-page-heading" tabindex="-1" use:focusTitle>{media.title}</h1>
@@ -109,7 +123,7 @@
     <aside class="content-panel metadata-panel" aria-labelledby="metadata-heading"><h2 id="metadata-heading">Details</h2><dl>{#each metadata as item (item.label)}<div><dt>{item.label}</dt><dd>{item.value}</dd></div>{/each}</dl></aside>
   </div>
 </article>
-{#if coverOpen && media.posterUrl && !failedPoster}<CoverLightbox url={media.posterUrl} title={media.title} onClose={() => coverOpen = false} />{/if}
+{#if coverOpen && media.posterUrl}<CoverLightbox url={media.posterUrl} title={media.title} onClose={closeCover} onLoaded={() => failedPoster = false} />{/if}
 
 <style>
   .title-page { max-width: 1260px; margin: 0 auto; min-width: 0; padding-bottom: 16px; animation: page-in 180ms var(--ease); }
