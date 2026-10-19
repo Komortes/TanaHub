@@ -22,6 +22,12 @@ The bridge tests also now include the same coverage collector as the other suite
 No assertions or CI gates were skipped. npm and NuGet vulnerability checks found
 no known vulnerable dependencies in the current lockfile/restored solution.
 
+The next Windows run passed all .NET and self-contained core assertions, then
+exposed a cleanup race: the extracted SQLite DLL remains locked briefly after
+terminating the core. Temporary-profile removal now uses Node's bounded recursive
+rm retries for Windows file locks; cleanup errors still fail the check. Its pass
+message is printed only after cleanup finishes.
+
 ## Usability and source-checkout readiness — 19 October 2026
 
 The user resumed autonomous development with the goal of an understandable app

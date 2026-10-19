@@ -54,7 +54,6 @@ try {
   assert.equal(completed.status, 'Completed');
   assert.equal(Date.parse(completed.completedAt), Date.parse('2026-10-11T07:00:00Z'));
   assert.equal(completed.progress, 2147483647);
-  console.log('Prepared .NET sidecar passed: native runtime/SQLite load, real RPC mutations, validation, persistence after restart. User data was isolated.');
 } finally {
   bridge.close();
   restarted?.close();
@@ -62,5 +61,7 @@ try {
   else process.env.TANAHUB_DATA_DIRECTORY = previousData;
   if (previousExtraction === undefined) delete process.env.DOTNET_BUNDLE_EXTRACT_BASE_DIR;
   else process.env.DOTNET_BUNDLE_EXTRACT_BASE_DIR = previousExtraction;
-  await rm(temporary, { recursive: true, force: true });
+  // Windows keeps extracted SQLite DLLs locked briefly while the killed cores exit.
+  await rm(temporary, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 }
+console.log('Prepared .NET sidecar passed: native runtime/SQLite load, real RPC mutations, validation, persistence after restart and cleanup. User data was isolated.');
