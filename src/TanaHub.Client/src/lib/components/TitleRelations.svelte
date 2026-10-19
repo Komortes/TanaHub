@@ -35,7 +35,10 @@
     error = '';
     try {
       const response = await featureApi.relations(id, force);
-      if (generation === requestGeneration && activeId === id) result = response;
+      if (generation === requestGeneration && activeId === id) {
+        result = response;
+        failedPosters = [];
+      }
     } catch (reason) {
       if (generation === requestGeneration && activeId === id) error = reason instanceof Error ? reason.message : 'Could not load related titles.';
     } finally {

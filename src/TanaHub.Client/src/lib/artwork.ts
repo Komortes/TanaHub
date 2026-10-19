@@ -33,6 +33,9 @@ export function artwork(node: HTMLImageElement, initial: Source) {
   function render() {
     // AniList supplies 100px thumbnails and 230px previews. Keep originals on Retina screens.
     const pixels = node.getBoundingClientRect().width * (window.devicePixelRatio || 1);
+    // Hidden collections stay mounted while a title is open. Keep their current
+    // source rather than treating a zero width as a request for the original.
+    if (!pixels && current.lazy !== false) return;
     const selected = pixels > 0 && pixels <= 100 && current.thumbnail ? current.thumbnail
       : pixels > 0 && pixels <= 230 && current.preview ? current.preview : current.url;
     const source = { url: selected, fallback: selected !== current.url ? current.url : current.fallback, lazy: current.lazy };
@@ -59,6 +62,7 @@ export function artwork(node: HTMLImageElement, initial: Source) {
     function release() {
       if (finished) return;
       finished = true; clearTimeout(timer);
+      observer?.disconnect();
       node.classList.remove('artwork-loading');
       if (running) { active--; pump(); }
     }
@@ -78,6 +82,9 @@ export function artwork(node: HTMLImageElement, initial: Source) {
       node.src = resolved;
     }
     const job = () => {
+      if (source.lazy !== false && !node.getClientRects().length) {
+        active--; queued = false; return;
+      }
       running = true;
       if (stopped) { release(); return; }
       node.addEventListener('load', loaded);
@@ -85,12 +92,17 @@ export function artwork(node: HTMLImageElement, initial: Source) {
       void assign(source.url);
     };
     function enqueue() {
-      if (stopped || queued) return;
-      queued = true; observer?.disconnect(); pending.push(job); pump();
+      if (stopped || queued || finished) return;
+      queued = true; pending.push(job); pump();
+    }
+    function dequeue() {
+      const index = pending.indexOf(job);
+      if (index >= 0) { pending.splice(index, 1); queued = false; }
     }
     if (source.lazy !== false && typeof IntersectionObserver !== 'undefined') {
       observer = new IntersectionObserver(entries => {
         if (entries.some(entry => entry.isIntersecting)) enqueue();
+        else if (!running) dequeue();
       }, { rootMargin: '240px' });
       observer.observe(node);
     } else enqueue();
@@ -99,8 +111,7 @@ export function artwork(node: HTMLImageElement, initial: Source) {
       stopped = true; observer?.disconnect();
       node.removeEventListener('load', loaded);
       node.removeEventListener('error', failed, true);
-      const index = pending.indexOf(job);
-      if (index >= 0) pending.splice(index, 1);
+      dequeue();
       release();
     };
   }
