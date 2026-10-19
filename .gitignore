@@ -7,6 +7,10 @@ coverage/
 *.coverage
 *.coveragexml
 coverage.cobertura.xml
+coverage-report/
+output/
+playwright-report/
+test-results/
 
 # .NET user/local files
 *.user
@@ -40,6 +44,12 @@ logs/
 *.db-wal
 *.sqlite
 *.sqlite3
+.settings.key
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
 
 # NuGet
 *.nupkg

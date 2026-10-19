@@ -1,0 +1,17 @@
+name: Feature request
+description: Describe a workflow TanaHub could improve.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or workflow
+      description: Who needs this, and what is difficult with the current behavior?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired result
+      description: Describe the result and any alternatives you already use.
+    validations:
+      required: true

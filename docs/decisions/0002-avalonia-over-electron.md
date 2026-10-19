@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Partially superseded by [0005](0005-tauri-client-with-dotnet-sidecar.md) for the new UI. Avalonia remains supported during migration; the original rationale below records the earlier decision.
 
 ## Context
 

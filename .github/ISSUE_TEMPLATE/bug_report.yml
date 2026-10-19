@@ -1,0 +1,24 @@
+name: Bug report
+description: Report a reproducible problem in TanaHub.
+body:
+  - type: input
+    id: build
+    attributes:
+      label: Version or commit
+      placeholder: 0.1.0 preview or a commit SHA
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: OS, architecture and client
+      placeholder: macOS 15, arm64, Tauri
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include what you expected, what happened, and whether it survives a restart. Remove credentials and personal data from logs or screenshots.
+    validations:
+      required: true
