@@ -32,11 +32,26 @@ export async function collectReleaseAssets(root, platform, bundle, output) {
     const destination = join(output, name);
     await copyFile(source, destination);
     assets.push(destination);
+    try {
+      const signature = `${destination}.sig`;
+      await copyFile(`${source}.sig`, signature);
+      assets.push(signature);
+    } catch (error) { if (error.code !== 'ENOENT') throw error; }
   }
   if (platform === 'osx-arm64') {
     const archive = join(output, `${stem}.app.tar.gz`);
-    // tar retains bundle symlinks and executable permissions across artifact uploads.
-    execFileSync('tar', ['-czf', archive, '-C', join(bundle, 'macos'), 'TanaHub.app'], { stdio: 'inherit' });
+    const signedArchive = join(bundle, 'macos', 'TanaHub.app.tar.gz');
+    try {
+      await readFile(`${signedArchive}.sig`);
+      // Preserve the exact bytes signed by Tauri; regenerating gzip invalidates its signature.
+      await copyFile(signedArchive, archive);
+      await copyFile(`${signedArchive}.sig`, `${archive}.sig`);
+      assets.push(`${archive}.sig`);
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+      // An unsigned CI run can be signed later on a maintainer's trusted machine.
+      execFileSync('tar', ['-czf', archive, '-C', join(bundle, 'macos'), 'TanaHub.app'], { stdio: 'inherit' });
+    }
     assets.push(archive);
   }
   const hashes = await Promise.all(assets.map(async file => {

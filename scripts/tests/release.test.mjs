@@ -92,3 +92,19 @@ test('Windows asset collection uses only the NSIS installer', async () => {
     await assert.rejects(collectReleaseAssets(temporary, 'win-x64', bundle, join(temporary, 'assets')), /found 2/);
   });
 });
+
+test('signed macOS updater archives are copied without regenerating their bytes', async () => {
+  await fixture(async temporary => {
+    const bundle = join(temporary, 'bundle');
+    await mkdir(join(bundle, 'dmg'), { recursive: true });
+    await mkdir(join(bundle, 'macos'), { recursive: true });
+    await writeFile(join(bundle, 'dmg', 'installer.dmg'), 'dmg fixture');
+    await writeFile(join(bundle, 'macos', 'TanaHub.app.tar.gz'), 'exact signed archive bytes');
+    await writeFile(join(bundle, 'macos', 'TanaHub.app.tar.gz.sig'), 'signature fixture');
+    const files = await collectReleaseAssets(temporary, 'osx-arm64', bundle, join(temporary, 'assets'));
+    const archive = files.find(file => file.endsWith('.app.tar.gz'));
+    assert.equal(await readFile(archive, 'utf8'), 'exact signed archive bytes');
+    assert.equal(await readFile(`${archive}.sig`, 'utf8'), 'signature fixture');
+    assert.ok((await readFile(files.at(-1), 'utf8')).includes(`${basename(archive)}.sig`));
+  });
+});

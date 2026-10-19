@@ -4,6 +4,12 @@ on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      create_draft:
+        description: Create a version tag and draft after all checks and packages pass
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -70,7 +76,10 @@ jobs:
       - name: Test packaged core
         run: npm run test:core
       - name: Build native installers
-        run: npm run tauri -- build --ci --bundles ${{ matrix.bundles }} -- --locked
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: node ../../scripts/build-release.mjs ${{ matrix.bundles }}
       - name: Collect installers and checksums
         run: node ../../scripts/collect-release-assets.mjs ${{ matrix.rid }}
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -84,7 +93,7 @@ jobs:
 
   draft-release:
     name: Create draft prerelease
-    if: github.ref_type == 'tag'
+    if: github.ref_type == 'tag' || inputs.create_draft == true
     needs: package
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -103,11 +112,27 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
         run: |
+          if test -z "$RELEASE_TAG"; then
+            RELEASE_TAG="v$(node -p "require('./src/TanaHub.Client/package.json').version")"
+            node scripts/check-release-version.mjs "$RELEASE_TAG"
+            if gh api "repos/$GH_REPO/git/ref/tags/$RELEASE_TAG" > /tmp/tanahub-tag-ref 2>/dev/null; then
+              existing="$(gh api "repos/$GH_REPO/commits/$RELEASE_TAG" --jq .sha)"
+              test "$existing" = "$GITHUB_SHA" || { echo 'Existing tag differs from the tested source; refusing to move it.'; exit 1; }
+            else
+              gh api --method POST "repos/$GH_REPO/git/refs" -f "ref=refs/tags/$RELEASE_TAG" -f "sha=$GITHUB_SHA"
+            fi
+          fi
           version="${RELEASE_TAG#v}"
           notes="docs/releases/${version}.md"
           test -f "$notes"
+          signatures=$(find artifacts/release -maxdepth 1 -name '*.sig' | wc -l)
+          if test "$signatures" -eq 3; then
+            node scripts/update-manifest.mjs artifacts/release "$RELEASE_TAG"
+          else
+            echo 'Update signatures are missing: sign all three packages locally and upload latest.json before publication.'
+          fi
           if gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft' > /tmp/tanahub-release-is-draft; then
             if test "$(cat /tmp/tanahub-release-is-draft)" != true; then
               echo 'Release is already published; leaving its notes and assets unchanged.'

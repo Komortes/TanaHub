@@ -51,7 +51,7 @@ jobs:
       - name: Verify release versions and tooling
         run: |
           node scripts/check-release-version.mjs
-          node --test scripts/tests/release.test.mjs scripts/tests/environment.test.mjs
+          node --test scripts/tests/release.test.mjs scripts/tests/environment.test.mjs scripts/tests/updates.test.mjs
       - name: Restore
         run: dotnet restore TanaHub.sln
       - name: Format check
@@ -69,7 +69,7 @@ jobs:
           npm run test:core
         working-directory: src/TanaHub.Client
       - name: Check native shell
-        run: cargo +stable check --locked --manifest-path src/TanaHub.Client/src-tauri/Cargo.toml
+        run: cargo +stable test --release --locked --manifest-path src/TanaHub.Client/src-tauri/Cargo.toml --lib
       - name: Coverage summary
         if: runner.os == 'Linux'
         run: |
