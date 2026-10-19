@@ -34,12 +34,15 @@ key material stays out of source and logs. The owner-only local backup is ignore
   browser run then exposed shared mutable fixture objects: size-selection tests
   leaked mocked provider URLs into later tests. Trace errors confirmed those
   exact leaked URLs. Each mock service now deep-clones its seed records; 30 focused
-  repetitions pass and the full suite is rerunning. No diagnostic code remains.
-  Signing/release CI and the real packaged upgrade remain pending.
+  repetitions and the final full 148/148 browser suite pass. No diagnostic code
+  remains. The first GitHub browser run then passed 147/148: Playwright's uncheck
+  postcondition raced with the expected immediate rollback after a failed settings
+  save. Use a normal user click and retain explicit error/persisted-value assertions;
+  12 focused repetitions pass. Superseded runs 39288729059/39288741456 were stopped
+  before packaging; updated source will get complete fresh CI/release checks.
 
-Next: finish the complete browser suite, push reviewed commits, build and verify
-the signed 0.1.2 prerelease, then exercise a real
-upgrade in the disposable native profile. Earlier public versions need a one-time
+Next: verify the signed 0.1.2 prerelease, publish after CI and package validation,
+then exercise a real upgrade in the disposable native profile. Earlier public versions need a one-time
 0.1.2 install; update packages are complete applications rather than delta patches.
 
 ## 0.1.1 preview publication — 19 October 2026

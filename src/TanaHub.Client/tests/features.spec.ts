@@ -271,7 +271,8 @@ test('a failed setting save restores the control to its persisted value', async 
   await page.goto('/');
   await navigate(page, 'Settings');
   const notifications = page.getByRole('switch', { name: 'Notifications', exact: true });
-  await notifications.uncheck();
+  // A fast failed save can restore the checkbox before Playwright's uncheck postcondition.
+  await notifications.click();
   await expect(page.getByRole('alert')).toContainText('Settings could not be saved.');
   await expect(notifications).toBeChecked();
   expect(library.settings.notificationsEnabled).toBe(true);
