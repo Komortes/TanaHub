@@ -2,6 +2,7 @@
   import { untrack, onMount, tick } from 'svelte';
   import { BookOpen, Compass, SearchX, RefreshCw, AlertCircle, Check, X } from '@lucide/svelte';
   import Sidebar from './lib/components/Sidebar.svelte';
+  import UpdateNotice from './lib/components/UpdateNotice.svelte';
   import CollectionToolbar from './lib/components/CollectionToolbar.svelte';
   import MediaCard from './lib/components/MediaCard.svelte';
   import TitlePage from './lib/components/TitlePage.svelte';
@@ -118,6 +119,7 @@
   });
   onMount(() => {
     void loadSettings();
+    desktopUpdates.start();
     if (location.hash) applyRoute(); else history.replaceState({ tanahub: true }, '', '#library');
     window.addEventListener('popstate', applyRoute);
     document.addEventListener('click', focusActivatedButton, true);
@@ -286,6 +288,7 @@
 <div class="app-shell">
   <Sidebar {page} onNavigate={navigate} />
   <main id="main-content">
+    <UpdateNotice inSettings={page === 'settings' && !selected} busy={!!settingsBusy || busyIds.length > 0} onDismiss={focusMainHeading} />
     {#if selected}
       {#key mediaKey(selected.id)}
         <TitlePage media={selected} entry={selectedEntry} loading={detailLoading} {libraryReady} busy={busyIds.includes(mediaKey(selected.id))} loadError={detailError} onClose={() => void closeDetails()} onRetry={() => void openDetails(selected!, false)} onAdd={() => mutate(selected!.id, () => api.add(selected!.id), 'Saved to your library')} onProgress={() => mutate(selected!.id, () => api.progress(selected!.id), 'Progress saved')} onProgressSet={(progress) => mutate(selected!.id, () => featureApi.progressSet(selected!.id, progress), 'Progress saved')} onScore={(score) => mutate(selected!.id, () => api.score(selected!.id, score), 'Rating saved')} onStatus={(newStatus) => mutate(selected!.id, () => api.status(selected!.id, newStatus), 'Status saved')} onNotes={(notes) => mutate(selected!.id, () => api.notes(selected!.id, notes), 'Notes saved')} onReview={(review) => mutate(selected!.id, () => featureApi.review(selected!.id, review), 'Review saved')} onOrganization={(tags, lists) => mutate(selected!.id, () => featureApi.organization(selected!.id, tags, lists), 'Organization saved')} onDates={(startedAt, completedAt) => mutate(selected!.id, () => featureApi.dates(selected!.id, startedAt, completedAt), 'Dates saved')} onRemove={removeSelected} onOpenRelated={(id) => void openId(id)} />

@@ -1,5 +1,39 @@
 # Autonomous development progress
 
+## Startup update checks and notification — 19 October 2026
+
+The user requested automatic update discovery on launch, a clear notification
+outside Settings, and commits/push. This iteration changes the client only; the
+published 0.1.2 packages retain their existing manual checker until a new release.
+
+- Extracted the updater into one reactive controller owned by the application
+  window. Existing five download/signature/install/restart scenarios passed before
+  adding startup behavior. Navigation no longer disposes an active download.
+- Supported native packages check once per window launch, asynchronously and with
+  the existing 20-second timeout. Automatic failures stay quiet; successful
+  availability produces an in-app notice. Settings retains explicit checking and
+  retry, uses the same resource, and remains usable during background checking.
+- The notice shows the version, Download update, progress, separate Install and
+  restart, and Later. Later postpones it until the next launch. It never downloads
+  or installs automatically. Signature verification and idle-core protection are
+  preserved; the installation/restart modal is now owned by the app window.
+- The initial startup regression failed first (zero checks instead of one).
+  Thirteen updater scenarios now cover foreground/background coordination,
+  offline/manual retry, no-update silence, unsupported packages, browser mode,
+  dismissal/relaunch, downloads across navigation, explicit installation,
+  signature/prepare/install/restart failures, keyboard focus and 320/1440px layout.
+- Browser plugin not available; used the repository Playwright workflow with
+  Chromium at http://127.0.0.1:1424 and isolated in-memory RPC/native IPC fixtures.
+  Full browser suite: 156/156 pass. Frontend build: zero errors and warnings.
+  Screenshot evidence (mock version 0.1.3) is outside source under
+  /private/tmp/tanahub-startup-updates/. No native package was published in this
+  iteration, and startup UI behavior has not been interactively tested in WebKit.
+- Reviewed lifecycle cleanup, single-flight guards, platform gating, focus and
+  failure paths. No dependencies, permissions, provider APIs, database or signing
+  keys changed. Documentation labels this behavior as unreleased/on main.
+
+Next: CI verification for these commits and inclusion in the next signed preview.
+
 ## Artwork and signed updater — 19 October 2026
 
 The user authorized continued optimization, commits/push and prereleases, and

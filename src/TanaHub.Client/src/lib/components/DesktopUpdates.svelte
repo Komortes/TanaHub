@@ -1,10 +1,9 @@
 <script lang="ts">
   import { version } from '../../../package.json';
   import { desktopUpdates as updates } from '../desktop-updates.svelte';
-  import { modal } from '../modal';
   let { busy = false, onBusyChange }: { busy?: boolean; onBusyChange: (busy: boolean) => void } = $props();
   const mb = (bytes: number) => (bytes / 1024 / 1024).toFixed(1);
-  $effect(() => onBusyChange(updates.working || updates.phase === 'installed'));
+  $effect(() => onBusyChange(['downloading', 'installing', 'installed'].includes(updates.phase)));
 </script>
 
 <section class="panel update-panel" aria-busy={updates.working}>
@@ -26,7 +25,7 @@
   </div>
   {#if updates.update?.body}<details><summary>What's new in {updates.update.version}</summary><p class="release-notes">{updates.update.body.slice(0, 12_000)}</p></details>{/if}
 </section>
-{#if updates.phase === 'installing' || updates.phase === 'installed'}<dialog use:modal aria-label="Installing update" oncancel={event => event.preventDefault()}><h2>{updates.phase === 'installed' ? 'Update installed' : 'Installing update…'}</h2><p>TanaHub will restart when installation finishes.</p>{#if updates.phase === 'installed'}{#if updates.error}<p role="alert">{updates.error}</p>{/if}<button class="primary-button" onclick={() => void updates.restart()}>Restart now</button>{/if}</dialog>{/if}
+
 
 <style>
   .update-panel { grid-column: 1 / -1; background: var(--shell); border: 1px solid var(--border); border-radius: 12px; padding: 22px; min-width: 0; }
@@ -39,7 +38,5 @@
   progress { width: 100%; accent-color: var(--violet); }
   details { margin-top: 16px; font-size: 12px; } summary { cursor: pointer; }
   .release-notes { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 240px; overflow: auto; color: var(--secondary); line-height: 1.6; }
-  dialog { margin: auto; padding: 28px; border: 1px solid var(--border-lit); border-radius: 12px; background: var(--shell); color: var(--text); max-width: calc(100vw - 32px); }
-  dialog::backdrop { background: #09080fe6; } dialog h2 { font-size: 18px; } dialog p { font-size: 13px; }
   @media (max-width: 760px) { .update-panel { padding: 18px; } }
 </style>

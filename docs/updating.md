@@ -28,6 +28,24 @@ Update signatures are separate from OS signing: these previews remain ad-hoc
 signed/not notarized on macOS and unsigned on Windows. Back up your app-data folder
 with TanaHub closed before trying a preview.
 
+## Startup notifications (unreleased)
+
+The next preview checks for updates in the background once per launch on supported
+macOS, Windows and Linux AppImage packages. This feature is available from `main`;
+the published 0.1.2 installers retain their manual Settings check.
+
+When a newer version is available, a notice appears above the current page with
+**Download update** and **Later**. Downloading does not start automatically. After
+the signature is verified, **Install and restart** lets you finish saving first.
+The download and its progress remain available when you change pages. Settings
+uses the same update state and still provides a manual check/retry.
+
+**Later** hides the notice for the rest of that launch; the next launch checks again.
+A failed startup check or an up-to-date result does not show a notice or interrupt
+library use. The browser preview and unsupported native package types do not
+request the native update feed. No operating-system notification permission is
+needed.
+
 ## Artwork cache
 
 The desktop client stores supported provider artwork in its OS app-cache folder,

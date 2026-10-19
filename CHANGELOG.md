@@ -2,6 +2,13 @@
 
 Changes are recorded here for each release.
 
+## Unreleased
+
+### Added
+
+- Automatic background update checks once per supported desktop app launch. An accessible in-app notice offers download, explicit installation/restart and Later; network failures stay quiet during startup.
+- Shared updater state keeps downloads available across navigation and in Settings, without duplicate startup checks or interrupting keyboard focus.
+
 ## [0.1.2 preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.2) — 2026-10-19
 
 ### Added

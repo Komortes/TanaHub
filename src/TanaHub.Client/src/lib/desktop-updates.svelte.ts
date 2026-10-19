@@ -11,15 +11,26 @@ class DesktopUpdates {
   error = $state('');
   downloaded = $state(0);
   total = $state<number | undefined>();
+  dismissed = $state(false);
+  private started = false;
   private disposed = false;
   get working() { return ['checking', 'downloading', 'installing'].includes(this.phase); }
   get percent() { return this.total ? Math.min(100, Math.round(this.downloaded / this.total * 100)) : undefined; }
 
+  get showNotice() { return !this.dismissed && !['installing', 'installed'].includes(this.phase) && (['available', 'downloading', 'ready'].includes(this.phase) || !!this.error); }
+  start() {
+    this.disposed = false;
+    if (this.started || !isDesktop()) return;
+    this.started = true;
+    void this.check(true);
+  }
+
   private async release() { const previous = this.update; this.update = null; await previous?.close().catch(() => {}); }
   dispose() { this.disposed = true; if (!this.working) void this.release(); }
 
-  async check() {
+  async check(silent = false) {
     if (!isDesktop() || this.working || this.phase === 'installed') return;
+    if (!silent) this.dismissed = false;
     this.phase = 'checking'; this.error = ''; this.message = '';
     try {
       await this.release();
@@ -28,11 +39,12 @@ class DesktopUpdates {
       this.update = await (await import('@tauri-apps/plugin-updater')).check({ timeout: 20_000 });
       this.message = this.update ? `Version ${this.update.version} is available` : 'You are up to date';
       this.phase = this.update ? 'available' : 'idle';
-    } catch (reason) { this.error = `Could not check for updates. ${String(reason)}`; this.phase = 'idle'; }
+    } catch (reason) { if (!silent) this.error = `Could not check for updates. ${String(reason)}`; this.phase = 'idle'; }
     finally { if (this.disposed) await this.release(); }
   }
   async download() {
-    if (!this.update || this.working) return;
+    if (!this.update || this.phase !== 'available') return;
+    this.dismissed = false;
     this.phase = 'downloading'; this.error = ''; this.downloaded = 0; this.total = undefined;
     try {
       await this.update.download(event => {
