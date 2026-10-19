@@ -1,17 +1,47 @@
 # Autonomous development progress
 
-## 0.1.3 release preparation — 19 October 2026
+## 0.1.3 publication and native upgrade — 19 October 2026
 
-The user requested a new prerelease with startup update checks, installers for
-macOS/Windows/Linux, CI verification and current README downloads. Version 0.1.3
-is synchronized across .NET, npm, Tauri and Cargo manifests/lockfiles. README,
-installation/update guides and release notes describe the startup notice and
-the one-time manual Settings upgrade from 0.1.2.
+Published [0.1.3 Preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.3)
+at 20:32:26 UTC with startup update checks and installers for Apple Silicon macOS,
+Windows x64 and Linux x64. Tag v0.1.3 resolves to the exact tested source commit
+0e9852b657417440e69bfa291ca95542e05f7cc8. Earlier releases/tags/assets are intact.
 
-The feature commits already pass all four jobs in
-[CI 39296929076](https://github.com/Komortes/TanaHub/actions/runs/39296929076),
-including 156 browser scenarios and native checks on all three operating systems.
-Packaging and publication of 0.1.3 are pending; published 0.1.2 assets remain intact.
+- [Source CI](https://github.com/Komortes/TanaHub/actions/runs/39317211704)
+  passes all four jobs. [Release](https://github.com/Komortes/TanaHub/actions/runs/39317223452)
+  passes all eight jobs: four checks, three packages and draft creation. Each
+  native runner passes 363 .NET tests, six Rust tests, 13 tooling tests, format,
+  frontend build and self-contained core tests. All 156 Chromium scenarios pass
+  without retries; frontend build has zero errors and warnings.
+- All 13 release assets match their GitHub sizes/SHA-256 digests. All three checksum
+  manifests and four signatures verify independently, including the additional
+  DEB signature. latest.json has the correct version, notes and three signed
+  platform packages. The draft workflow generated it automatically this time.
+- macOS DMG integrity, deep/strict codesign, version 0.1.3 and arm64 shell/core
+  checks pass. The exact packaged core passes real SQLite/RPC mutations, Unicode,
+  validation and persistence/restart tests locally with isolated data. Linux DEB
+  metadata reports 0.1.3/amd64; the AppImage is x86_64. Windows packaging reports
+  the x64 NSIS payload (its bootstrap executable itself is PE32).
+- [Update channel](https://github.com/Komortes/TanaHub/actions/runs/39320160240)
+  succeeds. Anonymous requests return HTTP 200 for the release and all four README
+  installer links. Public preview.json matches the verified three-platform
+  metadata and publication time. README and user/update/release guides now target
+  0.1.3; 52 local links in the release documents resolve.
+- A copy of the actual published 0.1.2 app offered 0.1.3 in Settings, downloaded
+  and verified its signature, installed it and relaunched (PID 42764 -> 45901).
+  The installed binary matches the published CI binary and strict codesign passes.
+  After restart, opening Settings shows 0.1.3 and You are up to date without
+  clicking Check for updates: the new startup check has already completed.
+- Every logical LibraryEntries field matches the pre-upgrade snapshot, including
+  Watching EP 1/28 and the Unicode note. All 25 artwork-cache files retain their
+  inode/size (1,380,155 bytes). The native log is empty; the test app quit cleanly.
+  Evidence is outside source under /private/tmp/tanahub-013-qa/ and ignored
+  artifacts/github-release/v0.1.3/.
+
+Windows/Linux interactive installation, real AniList OAuth and live recognition
+uploads remain unverified preview limits. macOS remains ad-hoc signed/not notarized
+and Windows OS signing is not configured; update signatures are verified separately.
+No database migration, dependency, permission or signing-key change was introduced.
 
 ## Startup update checks and notification — 19 October 2026
 
@@ -45,7 +75,7 @@ published 0.1.2 packages retain their existing manual checker until a new releas
   failure paths. No dependencies, permissions, provider APIs, database or signing
   keys changed. Documentation labels this behavior as unreleased/on main.
 
-Next: CI verification for these commits and inclusion in the next signed preview.
+Follow-up completed: CI is green and the feature shipped in signed 0.1.3 above.
 
 ## Artwork and signed updater — 19 October 2026
 
