@@ -109,7 +109,10 @@ jobs:
           notes="docs/releases/${version}.md"
           test -f "$notes"
           if gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft' > /tmp/tanahub-release-is-draft; then
-            test "$(cat /tmp/tanahub-release-is-draft)" = true || { echo 'Refusing to replace a published release.'; exit 1; }
+            if test "$(cat /tmp/tanahub-release-is-draft)" != true; then
+              echo 'Release is already published; leaving its notes and assets unchanged.'
+              exit 0
+            fi
             gh release edit "$RELEASE_TAG" --title "TanaHub $version — Preview" --notes-file "$notes" --prerelease
             gh release upload "$RELEASE_TAG" artifacts/release/* --clobber
           else

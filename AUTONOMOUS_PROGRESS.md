@@ -7,10 +7,48 @@ CI and publishing a prerelease with installers. This supersedes the earlier
 publication boundary for this release. The remote main branch was fetched and
 matched the local base; no existing release or tag needed replacement.
 
-Release preparation includes a source/secret inventory, platform download links,
+Release preparation included a source/secret inventory, platform download links,
 installation guidance and versioned preview notes. Native package builds and CI
-must pass before the draft is published. Publication evidence is recorded below
-once GitHub completes the release workflow.
+passed before publication.
+
+### Published result
+
+- [TanaHub 0.1.0 Preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.0)
+  was published on 19 October 2026 at 11:44 UTC. GitHub confirms draft=false and
+  prerelease=true. Public tag v0.1.0 points to tested commit
+  5e3216fbaf98d2584b3877c5e8e568091161bc48.
+- [Cross-platform CI](https://github.com/Komortes/TanaHub/actions/runs/39244660478)
+  passed all four jobs. Each native runner passed the 343 .NET tests, format/build,
+  version/tooling checks, frontend build, self-contained core and Rust checks.
+  The browser job passed all 125 Chromium scenarios and transport checks.
+- [Installer build](https://github.com/Komortes/TanaHub/actions/runs/39244660012)
+  passed the same reusable checks and packaged all three platforms. Its exact
+  downloaded artifacts were promoted to the release without a rebuild.
+- Public assets: Apple Silicon macOS DMG (35.67 MiB) and app archive (35.05 MiB),
+  Windows x64 EXE (35.10 MiB), Linux x64 DEB (38.45 MiB) and AppImage (112.51 MiB),
+  plus one SHA-256 manifest per platform. Local copies are ignored under
+  artifacts/github-release/v0.1.0/.
+- All five package hashes and formats passed verification. All eight GitHub
+  uploaded asset digests matched the verified local files. Anonymous HEAD requests
+  returned HTTP 200 for the published release page and all eight asset URLs.
+- The downloaded macOS bundle passed deep/strict codesign verification, reports
+  macOS 15.0 minimum and arm64 executables, and its DMG passed hdiutil verify.
+  The bundled core passed RPC/SQLite/Unicode/persistence checks. The actual CI app
+  also started its frontend and initialized SQLite through native IPC using an
+  isolated profile, then only that test process was terminated.
+- Preview limitations remain explicit: ad-hoc/non-notarized macOS, unsigned
+  Windows, pending interactive Windows/Linux installation, real OAuth, live
+  recognition uploads and native file-dialog validation. No user profile or
+  account was used for release checks.
+- Tag publication triggered a duplicate build
+  [39246784411](https://github.com/Komortes/TanaHub/actions/runs/39246784411), which
+  was cancelled after the exact same commit/artifacts had already passed the
+  complete manual workflow. The publication step now exits successfully without
+  changing an already public release, avoiding a misleading failure on reruns.
+- All prepared source was committed and pushed in five commits (02d7bc5,
+  4cd38b2, 9df1de7, d0b517e, 5e3216f); the final publication record and rerun guard
+  are a separate maintenance commit. The repository About description and topics
+  now describe the local-first Tauri/Svelte tracker.
 
 The first GitHub run exposed two Windows-specific test-harness failures: redirected
 stdin used the Windows console code page for Unicode requests, and moving a cache

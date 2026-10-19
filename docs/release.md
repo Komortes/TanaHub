@@ -51,10 +51,18 @@ Replace the runtime with `win-x64` or `linux-x64` on those hosts. Output goes to
 
 - Manual dispatch on a branch builds downloadable workflow artifacts only.
 - A matching `v<version>` tag, or dispatch on that tag, builds all three platforms and creates a **draft prerelease** with version-specific notes and checksums.
-- The draft is created only after every platform packages successfully. Reruns can update a draft; they refuse to overwrite a published release.
+- The draft is created only after every platform packages successfully. Reruns can update a draft; an already published release is left unchanged and its publication step is skipped successfully.
 - Build jobs have read-only repository permissions. Only the draft-release job receives `contents: write`.
 
 Before creating the tag, commit and review the intended source state and ensure CI is green. After reviewing the draft, download each target artifact, verify its checksums and run the available [smoke checks](smoke-test.md) on a fresh profile. Record the commit, OS, architecture and result. A preview may explicitly document remaining interactive platform checks; a stable release requires them to pass. Publish the draft explicitly only when these results and its signing limitations are acceptable.
+
+Maintainers can also promote the exact artifacts from a successful manual run.
+Download all three platform artifacts from that run, verify the full asset set and
+checksums, then create a draft with `gh release create` using `--target` set to the
+run's full tested commit SHA. Inspect uploaded asset digests before publishing.
+Creating the tag can trigger another Release run; cancel that duplicate when the
+same source and installer bytes have already passed the complete workflow. Never
+replace published assets or move the release tag to a different commit.
 
 Workflow definitions follow the [Tauri pipeline guidance](https://v2.tauri.app/distribute/pipelines/github/) and use [GitHub token permissions](https://docs.github.com/en/actions/tutorials/authenticate-with-github_token) scoped by job.
 

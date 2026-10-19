@@ -10,7 +10,9 @@ Download **TanaHub 0.1.0 Preview** from the [release page](https://github.com/Ko
 - **Windows x64:** run the `.exe` installer. It is unsigned, so SmartScreen may warn about an unrecognized app; **More info → Run anyway** is available when allowed by your system policy. WebView2 may be downloaded during setup if missing.
 - **Linux x64:** install the `.deb` with `sudo apt install ./TanaHub-0.1.0-linux-x64.deb`, or mark the `.AppImage` executable with `chmod +x TanaHub-0.1.0-linux-x64.AppImage` and launch it. AppImage requires FUSE 2 support; on Ubuntu 22.04 install `libfuse2` if needed. On systems without FUSE, `./TanaHub-0.1.0-linux-x64.AppImage --appimage-extract-and-run` is an alternative.
 
-Each platform has a `SHA256SUMS.txt` asset; [verify checksums](release.md#signing-and-validation-limits) if desired. macOS startup and editing have been exercised interactively. Windows/Linux packages have automated native build and core checks; interactive installation and full end-to-end validation remain preview limitations.
+Each platform has a `SHA256SUMS.txt` asset; [verify checksums](release.md#signing-and-validation-limits) if desired. macOS startup and editing have been exercised interactively. Windows/Linux packages have automated native build and core checks; interactive installation and full end-to-end validation remain preview limitations. Linux packages are built on Ubuntu 22.04; compatibility with older distributions is unverified.
+
+For platform-specific help, see [Apple's Gatekeeper instructions](https://support.apple.com/en-us/102445) and [AppImage's FUSE troubleshooting](https://docs.appimage.org/user-guide/troubleshooting/fuse.html).
 
 Before using an existing library, close the app and [back up its data](#export-and-backup).
 
