@@ -1,5 +1,51 @@
 # Autonomous development progress
 
+## 0.1.1 preview publication — 19 October 2026
+
+The user authorized a new prerelease with macOS, Windows and Linux installers,
+CI verification and updated README download links. All version manifests and the
+Settings version fallback now use 0.1.1. The user guide describes the shipped
+first-progress, draft-recovery and MAL XML fixes without source-only caveats.
+
+- Published [TanaHub 0.1.1 Preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.1)
+  at 13:49:52 UTC on 19 October 2026, with draft=false and prerelease=true.
+  Annotated tag v0.1.1 resolves to tested source commit
+  d547b768c7e77b89798ff106780e32251b60dee2.
+- [Main CI](https://github.com/Komortes/TanaHub/actions/runs/39260271758)
+  passed all four jobs before tagging. The tag's
+  [Release workflow](https://github.com/Komortes/TanaHub/actions/runs/39261312725)
+  passed all eight jobs: four reusable checks, three platform packages and draft
+  creation. Each native runner passed 359 .NET tests, version/tooling checks,
+  frontend build, real self-contained core and Rust checks; Chromium passed all
+  137 scenarios. Package jobs also passed their own real core tests.
+- Published five packages: macOS arm64 DMG/app archive, Windows x64 NSIS EXE,
+  Linux x64 DEB/AppImage, plus three SHA-256 manifests. Downloaded the exact CI
+  artifacts under ignored artifacts/github-release/v0.1.1/ and verified every
+  payload checksum, all eight GitHub uploaded digests and file sizes.
+- Anonymous HTTP checks returned 200 for the release page and all eight asset
+  URLs. All three anonymously downloaded checksum files match the verified local
+  files. The four README installer links are members of that published asset set;
+  the README fetched from GitHub matches the updated local source.
+- The downloaded macOS app reports version 0.1.1, macOS minimum 15.0 and arm64
+  executables; deep/strict codesign verification passes with an ad-hoc hardened
+  runtime signature. The DMG passes hdiutil verification; its shell, core and
+  Info.plist match the tested app archive, and it includes an Applications link.
+  The read-only test mount was detached afterward.
+- The core from the CI archive passed real SQLite/RPC mutations, boundary checks,
+  Unicode/imported metadata persistence and restart checks with disposable data.
+  The actual CI application opened an empty isolated profile, loaded Settings,
+  showed 0.1.1 before and after a real update check, and correctly explained that
+  previews are downloaded through Browse releases. It quit with exit code 0.
+  The inspected screenshot is in ignored output/release/v0.1.1/native-settings.jpg.
+- Linux DEB metadata reports version 0.1.1 and amd64, includes the shell/core,
+  desktop entry and icons; AppImage is x86-64 ELF. Windows packaging logs confirm
+  the x64 NSIS target. Interactive Windows/Linux installation remains unverified.
+- Previous v0.1.0 release notes, publication state and all eight asset records
+  remain unchanged. Neither the old public tag nor its packages were replaced.
+- Signing limitations remain explicit: macOS ad-hoc/not notarized and Windows
+  unsigned. Live OAuth and recognition uploads remain outside the evidence.
+  No personal profile or account was used for these release smoke checks.
+
 ## New-user workflow audit and fixes — 19 October 2026
 
 ### Additional import walkthrough
