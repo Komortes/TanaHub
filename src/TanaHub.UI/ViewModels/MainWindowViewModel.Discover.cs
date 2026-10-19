@@ -50,6 +50,24 @@ public sealed partial class MainWindowViewModel
     [ObservableProperty]
     private bool isLoadingMoreSearchResults;
 
+    private CancellationTokenSource? discoverSearchCancellation;
+    private int discoverSearchVersion;
+
+    [ObservableProperty]
+    private bool isSearching;
+
+    public bool IsSearchEmpty => IsDiscoverSearchActive && !IsSearching && !HasSearchResults;
+
+    partial void OnIsSearchingChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsSearchEmpty));
+        OnPropertyChanged(nameof(IsInitialSearchLoading));
+    }
+    partial void OnIsLoadingMoreSearchResultsChanged(bool value) => OnPropertyChanged(nameof(IsInitialSearchLoading));
+    partial void OnHasSearchResultsChanged(bool value) => OnPropertyChanged(nameof(IsSearchEmpty));
+
+    public bool IsInitialSearchLoading => IsSearching && !IsLoadingMoreSearchResults;
+
     private int currentDiscoverPage = 1;
     private int? discoverYearFilter;
     private MediaFormat? discoverFormatFilter;
@@ -66,8 +84,11 @@ public sealed partial class MainWindowViewModel
     public bool IsDiscoverTrendingSelected => SelectedDiscoverSort == "Trending";
     public bool IsDiscoverNewSelected => SelectedDiscoverSort == "New";
 
-    partial void OnIsDiscoverSearchActiveChanged(bool value) =>
+    partial void OnIsDiscoverSearchActiveChanged(bool value)
+    {
         OnPropertyChanged(nameof(IsDiscoverBrowseActive));
+        OnPropertyChanged(nameof(IsSearchEmpty));
+    }
 
     partial void OnSelectedDiscoverGenreChanged(string? value)
     {
@@ -81,13 +102,14 @@ public sealed partial class MainWindowViewModel
     {
         IsSearchDropdownOpen = false;
         SelectNavigationItem("discover");
+        IsDiscoverSearchActive = true;
         await LoadSearchResultsAsync(page: 1, append: false);
-        IsDiscoverSearchActive = HasSearchResults || !string.IsNullOrWhiteSpace(SearchText);
     }
 
     [RelayCommand]
     private void ClearDiscoverSearch()
     {
+        CancelDiscoverSearch();
         SearchText = string.Empty;
         SearchResults.Clear();
         HasSearchResults = false;
@@ -160,20 +182,11 @@ public sealed partial class MainWindowViewModel
         await ApplyDiscoverFiltersAsync();
     }
 
-    [RelayCommand]
+    [RelayCommand(AllowConcurrentExecutions = true)]
     private async Task LoadMoreSearchResultsAsync()
     {
-        if (!HasMoreSearchResults || IsLoadingMoreSearchResults) return;
-
-        IsLoadingMoreSearchResults = true;
-        try
-        {
-            await LoadSearchResultsAsync(currentDiscoverPage + 1, append: true);
-        }
-        finally
-        {
-            IsLoadingMoreSearchResults = false;
-        }
+        if (!HasMoreSearchResults || IsSearching) return;
+        await LoadSearchResultsAsync(currentDiscoverPage + 1, append: true);
     }
 
     [RelayCommand]
@@ -181,12 +194,13 @@ public sealed partial class MainWindowViewModel
 
     private async Task ApplyDiscoverFiltersAsync()
     {
-        await LoadSearchResultsAsync(page: 1, append: false);
         IsDiscoverSearchActive = true;
+        await LoadSearchResultsAsync(page: 1, append: false);
     }
 
     private async Task DebounceDropdownAsync(string query, CancellationToken ct)
     {
+        var context = detailLoadVersion;
         try
         {
             await Task.Delay(350, ct);
@@ -195,9 +209,9 @@ public sealed partial class MainWindowViewModel
                 SearchText = query,
                 Page = 1,
                 PageSize = 6
-            });
+            }, ct);
 
-            if (ct.IsCancellationRequested) return;
+            if (ct.IsCancellationRequested || IsDiscoverVisible) return;
 
             SearchDropdownResults.Clear();
             if (result.IsSuccess)
@@ -216,48 +230,92 @@ public sealed partial class MainWindowViewModel
         {
             // Debounced — newer keystroke superseded this search
         }
+        catch (Exception ex)
+        {
+            if (!ct.IsCancellationRequested) ShowFeedback($"Search failed: {ex.Message}", context, isError: true);
+        }
     }
 
     private async Task LoadSearchResultsAsync(int page = 1, bool append = false)
     {
-        var result = await mediaCatalogService.SearchAsync(new MediaSearchQuery
+        CancelDiscoverSearch();
+        var version = discoverSearchVersion;
+        using var cancellation = new CancellationTokenSource();
+        discoverSearchCancellation = cancellation;
+        IsLoadingMoreSearchResults = append;
+        IsSearching = true;
+        if (!append)
         {
-            SearchText = SearchText,
-            Type = ParseMediaTypeFilter(SelectedDiscoverType),
-            Genres = string.IsNullOrWhiteSpace(SelectedDiscoverGenre) ? [] : [SelectedDiscoverGenre],
-            Sort = ParseDiscoverSort(SelectedDiscoverSort),
-            SeasonYear = discoverYearFilter,
-            Format = discoverFormatFilter,
-            ReleaseStatus = discoverReleaseStatusFilter,
-            CountryCode = discoverCountryFilter,
-            Page = page,
-            PageSize = 12
-        });
-
-        if (!append) SearchResults.Clear();
-
-        if (result.IsFailure)
-        {
-            SearchStatus = result.Error.Message;
-            HasSearchResults = SearchResults.Count > 0;
+            SearchResults.Clear();
+            HasSearchResults = false;
             HasMoreSearchResults = false;
-            return;
         }
-
-        foreach (var item in result.Value!.Items)
+        SearchStatus = "Searching titles…";
+        try
         {
-            if (SearchResults.All(existing => !existing.Id.Equals(item.Id, StringComparison.OrdinalIgnoreCase)))
-                SearchResults.Add(MediaSearchResultViewModel.FromMediaItem(item, AddToLibraryAsync, OpenDetailAsync));
-        }
+            var result = await mediaCatalogService.SearchAsync(new MediaSearchQuery
+            {
+                SearchText = SearchText,
+                Type = ParseMediaTypeFilter(SelectedDiscoverType),
+                Genres = string.IsNullOrWhiteSpace(SelectedDiscoverGenre) ? [] : [SelectedDiscoverGenre],
+                Sort = ParseDiscoverSort(SelectedDiscoverSort),
+                SeasonYear = discoverYearFilter,
+                Format = discoverFormatFilter,
+                ReleaseStatus = discoverReleaseStatusFilter,
+                CountryCode = discoverCountryFilter,
+                Page = page,
+                PageSize = 12
+            }, cancellation.Token).WaitAsync(cancellation.Token);
+            // Providers may finish a response even after cancellation.
+            if (version != discoverSearchVersion || cancellation.IsCancellationRequested) return;
 
-        currentDiscoverPage = page;
-        HasSearchResults = SearchResults.Count > 0;
-        HasMoreSearchResults = result.Value.HasNextPage;
-        SearchStatus = HasSearchResults
-            ? result.Value.TotalCount is { } total
-                ? $"Showing {SearchResults.Count} of {total} result(s)."
-                : $"Showing {SearchResults.Count} result(s)."
-            : "No local results found.";
+            if (!append) SearchResults.Clear();
+            if (result.IsFailure)
+            {
+                SearchStatus = result.Error.Message;
+                HasSearchResults = SearchResults.Count > 0;
+                return;
+            }
+
+            var ids = SearchResults.Select(item => item.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in result.Value!.Items)
+            {
+                if (ids.Add(item.Id))
+                    SearchResults.Add(MediaSearchResultViewModel.FromMediaItem(item, AddToLibraryAsync, OpenDetailAsync));
+            }
+
+            currentDiscoverPage = page;
+            HasSearchResults = SearchResults.Count > 0;
+            HasMoreSearchResults = result.Value.HasNextPage;
+            SearchStatus = HasSearchResults
+                ? result.Value.TotalCount is { } total
+                    ? $"Showing {SearchResults.Count} of {total} results."
+                    : $"Showing {SearchResults.Count} results."
+                : "No titles match these filters.";
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { }
+        catch (Exception ex)
+        {
+            if (version == discoverSearchVersion) SearchStatus = $"Search failed: {ex.Message}";
+        }
+        finally
+        {
+            if (version == discoverSearchVersion)
+            {
+                discoverSearchCancellation = null;
+                IsSearching = false;
+                IsLoadingMoreSearchResults = false;
+            }
+        }
+    }
+
+    private void CancelDiscoverSearch()
+    {
+        ++discoverSearchVersion;
+        discoverSearchCancellation?.Cancel();
+        discoverSearchCancellation = null;
+        IsSearching = false;
+        IsLoadingMoreSearchResults = false;
     }
 
     private async Task LoadDiscoverBrowseAsync()

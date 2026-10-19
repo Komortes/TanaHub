@@ -19,14 +19,16 @@ public sealed class RemoteImage : Image
         Timeout = TimeSpan.FromSeconds(8)
     };
 
-    private static readonly ConcurrentDictionary<Uri, Bitmap?> Cache = new();
+    private static readonly ConcurrentDictionary<Uri, Bitmap> Cache = new();
     private static readonly ConcurrentQueue<Uri> CacheOrder = new();
+    private static readonly SemaphoreSlim LoadSlots = new(4);
     private const int MaxCacheEntries = 64;
     private const int MaxEncodedImageBytes = 8 * 1024 * 1024;
     private const long MaxDecodedPixels = 16_000_000;
     private const long MaxCacheableBitmapBytes = 4 * 1024 * 1024;
 
-    private Uri? requestedUri;
+    private CancellationTokenSource? loadCancellation;
+    private bool isAttached;
 
     public RemoteImage()
     {
@@ -49,81 +51,114 @@ public sealed class RemoteImage : Image
     {
         base.OnPropertyChanged(change);
 
-        if (change.Property == SourceUriProperty)
+        if (change.Property == SourceUriProperty || change.Property == AllowFileSourceProperty)
         {
-            _ = LoadAsync(change.GetNewValue<Uri?>());
+            Reload();
         }
     }
 
-    private async Task LoadAsync(Uri? uri)
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
-        requestedUri = uri;
+        base.OnAttachedToVisualTree(e);
+        isAttached = true;
+        Reload();
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        isAttached = false;
+        Reload();
+        base.OnDetachedFromVisualTree(e);
+    }
+
+    private void Reload()
+    {
+        loadCancellation?.Cancel();
+        loadCancellation = null;
         Source = null;
 
-        if (uri is null)
+        var uri = SourceUri;
+        if (!isAttached || uri is null || !uri.IsAbsoluteUri ||
+            (uri.IsFile ? !AllowFileSource : uri.Scheme is not ("http" or "https")))
         {
             return;
         }
 
-        if (Cache.TryGetValue(uri, out var cached))
+        if (!uri.IsFile && Cache.TryGetValue(uri, out var cached))
         {
-            if (requestedUri == uri)
-            {
-                Source = cached;
-            }
-
+            Source = cached;
             return;
         }
 
+        loadCancellation = new CancellationTokenSource();
+        _ = LoadAsync(uri, loadCancellation);
+    }
+
+    private async Task LoadAsync(Uri uri, CancellationTokenSource cancellation)
+    {
         Bitmap? bitmap = null;
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellation.Token);
+        timeout.CancelAfter(TimeSpan.FromSeconds(8));
+        var token = timeout.Token;
 
         try
         {
-            if (uri.IsFile)
+            await LoadSlots.WaitAsync(token);
+            try
             {
-                if (!AllowFileSource || new FileInfo(uri.LocalPath).Length > MaxEncodedImageBytes)
+                // Both file IO and bitmap decoding must stay off the UI thread.
+                bitmap = await Task.Run(async () =>
                 {
-                    return;
-                }
+                    byte[] bytes;
+                    if (uri.IsFile)
+                    {
+                        await using var file = File.OpenRead(uri.LocalPath);
+                        bytes = await RemoteImageDownloader.ReadLimitedAsync(file, MaxEncodedImageBytes, token);
+                    }
+                    else
+                    {
+                        bytes = await RemoteImageDownloader.DownloadAsync(HttpClient, uri, MaxEncodedImageBytes, token);
+                    }
 
-                await using var stream = File.OpenRead(uri.LocalPath);
-                bitmap = new Bitmap(stream);
+                    token.ThrowIfCancellationRequested();
+                    using var stream = new MemoryStream(bytes);
+                    return new Bitmap(stream);
+                }, token);
             }
-            else
+            finally
             {
-                var bytes = await RemoteImageDownloader.DownloadAsync(
-                    HttpClient,
-                    uri,
-                    MaxEncodedImageBytes,
-                    CancellationToken.None);
-                await using var stream = new MemoryStream(bytes);
-                bitmap = new Bitmap(stream);
+                LoadSlots.Release();
             }
 
+            token.ThrowIfCancellationRequested();
             if ((long)bitmap.PixelSize.Width * bitmap.PixelSize.Height > MaxDecodedPixels)
             {
-                bitmap.Dispose();
-                bitmap = null;
+                return;
             }
+
+            var estimatedBitmapBytes = (long)bitmap.PixelSize.Width * bitmap.PixelSize.Height * 4;
+            if (!uri.IsFile && estimatedBitmapBytes <= MaxCacheableBitmapBytes && Cache.TryAdd(uri, bitmap))
+            {
+                CacheOrder.Enqueue(uri);
+                TrimCache();
+            }
+
+            Source = bitmap;
+            bitmap = null; // Ownership has passed to the control and, optionally, the shared cache.
         }
         catch
         {
-            // Keep the gradient fallback visible when remote images fail.
+            // Keep the fallback visible on failure; failed requests remain retryable.
         }
-
-        var estimatedBitmapBytes = bitmap is null
-            ? 0
-            : (long)bitmap.PixelSize.Width * bitmap.PixelSize.Height * 4;
-        if (estimatedBitmapBytes <= MaxCacheableBitmapBytes)
+        finally
         {
-            Cache[uri] = bitmap;
-            CacheOrder.Enqueue(uri);
-            TrimCache();
-        }
+            bitmap?.Dispose(); // Only dispose unpublished images, never shared or displayed images.
+            if (ReferenceEquals(loadCancellation, cancellation))
+            {
+                loadCancellation = null;
+            }
 
-        if (requestedUri == uri)
-        {
-            Source = bitmap;
+            cancellation.Dispose();
         }
     }
 
@@ -131,6 +166,7 @@ public sealed class RemoteImage : Image
     {
         while (Cache.Count > MaxCacheEntries && CacheOrder.TryDequeue(out var oldest))
         {
+            // Other controls may still display this bitmap after it leaves the cache.
             Cache.TryRemove(oldest, out _);
         }
     }

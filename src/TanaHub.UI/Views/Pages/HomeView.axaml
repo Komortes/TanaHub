@@ -7,6 +7,44 @@
     xmlns:controls="clr-namespace:TanaHub.UI.Views.Controls"
     x:DataType="vm:MainWindowViewModel">
 
+  <StackPanel Spacing="16">
+      <!-- Stats -->
+      <ItemsControl ItemsSource="{Binding DashboardMetrics}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <UniformGrid Columns="3"/>
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:DashboardMetricViewModel">
+            <Border Classes="card" Padding="16,14" Margin="0,0,10,10">
+              <Grid RowDefinitions="Auto,Auto">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                  <Border Width="36" Height="36" CornerRadius="10"
+                          Background="{DynamicResource TanaHubAccentGlowBrush}">
+                    <material:MaterialIcon Width="18" Height="18"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          Kind="{Binding Icon}"
+                                          Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
+                  </Border>
+                  <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                    <TextBlock Text="{Binding Label}" FontSize="11"
+                               Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
+                    <TextBlock Classes="mono" Text="{Binding Value}" FontSize="24"
+                               FontWeight="Bold"
+                               Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+                  </StackPanel>
+                </Grid>
+                <TextBlock Grid.Row="1" Margin="0,6,0,0" Text="{Binding Detail}"
+                           FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+
   <!-- Two-column dashboard: left = content, right = schedule + stats -->
   <Grid ColumnDefinitions="1.6*,*" ColumnSpacing="22">
 
@@ -92,7 +130,7 @@
                                    Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
                                    TextTrimming="CharacterEllipsis"/>
                         <Grid ColumnDefinitions="*,Auto">
-                          <TextBlock Classes="mono" Text="{Binding Progress}" FontSize="11"
+                          <TextBlock Classes="mono" Text="{Binding ProgressLabel}" FontSize="11"
                                      Foreground="{DynamicResource TanaHubCyanBrush}"/>
                           <TextBlock Classes="mono" Grid.Column="1" Text="{Binding Score}"
                                      FontSize="11" Foreground="{DynamicResource TanaHubAmberBrush}"/>
@@ -203,7 +241,7 @@
         <!-- Empty state -->
         <Border
             Classes="panel"
-            IsVisible="{Binding IsLibraryEmpty}"
+            IsVisible="{Binding !HasRecentLibraryEntries}"
             Padding="20,24">
           <StackPanel HorizontalAlignment="Center" Spacing="10">
             <material:MaterialIcon Width="32" Height="32" Kind="Bookshelf"
@@ -219,7 +257,7 @@
         </Border>
 
         <!-- Entries — outer ScrollViewer handles all vertical scrolling -->
-        <ItemsControl IsVisible="{Binding !IsLibraryEmpty}" ItemsSource="{Binding LibraryEntries}">
+        <ItemsControl IsVisible="{Binding HasRecentLibraryEntries}" ItemsSource="{Binding RecentLibraryEntries}">
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:LibraryEntryViewModel">
               <Button Classes="row" Margin="0,0,0,6" Command="{Binding OpenDetailCommand}">
@@ -233,10 +271,10 @@
                     <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
                                Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
                                TextTrimming="CharacterEllipsis"/>
-                    <TextBlock Text="{Binding Status}" FontSize="11"
+                    <TextBlock Text="{Binding StatusLabel}" FontSize="11"
                                Foreground="{Binding StatusForeground}"/>
                   </StackPanel>
-                  <TextBlock Classes="mono" Grid.Column="2" Text="{Binding Progress}"
+                  <TextBlock Classes="mono" Grid.Column="2" Text="{Binding ProgressLabel}"
                              FontSize="12" VerticalAlignment="Center"
                              Foreground="{DynamicResource TanaHubCyanBrush}"/>
                 </Grid>
@@ -256,7 +294,7 @@
         <Grid ColumnDefinitions="*,Auto">
           <StackPanel Orientation="Horizontal" Spacing="8">
           <Border Classes="eyebrow-bar" Background="{DynamicResource TanaHubSakuraBrush}"/>
-          <TextBlock Classes="eyebrow" Text="AIRING TODAY"
+          <TextBlock Classes="eyebrow" Text="{Binding ScheduleHeading}"
                      Foreground="{DynamicResource TanaHubSakuraBrush}"/>
           </StackPanel>
           <Button Classes="ghost" Grid.Column="1" Height="24" Padding="8,0"
@@ -277,10 +315,10 @@
             <material:MaterialIcon Width="32" Height="32" Kind="CalendarBlank"
                                    Foreground="{DynamicResource TanaHubTextMutedBrush}"
                                    HorizontalAlignment="Center"/>
-            <TextBlock Text="No episodes today" FontSize="13" FontWeight="SemiBold"
+            <TextBlock Text="No upcoming episodes" FontSize="13" FontWeight="SemiBold"
                        Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
                        HorizontalAlignment="Center"/>
-            <TextBlock Text="Episodes from your library will appear here on their air date."
+            <TextBlock Text="Upcoming releases will appear here when the schedule is available."
                        FontSize="11" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"
                        HorizontalAlignment="Center" TextWrapping="Wrap"/>
           </StackPanel>
@@ -324,42 +362,6 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
       </StackPanel>
-
-      <!-- Stats -->
-      <ItemsControl ItemsSource="{Binding DashboardMetrics}">
-        <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate>
-            <StackPanel Spacing="10"/>
-          </ItemsPanelTemplate>
-        </ItemsControl.ItemsPanel>
-        <ItemsControl.ItemTemplate>
-          <DataTemplate x:DataType="vm:DashboardMetricViewModel">
-            <Border Classes="card" Padding="16,14">
-              <Grid RowDefinitions="Auto,Auto">
-                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                  <Border Width="36" Height="36" CornerRadius="10"
-                          Background="{DynamicResource TanaHubAccentGlowBrush}">
-                    <material:MaterialIcon Width="18" Height="18"
-                                          HorizontalAlignment="Center"
-                                          VerticalAlignment="Center"
-                                          Kind="{Binding Icon}"
-                                          Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
-                  </Border>
-                  <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
-                    <TextBlock Text="{Binding Label}" FontSize="11"
-                               Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
-                    <TextBlock Classes="mono" Text="{Binding Value}" FontSize="24"
-                               FontWeight="Bold"
-                               Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
-                  </StackPanel>
-                </Grid>
-                <TextBlock Grid.Row="1" Margin="0,6,0,0" Text="{Binding Detail}"
-                           FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
-              </Grid>
-            </Border>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
 
       <!-- Charts -->
       <ItemsControl ItemsSource="{Binding DashboardCharts}">
@@ -426,4 +428,5 @@
     </StackPanel>
 
   </Grid>
+  </StackPanel>
 </UserControl>

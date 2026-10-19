@@ -22,7 +22,7 @@ public sealed class AvaloniaAppThemeService : IAppThemeService
             ["TanaHubAccentGlowStrongBrush"] = "#489B6EF8",
             ["TanaHubTextPrimaryBrush"] = "#EDE9FF",
             ["TanaHubTextSecondaryBrush"] = "#A99EC0",
-            ["TanaHubTextMutedBrush"] = "#6B6080"
+            ["TanaHubTextMutedBrush"] = "#9B90AD"
         };
 
     private static readonly IReadOnlyDictionary<string, string> HighContrastPalette =

@@ -45,6 +45,10 @@ public sealed record UserMediaEntry
     public UserMediaEntry IncrementProgress(int amount = 1)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(amount);
+        if (Progress > int.MaxValue - amount)
+        {
+            throw new ArgumentOutOfRangeException(nameof(amount), "Progress cannot exceed 2,147,483,647.");
+        }
 
         return this with
         {

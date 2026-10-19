@@ -81,7 +81,9 @@ public sealed class AniListAiringScheduleService : IAiringScheduleService
         catch (HttpRequestException ex)
         {
             return Result<IReadOnlyList<AiringScheduleItem>>.Failure(
-                ApplicationError.ExternalService(ex.Message));
+                ApplicationError.ExternalService(ex.StatusCode == System.Net.HttpStatusCode.TooManyRequests
+                    ? "AniList is busy. Please refresh the schedule in a minute."
+                    : "Could not load the schedule. Check your connection and try again."));
         }
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {

@@ -9,7 +9,7 @@ using TanaHub.UI.ViewModels;
 
 namespace TanaHub.Application.Tests;
 
-public sealed class MainWindowViewModelRecognitionTests
+public sealed partial class MainWindowViewModelRecognitionTests
 {
     [Fact]
     public async Task RecognizeFromFileCommand_ClearsPreviousResultWhenSelectionIsCanceled()
@@ -54,11 +54,11 @@ public sealed class MainWindowViewModelRecognitionTests
         Assert.False(File.Exists(temporaryPath));
     }
 
-    private static MainWindowViewModel CreateViewModel(IFileOpenService fileOpenService)
+    private static MainWindowViewModel CreateViewModel(IFileOpenService fileOpenService, IMediaCatalogService? catalog = null, IUserLibraryService? library = null, IMediaRelationsService? relations = null)
     {
         return new MainWindowViewModel(
-            new FakeMediaCatalogService(),
-            new FakeUserLibraryService(),
+            catalog ?? new FakeMediaCatalogService(),
+            library ?? new FakeUserLibraryService(),
             new FakeAppSettingsService(),
             new FakeAiringScheduleService(),
             new FakeAppThemeService(),
@@ -71,7 +71,7 @@ public sealed class MainWindowViewModelRecognitionTests
             new FakeArtRecognitionService(),
             new FakeRecognitionInboxService(),
             fileOpenService,
-            new FakeAppUpdateService());
+            new FakeAppUpdateService(), relations);
     }
 
     [Fact]
@@ -131,25 +131,35 @@ public sealed class MainWindowViewModelRecognitionTests
 
     private sealed class FakeUserLibraryService : IUserLibraryService
     {
+        public UserMediaEntry? Entry { get; set; }
+        public TaskCompletionSource? PendingSave { get; set; }
+        public int UpsertCalls { get; private set; }
         public Task<Result<PagedResult<UserMediaEntry>>> GetEntriesAsync(
             UserLibraryQuery query,
             CancellationToken cancellationToken = default)
         {
             return Task.FromResult(Result<PagedResult<UserMediaEntry>>.Success(
-                new PagedResult<UserMediaEntry>([], query.Page, query.PageSize, 0)));
+                new PagedResult<UserMediaEntry>(Entry is null ? [] : [Entry], query.Page, query.PageSize, Entry is null ? 0 : 1)));
         }
 
         public Task<Result<UserMediaEntry>> GetEntryAsync(
             string mediaId,
             CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(Result<UserMediaEntry>.Failure(ApplicationError.NotFound("Not found.")));
+            return Task.FromResult(Entry is null
+                ? Result<UserMediaEntry>.Failure(ApplicationError.NotFound("Not found."))
+                : Result<UserMediaEntry>.Success(Entry));
         }
 
-        public Task<Result<UserMediaEntry>> UpsertEntryAsync(
+        public async Task<Result<UserMediaEntry>> UpsertEntryAsync(
             UserMediaEntry entry,
-            CancellationToken cancellationToken = default) =>
-            Task.FromResult(Result<UserMediaEntry>.Success(entry));
+            CancellationToken cancellationToken = default)
+        {
+            UpsertCalls++;
+            if (PendingSave is not null) await PendingSave.Task;
+            Entry = entry;
+            return Result<UserMediaEntry>.Success(entry);
+        }
 
         public Task<Result<int>> MergeEntriesAsync(
             IReadOnlyCollection<UserMediaEntry> entries,
@@ -171,8 +181,11 @@ public sealed class MainWindowViewModelRecognitionTests
         public Task<Result<UserMediaEntry>> UpdateScoreAsync(
             string mediaId,
             int? score,
-            CancellationToken cancellationToken = default) =>
-            GetEntryAsync(mediaId, cancellationToken);
+            CancellationToken cancellationToken = default)
+        {
+            if (Entry is not null) Entry = Entry with { Score = score };
+            return GetEntryAsync(mediaId, cancellationToken);
+        }
 
         public Task<Result<UserMediaEntry>> UpdateNotesAsync(
             string mediaId,

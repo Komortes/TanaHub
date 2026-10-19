@@ -19,15 +19,15 @@ public static class LibraryInsightsCalculator
 
         var episodesWatched = items
             .Where(entry => entry.MediaType == MediaType.Anime)
-            .Sum(entry => entry.Progress);
+            .Sum(entry => (long)entry.Progress);
 
         var chaptersRead = items
             .Where(entry => entry.MediaType == MediaType.Manga)
-            .Sum(entry => entry.Progress);
+            .Sum(entry => (long)entry.Progress);
 
         var estimatedWatchMinutes = items
             .Where(entry => entry.MediaType == MediaType.Anime)
-            .Sum(entry => entry.Progress * GetEpisodeMinutes(entry, mediaById));
+            .Sum(entry => (long)entry.Progress * GetEpisodeMinutes(entry, mediaById));
 
         return new LibraryInsightsSummary(
             totalEntries,

@@ -118,11 +118,17 @@ internal sealed class AniListMediaCatalogService : IMediaCatalogService
             return await fallbackCatalog.GetByIdAsync(mediaId, cancellationToken);
         }
 
+        // AniList applies explicit null lookup variables as filters instead of omitting them.
+        var variables = new Dictionary<string, object>();
+        if (id.HasValue) variables["id"] = id.Value;
+        if (malId.HasValue) variables["idMal"] = malId.Value;
+        if (mediaType is not null) variables["type"] = mediaType;
+
         try
         {
             var response = await PostGraphQlAsync<AniListMediaData>(
                 MediaQuery,
-                new { id, idMal = malId, type = mediaType },
+                variables,
                 cancellationToken);
 
             var media = response.Data?.Media;

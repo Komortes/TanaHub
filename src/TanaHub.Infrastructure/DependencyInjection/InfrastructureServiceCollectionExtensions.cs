@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TanaHub.Application.Services;
-using TanaHub.Domain.Enums;
-using TanaHub.Domain.Models;
 using TanaHub.Infrastructure.Catalog;
 using TanaHub.Infrastructure.Library;
 using TanaHub.Infrastructure.Schedule;
@@ -18,12 +16,12 @@ public static class InfrastructureServiceCollectionExtensions
 {
     public static IServiceCollection AddTanaHubInfrastructure(this IServiceCollection services)
     {
+        var dataDirectory = GetDataDirectory(Environment.GetEnvironmentVariable("TANAHUB_DATA_DIRECTORY"));
         services.AddSingleton<InMemoryMediaCatalogService>();
         services.AddSingleton<OfflineCatalogCache>(provider =>
         {
-            var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var cache = new OfflineCatalogCache(Path.Combine(appData, "TanaHub", "catalog_cache.json"));
-            _ = cache.LoadAsync();
+            var cache = new OfflineCatalogCache(Path.Combine(dataDirectory, "catalog_cache.json"));
+            cache.LoadAsync().GetAwaiter().GetResult();
             return cache;
         });
         services.AddSingleton<AniListMediaCatalogService>(provider =>
@@ -37,9 +35,7 @@ public static class InfrastructureServiceCollectionExtensions
         });
         services.AddSingleton<MangaDexMediaCatalogService>(_ =>
         {
-            var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
-            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("TanaHub/0.1");
-            return new MangaDexMediaCatalogService(httpClient);
+            return new MangaDexMediaCatalogService(CreateMangaDexHttpClient());
         });
         services.AddSingleton<RoutedMediaCatalogService>(provider => new RoutedMediaCatalogService(
             provider.GetRequiredService<AniListMediaCatalogService>(),
@@ -48,35 +44,38 @@ public static class InfrastructureServiceCollectionExtensions
             provider.GetRequiredService<RoutedMediaCatalogService>());
         services.AddSingleton<ICatalogSourceSelector>(provider =>
             provider.GetRequiredService<RoutedMediaCatalogService>());
+        services.AddSingleton<AniListMediaRelationsService>(_ =>
+        {
+            var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("TanaHub/0.1");
+            return new AniListMediaRelationsService(httpClient);
+        });
+        services.AddSingleton<MangaDexMediaRelationsService>(provider =>
+        {
+            return new MangaDexMediaRelationsService(CreateMangaDexHttpClient(), provider.GetRequiredService<AniListMediaRelationsService>());
+        });
+        services.AddSingleton<IMediaRelationsService>(provider => new CachedMediaRelationsService(
+            provider.GetRequiredService<AniListMediaRelationsService>(),
+            provider.GetRequiredService<MangaDexMediaRelationsService>(),
+            Path.Combine(dataDirectory, "relations_cache.json")));
         services.AddSingleton<IDbContextFactory<LibraryDbContext>>(_ =>
         {
             var options = new DbContextOptionsBuilder<LibraryDbContext>()
-                .UseSqlite($"Data Source={GetDefaultLibraryDbPath()}")
+                .UseSqlite(new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
+                {
+                    DataSource = Path.Combine(dataDirectory, "library.db")
+                }.ToString())
                 .Options;
             return new SimpleLibraryDbContextFactory(options);
         });
         services.AddSingleton<IUserLibraryService>(provider =>
         {
             var factory = provider.GetRequiredService<IDbContextFactory<LibraryDbContext>>();
-            using (var db = factory.CreateDbContext())
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(GetDefaultLibraryDbPath())!);
-                db.Database.Migrate();
-                SqliteUserLibraryService.ImportFromJsonIfNeededAsync(db, GetDefaultLibraryPath())
-                    .GetAwaiter().GetResult();
-
-                if (!db.Entries.Any())
-                {
-                    foreach (var seed in CreateSeedLibraryEntries())
-                        db.Entries.Add(SqliteUserLibraryService.ToEntityForSeeding(seed));
-                    db.SaveChanges();
-                }
-            }
-
-            return new SqliteUserLibraryService(factory);
+            Directory.CreateDirectory(dataDirectory);
+            return CreateUserLibraryService(factory, Path.Combine(dataDirectory, "library.json"));
         });
         services.AddSingleton<IAppSettingsService>(_ => new FileAppSettingsService(
-            GetDefaultSettingsPath()));
+            Path.Combine(dataDirectory, "settings.json")));
         services.AddSingleton<IAiringScheduleService>(_ =>
         {
             var httpClient = new HttpClient
@@ -90,7 +89,7 @@ public static class InfrastructureServiceCollectionExtensions
 
         services.AddSingleton<INotificationService, OsNotificationService>();
         services.AddSingleton<IRecognitionInboxService>(_ => new FileRecognitionInboxService(
-            GetDefaultRecognitionInboxPath()));
+            Path.Combine(dataDirectory, "recognition_inbox.json")));
         services.AddSingleton<IRecognitionService>(_ => new TraceMoeService(
             new HttpClient { Timeout = TimeSpan.FromSeconds(30) }));
         services.AddSingleton<IArtRecognitionService>(_ => new SauceNaoService(
@@ -117,16 +116,27 @@ public static class InfrastructureServiceCollectionExtensions
         return services;
     }
 
-    private static string GetDefaultLibraryPath()
+    private static HttpClient CreateMangaDexHttpClient()
     {
-        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        return Path.Combine(appData, "TanaHub", "library.json");
+        var client = OperatingSystem.IsMacOS() ? new HttpClient(new MangaDexCurlHandler()) : new HttpClient();
+        client.Timeout = TimeSpan.FromSeconds(10);
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("TanaHub/0.1");
+        return client;
     }
 
-    private static string GetDefaultLibraryDbPath()
+    internal static string GetDataDirectory(string? configuredDirectory)
     {
+        if (!string.IsNullOrWhiteSpace(configuredDirectory))
+        {
+            if (!Path.IsPathFullyQualified(configuredDirectory))
+            {
+                throw new ArgumentException("TANAHUB_DATA_DIRECTORY must be an absolute path.", nameof(configuredDirectory));
+            }
+
+            return Path.GetFullPath(configuredDirectory);
+        }
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        return Path.Combine(appData, "TanaHub", "library.db");
+        return Path.Combine(appData, "TanaHub");
     }
 
     private sealed class SimpleLibraryDbContextFactory(DbContextOptions<LibraryDbContext> options)
@@ -138,43 +148,13 @@ public static class InfrastructureServiceCollectionExtensions
             Task.FromResult(CreateDbContext());
     }
 
-    private static string GetDefaultSettingsPath()
+    internal static SqliteUserLibraryService CreateUserLibraryService(
+        IDbContextFactory<LibraryDbContext> factory, string legacyJsonPath)
     {
-        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        return Path.Combine(appData, "TanaHub", "settings.json");
-    }
-
-    private static string GetDefaultRecognitionInboxPath()
-    {
-        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        return Path.Combine(appData, "TanaHub", "recognition_inbox.json");
-    }
-
-    private static IReadOnlyList<UserMediaEntry> CreateSeedLibraryEntries()
-    {
-        return
-        [
-            new UserMediaEntry("anilist:154587", MediaType.Anime, MediaListStatus.Current)
-            {
-                Progress = 9,
-                Score = 9,
-                Tags = ["seasonal", "action"],
-                CustomLists = ["Current cour"]
-            },
-            new UserMediaEntry("anilist:1", MediaType.Anime, MediaListStatus.Completed)
-            {
-                Progress = 26,
-                Score = 10,
-                Tags = ["classic", "rewatch"],
-                CustomLists = ["Favorites"]
-            },
-            new UserMediaEntry("anilist:30002", MediaType.Manga, MediaListStatus.Paused)
-            {
-                Progress = 373,
-                Score = 10,
-                Tags = ["dark fantasy"],
-                CustomLists = ["Long reads"]
-            }
-        ];
+        using var db = factory.CreateDbContext();
+        db.Database.Migrate();
+        SqliteUserLibraryService.ImportFromJsonIfNeededAsync(db, legacyJsonPath)
+            .GetAwaiter().GetResult();
+        return new SqliteUserLibraryService(factory);
     }
 }

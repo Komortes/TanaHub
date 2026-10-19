@@ -112,15 +112,27 @@ public sealed class InMemoryUserLibraryService : IUserLibraryService
         int amount = 1,
         CancellationToken cancellationToken = default)
     {
+        if (amount < 1)
+        {
+            return Failure<UserMediaEntry>("Amount must be greater than zero.");
+        }
+
         if (!entries.TryGetValue(mediaId, out var entry))
         {
             return Task.FromResult(Result<UserMediaEntry>.Failure(
                 ApplicationError.NotFound($"Library entry '{mediaId}' was not found.")));
         }
 
-        var updated = entry.IncrementProgress(amount);
-        entries[mediaId] = updated;
-        return Task.FromResult(Result<UserMediaEntry>.Success(updated));
+        try
+        {
+            var updated = entry.IncrementProgress(amount);
+            entries[mediaId] = updated;
+            return Task.FromResult(Result<UserMediaEntry>.Success(updated));
+        }
+        catch (ArgumentOutOfRangeException ex) when (ex.ParamName == nameof(amount))
+        {
+            return Failure<UserMediaEntry>("Progress cannot exceed 2,147,483,647.");
+        }
     }
 
     public Task<Result<UserMediaEntry>> UpdateStatusAsync(
@@ -134,12 +146,15 @@ public sealed class InMemoryUserLibraryService : IUserLibraryService
                 ApplicationError.NotFound($"Library entry '{mediaId}' was not found.")));
         }
 
+        var updatedAt = DateTimeOffset.UtcNow;
         var updated = entry with
         {
             Status = status,
-            StartedAt = status == MediaListStatus.Current && entry.StartedAt is null ? DateTimeOffset.UtcNow : entry.StartedAt,
-            CompletedAt = status == MediaListStatus.Completed ? DateTimeOffset.UtcNow : entry.CompletedAt,
-            UpdatedAt = DateTimeOffset.UtcNow
+            StartedAt = status == MediaListStatus.Current && entry.StartedAt is null
+                && (entry.CompletedAt is null || entry.CompletedAt >= updatedAt) ? updatedAt : entry.StartedAt,
+            CompletedAt = status == MediaListStatus.Completed && entry.CompletedAt is null
+                && (entry.StartedAt is null || entry.StartedAt <= updatedAt) ? updatedAt : entry.CompletedAt,
+            UpdatedAt = updatedAt
         };
 
         entries[mediaId] = updated;

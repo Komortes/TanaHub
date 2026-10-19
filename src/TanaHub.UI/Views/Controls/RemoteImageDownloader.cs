@@ -12,7 +12,7 @@ internal static class RemoteImageDownloader
         ArgumentNullException.ThrowIfNull(uri);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxBytes);
 
-        if (uri.Scheme is not ("http" or "https"))
+        if (!uri.IsAbsoluteUri || uri.Scheme is not ("http" or "https"))
         {
             throw new InvalidDataException("Remote images must use HTTP or HTTPS.");
         }
@@ -37,13 +37,19 @@ internal static class RemoteImageDownloader
         }
 
         await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        await using var buffer = new MemoryStream(Math.Min(
-            maxBytes,
-            (int)Math.Max(0, response.Content.Headers.ContentLength ?? 0)));
+        return await ReadLimitedAsync(responseStream, maxBytes, cancellationToken);
+    }
+
+    internal static async Task<byte[]> ReadLimitedAsync(Stream stream, int maxBytes, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(stream);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxBytes);
+
+        using var buffer = new MemoryStream();
         var chunk = new byte[81920];
         while (true)
         {
-            var read = await responseStream.ReadAsync(chunk, cancellationToken);
+            var read = await stream.ReadAsync(chunk, cancellationToken);
             if (read == 0) break;
             if (buffer.Length + read > maxBytes)
             {

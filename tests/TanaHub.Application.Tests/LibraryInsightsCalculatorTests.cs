@@ -7,6 +7,22 @@ namespace TanaHub.Application.Tests;
 public sealed class LibraryInsightsCalculatorTests
 {
     [Fact]
+    public void Calculate_UsesWideTotalsForLargeStoredProgressAndWatchTime()
+    {
+        var entries = new UserMediaEntry[]
+        {
+            new("anime:1", MediaType.Anime, MediaListStatus.Current) { Progress = int.MaxValue },
+            new("anime:2", MediaType.Anime, MediaListStatus.Current) { Progress = 10 },
+            new("manga:1", MediaType.Manga, MediaListStatus.Current) { Progress = int.MaxValue },
+            new("manga:2", MediaType.Manga, MediaListStatus.Current) { Progress = int.MaxValue }
+        };
+        var summary = LibraryInsightsCalculator.Calculate(entries);
+        Assert.Equal((long)int.MaxValue + 10, summary.EpisodesWatched);
+        Assert.Equal(2L * int.MaxValue, summary.ChaptersRead);
+        Assert.Equal(((long)int.MaxValue + 10) * 24, summary.EstimatedWatchMinutes);
+    }
+
+    [Fact]
     public void Calculate_ComputesCoreMetricsForMixedLibrary()
     {
         var anime = new Anime(

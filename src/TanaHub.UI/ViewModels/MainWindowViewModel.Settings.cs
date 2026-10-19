@@ -135,8 +135,8 @@ public sealed partial class MainWindowViewModel
         AniListSyncStatus = "Syncing…";
         SetAppConnectionStatus("Online", "Syncing AniList...");
 
-        var result = await aniListSyncService.SyncAsync(
-            appSettings.AniListAccessToken, appSettings.AniListUserId, userLibraryService);
+        var result = await SerializeLibraryImportAsync(() => aniListSyncService.SyncAsync(
+            appSettings.AniListAccessToken, appSettings.AniListUserId, userLibraryService));
 
         if (result.IsFailure)
         {
@@ -212,7 +212,7 @@ public sealed partial class MainWindowViewModel
         var importResult = MalXmlLibraryExchange.Import(await reader.ReadToEndAsync());
         if (importResult.IsFailure) { LibraryExportStatus = importResult.Error.Message; return; }
 
-        var mergeResult = await userLibraryService.MergeEntriesAsync(importResult.Value!);
+        var mergeResult = await SerializeLibraryImportAsync(() => userLibraryService.MergeEntriesAsync(importResult.Value!));
         if (mergeResult.IsFailure) { LibraryExportStatus = mergeResult.Error.Message; return; }
 
         await LoadLibraryAsync();
@@ -315,6 +315,7 @@ public sealed partial class MainWindowViewModel
 
     private async Task SaveSettingsAsync(AppSettings settings)
     {
+        var context = detailLoadVersion;
         var result = await appSettingsService.SaveAsync(settings);
         if (result.IsFailure)
         {
@@ -324,7 +325,7 @@ public sealed partial class MainWindowViewModel
         }
 
         ApplySettingsToUi(result.Value!);
-        SearchStatus = "Settings saved.";
+        ShowFeedback("Settings saved.", context);
     }
 
     private void ApplySettingsToUi(AppSettings settings)
@@ -340,6 +341,7 @@ public sealed partial class MainWindowViewModel
         PreferredSyncSource = appSettings.PreferredSyncSource;
         catalogSourceSelector.SetSource(PreferredSyncSource);
         catalogSourceSelector.SetOfflineCacheEnabled(OfflineCacheEnabled);
+        mediaRelationsService?.SetOfflineCacheEnabled(OfflineCacheEnabled);
         NotifySyncSourceSelectionChanged();
         SettingsStorageDetail = $"Settings saved {appSettings.UpdatedAt:yyyy-MM-dd HH:mm}";
         AniListClientId = appSettings.AniListClientId;

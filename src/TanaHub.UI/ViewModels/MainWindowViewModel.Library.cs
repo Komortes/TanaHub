@@ -15,9 +15,25 @@ namespace TanaHub.UI.ViewModels;
 public sealed partial class MainWindowViewModel
 {
     private const int MaxCatalogConcurrency = 6;
+    private readonly SemaphoreSlim libraryMutationGate = new(1, 1);
     private List<LibraryEntryViewModel> allLibraryEntries;
+
+    public ObservableCollection<LibraryEntryViewModel> RecentLibraryEntries { get; } = [];
+    public bool HasRecentLibraryEntries => RecentLibraryEntries.Count > 0;
     private bool suppressLibraryFilterRefresh;
     private int libraryLoadVersion;
+    internal Task LibraryRefresh { get; private set; } = Task.CompletedTask;
+
+    private void RefreshLibraryAfterChange(int context) => LibraryRefresh = RefreshLibraryAfterChangeAsync(context);
+
+    private async Task RefreshLibraryAfterChangeAsync(int context)
+    {
+        try { await LoadLibraryAsync(); }
+        catch (Exception)
+        {
+            ShowFeedback("Changes saved. The library could not refresh; try refreshing it again.", context, isError: true);
+        }
+    }
 
     public IReadOnlyList<string> LibraryTypeOptions { get; } = ["All", "Anime", "Manga"];
     public IReadOnlyList<string> LibrarySortOptions { get; } = ["Updated", "Title", "Score", "Progress"];
@@ -102,7 +118,7 @@ public sealed partial class MainWindowViewModel
     private void SearchLibrary() => ApplyLibraryFilters();
 
     [RelayCommand]
-    private async Task SelectLibraryTypeAsync(string type)
+    private void SelectLibraryType(string type)
     {
         SelectedLibraryType = string.IsNullOrWhiteSpace(type) ? "All" : type;
     }
@@ -141,7 +157,6 @@ public sealed partial class MainWindowViewModel
         if (result.IsFailure || loadVersion != libraryLoadVersion) return;
 
         var hydrated = new List<LibraryEntryViewModel>();
-        var continueItems = new List<LibraryEntryViewModel>();
         var mediaById = new Dictionary<string, MediaItem>(StringComparer.OrdinalIgnoreCase);
         var entries = result.Value!.Items.ToArray();
 
@@ -159,34 +174,50 @@ public sealed partial class MainWindowViewModel
 
             var vm = CreateLibraryEntryViewModel(entry, mediaResult.IsSuccess ? mediaResult.Value : null);
             hydrated.Add(vm);
-            if (entry.Status is MediaListStatus.Current or MediaListStatus.Paused)
-                continueItems.Add(vm);
         }
 
         if (loadVersion != libraryLoadVersion) return;
 
+        var existingById = allLibraryEntries.ToDictionary(item => item.MediaId, StringComparer.OrdinalIgnoreCase);
+        for (var i = 0; i < hydrated.Count; i++)
+        {
+            if (!existingById.TryGetValue(hydrated[i].MediaId, out var existing)) continue;
+            existing.UpdateFrom(hydrated[i]);
+            hydrated[i] = existing;
+        }
         allLibraryEntries = hydrated;
-        ContinueItems.Clear();
-        foreach (var item in continueItems)
-            ContinueItems.Add(item);
+        SynchronizeLibraryCollection(RecentLibraryEntries, hydrated.Take(6));
+        OnPropertyChanged(nameof(HasRecentLibraryEntries));
+        SynchronizeLibraryCollection(ContinueItems, hydrated.Where(item => item.Status is "Current" or "Paused"));
 
         RefreshDashboardMetrics(LibraryInsightsCalculator.Calculate(entries, mediaById));
-        await RefreshRecommendationsAsync(entries, mediaById, loadVersion);
-        if (loadVersion != libraryLoadVersion) return;
         OnPropertyChanged(nameof(HasContinueItems));
         ApplyLibraryFilters();
+        await RefreshRecommendationsAsync(entries, mediaById, loadVersion);
     }
 
     private void ApplyLibraryFilters()
     {
         RefreshLibraryOrganizationFilters(allLibraryEntries);
 
-        LibraryEntries.Clear();
-        foreach (var vm in SortLibraryEntries(FilterLibraryEntries(allLibraryEntries)))
-            LibraryEntries.Add(vm);
+        SynchronizeLibraryCollection(LibraryEntries, SortLibraryEntries(FilterLibraryEntries(allLibraryEntries)));
 
         OnPropertyChanged(nameof(IsLibraryEmpty));
         OnPropertyChanged(nameof(LibraryEmptyMessage));
+    }
+
+    private static void SynchronizeLibraryCollection(
+        ObservableCollection<LibraryEntryViewModel> target, IEnumerable<LibraryEntryViewModel> items)
+    {
+        var desired = items.ToArray();
+        for (var i = 0; i < desired.Length; i++)
+        {
+            if (i < target.Count && ReferenceEquals(target[i], desired[i])) continue;
+            var oldIndex = target.IndexOf(desired[i]);
+            if (oldIndex >= 0) target.Move(oldIndex, i);
+            else target.Insert(i, desired[i]);
+        }
+        while (target.Count > desired.Length) target.RemoveAt(target.Count - 1);
     }
 
     private void RefreshDashboardMetrics(LibraryInsightsSummary insights)
@@ -242,7 +273,7 @@ public sealed partial class MainWindowViewModel
             new AsyncRelayCommand(() => IncrementProgressAsync(entry.MediaId)),
             new AsyncRelayCommand(() => UpdateLibraryStatusAsync(entry.MediaId, MediaListStatus.Current)),
             new AsyncRelayCommand(() => UpdateLibraryStatusAsync(entry.MediaId, MediaListStatus.Completed)),
-            new AsyncRelayCommand(() => IncreaseScoreAsync(entry.MediaId, entry.Score)),
+            new AsyncRelayCommand(() => IncreaseScoreAsync(entry.MediaId)),
             new AsyncRelayCommand(() => RemoveFromLibraryAsync(entry.MediaId)),
             new AsyncRelayCommand(() => OpenDetailAsync(entry.MediaId)),
             entry.Notes, entry.Tags, entry.CustomLists);
@@ -255,30 +286,24 @@ public sealed partial class MainWindowViewModel
     {
         if (loadVersion != libraryLoadVersion) return;
 
-        RecommendedItems.Clear();
         var genreProfile = LibraryRecommendationBuilder.BuildGenreProfile(entries, mediaById, maxGenres: 3);
         if (genreProfile.Count == 0)
         {
+            RecommendedItems.Clear();
             RecommendationSummary = "Add scored or in-progress titles to get recommendations.";
             OnPropertyChanged(nameof(HasRecommendedItems));
             return;
         }
 
-        var candidatePool = new List<MediaItem>();
-        foreach (var genre in genreProfile)
-        {
-            var result = await mediaCatalogService.SearchAsync(new MediaSearchQuery
+        var results = await BoundedAsyncLoader.RunAsync(genreProfile, 3,
+            (genre, ct) => mediaCatalogService.SearchAsync(new MediaSearchQuery
             {
                 Genres = [genre.Name],
                 Sort = MediaSearchSort.Score,
                 PageSize = 8
-            });
-
-            if (result.IsSuccess)
-            {
-                candidatePool.AddRange(result.Value!.Items);
-            }
-        }
+            }, ct));
+        var candidatePool = results.Where(result => result.IsSuccess)
+            .SelectMany(result => result.Value!.Items);
 
         if (loadVersion != libraryLoadVersion) return;
 
@@ -290,6 +315,7 @@ public sealed partial class MainWindowViewModel
                 .Select(group => group.First()),
             maxItems: 8);
 
+        RecommendedItems.Clear();
         foreach (var item in recommendations)
         {
             RecommendedItems.Add(MediaSearchResultViewModel.FromMediaItem(item, AddToLibraryAsync, OpenDetailAsync));
@@ -306,43 +332,88 @@ public sealed partial class MainWindowViewModel
         return string.Join(", ", genres.Take(3).Select(genre => genre.Name));
     }
 
+    // Imports and every UI write share this queue, including read-modify-write actions.
+    private async Task<T> SerializeLibraryImportAsync<T>(Func<Task<T>> importAsync)
+    {
+        await libraryMutationGate.WaitAsync();
+        try { return await importAsync(); }
+        finally { libraryMutationGate.Release(); }
+    }
+
+    private async Task SerializeLibraryMutationAsync(Func<int, Task> mutationAsync)
+    {
+        var context = detailLoadVersion;
+        await libraryMutationGate.WaitAsync();
+        try { await mutationAsync(context); }
+        finally { libraryMutationGate.Release(); }
+    }
+
     private async Task AddToLibraryAsync(string mediaId)
     {
-        var media = await mediaCatalogService.GetByIdAsync(mediaId);
-        if (media.IsFailure) { SearchStatus = media.Error.Message; return; }
-
-        var status = media.Value!.Type == MediaType.Anime
-            ? MediaListStatus.Current : MediaListStatus.Planning;
-
-        var result = await userLibraryService.UpsertEntryAsync(
-            new UserMediaEntry(media.Value.Id, media.Value.Type, status)
+        var context = detailLoadVersion;
+        await libraryMutationGate.WaitAsync();
+        try
+        {
+            var existing = await userLibraryService.GetEntryAsync(mediaId);
+            if (existing.IsSuccess)
             {
-                PosterUri = media.Value.Images.PosterUri
-            });
+                ShowFeedback("This title is already in your library.", context);
+                return;
+            }
+            if (existing.Error.Code != "not_found")
+            {
+                ShowFeedback(existing.Error.Message, context, isError: true);
+                return;
+            }
+            var media = await mediaCatalogService.GetByIdAsync(mediaId);
+            if (media.IsFailure) { ShowFeedback(media.Error.Message, context, isError: true); return; }
 
-        SearchStatus = result.IsSuccess
-            ? $"Added {media.Value.Title.DisplayTitle} to local library."
-            : result.Error.Message;
+            var status = media.Value!.Type == MediaType.Anime
+                ? MediaListStatus.Current : MediaListStatus.Planning;
 
-        await LoadLibraryAsync();
-        await RefreshDetailIfOpenAsync(mediaId);
+            var result = await userLibraryService.UpsertEntryAsync(
+                new UserMediaEntry(media.Value.Id, media.Value.Type, status)
+                {
+                    PosterUri = media.Value.Images.PosterUri
+                });
+
+            ShowFeedback(result.IsSuccess
+                ? $"Added {media.Value.Title.DisplayTitle} to local library."
+                : result.Error.Message, context, isError: result.IsFailure);
+            if (result.IsSuccess)
+            {
+                await RefreshDetailIfOpenAsync(mediaId);
+                RefreshLibraryAfterChange(context);
+            }
+        }
+        finally { libraryMutationGate.Release(); }
     }
 
-    private async Task IncrementProgressAsync(string mediaId)
+    private Task IncrementProgressAsync(string mediaId) => SerializeLibraryMutationAsync(async context =>
     {
         var result = await userLibraryService.IncrementProgressAsync(mediaId);
-        SearchStatus = result.IsSuccess
-            ? $"Updated progress for {mediaId}."
-            : result.Error.Message;
+        ShowFeedback(result.IsSuccess
+            ? "Progress updated."
+            : result.Error.Message, context, isError: result.IsFailure);
 
-        await LoadLibraryAsync();
-        await RefreshDetailIfOpenAsync(mediaId);
+        if (result.IsSuccess)
+        {
+            await RefreshDetailIfOpenAsync(mediaId);
+            RefreshLibraryAfterChange(context);
+        }
+    });
+
+    private Task SetNumericInputAsync(string? input, Func<int, Task> saveAsync)
+    {
+        if (int.TryParse(input, out var value) && value >= 0) return saveAsync(value);
+        ShowFeedback("Enter a whole number of zero or more.", detailLoadVersion, isError: true);
+        return Task.CompletedTask;
     }
 
-    private async Task SetProgressAsync(string mediaId, int progress)
+    private Task SetProgressAsync(string mediaId, int progress) => SerializeLibraryMutationAsync(async context =>
     {
         var entryResult = await userLibraryService.GetEntryAsync(mediaId);
-        if (entryResult.IsFailure) return;
+        if (entryResult.IsFailure) { ShowFeedback(entryResult.Error.Message, context, isError: true); return; }
 
         var updated = entryResult.Value! with
         {
@@ -350,106 +421,124 @@ public sealed partial class MainWindowViewModel
             UpdatedAt = DateTimeOffset.UtcNow
         };
         var result = await userLibraryService.UpsertEntryAsync(updated);
-        SearchStatus = result.IsSuccess ? $"Progress set to {progress}." : result.Error.Message;
-
-        await LoadLibraryAsync();
-        await RefreshDetailIfOpenAsync(mediaId);
-    }
-
-    private async Task UpdateLibraryStatusAsync(string mediaId, MediaListStatus status)
-    {
-        var result = await userLibraryService.UpdateStatusAsync(mediaId, status);
-        SearchStatus = result.IsSuccess
-            ? $"Updated {mediaId} to {status}."
-            : result.Error.Message;
-
-        await LoadLibraryAsync();
-        await RefreshDetailIfOpenAsync(mediaId);
-    }
-
-    private async Task IncreaseScoreAsync(string mediaId, int? currentScore)
-    {
-        var nextScore = currentScore is null or >= 10 ? 1 : currentScore.Value + 1;
-        var result = await userLibraryService.UpdateScoreAsync(mediaId, nextScore);
-        SearchStatus = result.IsSuccess
-            ? $"Updated score for {mediaId}."
-            : result.Error.Message;
-
-        await LoadLibraryAsync();
-        await RefreshDetailIfOpenAsync(mediaId);
-    }
-
-    private async Task SetScoreDirectAsync(string mediaId, int score)
-    {
-        var result = await userLibraryService.UpdateScoreAsync(mediaId, score);
-        SearchStatus = result.IsSuccess
-            ? $"Score set to {score} for {mediaId}."
-            : result.Error.Message;
-
-        await LoadLibraryAsync();
-        await RefreshDetailIfOpenAsync(mediaId);
-    }
-
-    private async Task SaveNotesAsync(string mediaId, string? notes)
-    {
-        var result = await userLibraryService.UpdateNotesAsync(mediaId, notes);
-        if (result.IsFailure) SearchStatus = result.Error.Message;
-    }
-
-    private async Task SaveReviewAsync(string mediaId, string? review)
-    {
-        var result = await userLibraryService.UpdateReviewAsync(mediaId, review);
-        SearchStatus = result.IsSuccess ? "Review saved." : result.Error.Message;
+        ShowFeedback(result.IsSuccess ? $"Progress set to {progress}." : result.Error.Message, context, isError: result.IsFailure);
 
         if (result.IsSuccess)
         {
-            await LoadLibraryAsync();
             await RefreshDetailIfOpenAsync(mediaId);
+            RefreshLibraryAfterChange(context);
         }
-    }
+    });
 
-    private async Task SaveTagsAsync(string mediaId, string? tagsText)
+    private Task UpdateLibraryStatusAsync(string mediaId, MediaListStatus status) => SerializeLibraryMutationAsync(async context =>
+    {
+        var result = await userLibraryService.UpdateStatusAsync(mediaId, status);
+        ShowFeedback(result.IsSuccess
+            ? $"Status changed to {status}."
+            : result.Error.Message, context, isError: result.IsFailure);
+
+        if (result.IsSuccess)
+        {
+            await RefreshDetailIfOpenAsync(mediaId);
+            RefreshLibraryAfterChange(context);
+        }
+    });
+
+    private Task IncreaseScoreAsync(string mediaId) => SerializeLibraryMutationAsync(async context =>
+    {
+        var entry = await userLibraryService.GetEntryAsync(mediaId);
+        if (entry.IsFailure) { ShowFeedback(entry.Error.Message, context, isError: true); return; }
+        var currentScore = entry.Value!.Score;
+        var nextScore = currentScore is null or >= 10 ? 1 : currentScore.Value + 1;
+        var result = await userLibraryService.UpdateScoreAsync(mediaId, nextScore);
+        ShowFeedback(result.IsSuccess
+            ? "Score updated."
+            : result.Error.Message, context, isError: result.IsFailure);
+
+        if (result.IsSuccess)
+        {
+            await RefreshDetailIfOpenAsync(mediaId);
+            RefreshLibraryAfterChange(context);
+        }
+    });
+
+    private Task SetScoreDirectAsync(string mediaId, int score) => SerializeLibraryMutationAsync(async context =>
+    {
+        var result = await userLibraryService.UpdateScoreAsync(mediaId, score);
+        ShowFeedback(result.IsSuccess
+            ? $"Score set to {score}."
+            : result.Error.Message, context, isError: result.IsFailure);
+
+        if (result.IsSuccess)
+        {
+            await RefreshDetailIfOpenAsync(mediaId);
+            RefreshLibraryAfterChange(context);
+        }
+    });
+
+    private Task SaveNotesAsync(string mediaId, string? notes) => SerializeLibraryMutationAsync(async context =>
+    {
+        var result = await userLibraryService.UpdateNotesAsync(mediaId, notes);
+        ShowFeedback(result.IsSuccess ? "Notes saved." : result.Error.Message, context, isError: result.IsFailure);
+    });
+
+    private Task SaveReviewAsync(string mediaId, string? review) => SerializeLibraryMutationAsync(async context =>
+    {
+        var result = await userLibraryService.UpdateReviewAsync(mediaId, review);
+        ShowFeedback(result.IsSuccess ? "Review saved." : result.Error.Message, context, isError: result.IsFailure);
+
+        if (result.IsSuccess)
+        {
+            await RefreshDetailIfOpenAsync(mediaId);
+            RefreshLibraryAfterChange(context);
+        }
+    });
+
+    private Task SaveTagsAsync(string mediaId, string? tagsText) => SerializeLibraryMutationAsync(async context =>
     {
         var entry = await GetLibraryEntryAsync(mediaId);
-        if (entry is null) { SearchStatus = "Add this title to your library before editing tags."; return; }
+        if (entry is null) { ShowFeedback("Add this title to your library before editing tags.", context); return; }
 
         var result = await userLibraryService.UpdateOrganizationAsync(
             mediaId, ParseOrganizationValues(tagsText), entry.CustomLists);
-        SearchStatus = result.IsSuccess ? "Tags saved." : result.Error.Message;
+        ShowFeedback(result.IsSuccess ? "Tags saved." : result.Error.Message, context, isError: result.IsFailure);
 
         if (result.IsSuccess)
         {
-            await LoadLibraryAsync();
             await RefreshDetailIfOpenAsync(mediaId);
+            RefreshLibraryAfterChange(context);
         }
-    }
+    });
 
-    private async Task SaveCustomListsAsync(string mediaId, string? customListsText)
+    private Task SaveCustomListsAsync(string mediaId, string? customListsText) => SerializeLibraryMutationAsync(async context =>
     {
         var entry = await GetLibraryEntryAsync(mediaId);
-        if (entry is null) { SearchStatus = "Add this title to your library before editing custom lists."; return; }
+        if (entry is null) { ShowFeedback("Add this title to your library before editing custom lists.", context); return; }
 
         var result = await userLibraryService.UpdateOrganizationAsync(
             mediaId, entry.Tags, ParseOrganizationValues(customListsText));
-        SearchStatus = result.IsSuccess ? "Custom lists saved." : result.Error.Message;
+        ShowFeedback(result.IsSuccess ? "Custom lists saved." : result.Error.Message, context, isError: result.IsFailure);
 
         if (result.IsSuccess)
         {
-            await LoadLibraryAsync();
             await RefreshDetailIfOpenAsync(mediaId);
+            RefreshLibraryAfterChange(context);
         }
-    }
+    });
 
-    private async Task RemoveFromLibraryAsync(string mediaId)
+    private Task RemoveFromLibraryAsync(string mediaId) => SerializeLibraryMutationAsync(async context =>
     {
         var result = await userLibraryService.RemoveEntryAsync(mediaId);
-        SearchStatus = result.IsSuccess
-            ? $"Removed {mediaId} from local library."
-            : result.Error.Message;
+        ShowFeedback(result.IsSuccess
+            ? "Title removed from your library."
+            : result.Error.Message, context, isError: result.IsFailure);
 
-        await LoadLibraryAsync();
-        await RefreshDetailIfOpenAsync(mediaId);
-    }
+        if (result.IsSuccess)
+        {
+            await RefreshDetailIfOpenAsync(mediaId);
+            RefreshLibraryAfterChange(context);
+        }
+    });
 
     private IEnumerable<LibraryEntryViewModel> FilterLibraryEntries(IEnumerable<LibraryEntryViewModel> entries)
     {
@@ -541,7 +630,7 @@ public sealed partial class MainWindowViewModel
 
     private static string FormatRatio(double value) => $"{value * 100:F0}%";
 
-    private static string FormatMinutes(int minutes)
+    private static string FormatMinutes(long minutes)
     {
         if (minutes <= 0) return "0h";
         var hours = minutes / 60;

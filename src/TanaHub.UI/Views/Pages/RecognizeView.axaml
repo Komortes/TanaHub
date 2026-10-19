@@ -218,16 +218,6 @@
         <DataTemplate x:DataType="vm:RecognitionResultViewModel">
           <Border Classes="card" Width="180" Height="280" Margin="0,0,14,14"
                   ClipToBounds="True" RenderTransformOrigin="0.5,0.5">
-            <Border.Styles>
-              <Style Selector="Border:pointerover">
-                <Setter Property="RenderTransform" Value="translateY(-3px) scale(1.01)"/>
-              </Style>
-            </Border.Styles>
-            <Border.Transitions>
-              <Transitions>
-                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" Easing="CubicEaseOut"/>
-              </Transitions>
-            </Border.Transitions>
             <Button Command="{Binding OpenCommand}" Padding="0" Background="Transparent"
                     BorderThickness="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                     HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">

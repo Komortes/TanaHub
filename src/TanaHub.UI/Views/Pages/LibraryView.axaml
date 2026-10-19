@@ -14,6 +14,10 @@
 
   <UserControl.Styles>
 
+    <Style Selector="Grid.library-columns">
+      <Setter Property="ColumnSpacing" Value="10"/>
+    </Style>
+
     <!-- ── Shared sidebar filter list ──────────────────────────── -->
     <Style Selector="ListBox.filter-list">
       <Setter Property="Background" Value="Transparent"/>
@@ -74,10 +78,11 @@
 
   </UserControl.Styles>
 
-  <Grid ColumnDefinitions="220,*" ColumnSpacing="20">
+  <Border x:Name="LibraryPageFrame" SizeChanged="OnPageSizeChanged">
+  <Grid x:Name="LibraryLayout" Classes="library-layout" ColumnDefinitions="220,*" RowDefinitions="Auto,Auto" ColumnSpacing="20">
 
     <!-- ── Sidebar ───────────────────────────────────────────────── -->
-    <Border Classes="panel">
+    <Border x:Name="LibrarySidebar" Classes="panel library-sidebar" Grid.RowSpan="2">
       <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
       <StackPanel Spacing="20">
 
@@ -179,8 +184,38 @@
       </ScrollViewer>
     </Border>
 
+    <Border x:Name="LibraryCompactFilters" Classes="panel library-compact-filters" IsVisible="False" Padding="16,12">
+      <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
+        <StackPanel Spacing="5">
+          <TextBlock Classes="eyebrow" Text="LISTS"/>
+          <ComboBox ItemsSource="{Binding LibraryStatusFilters}"
+                    SelectedItem="{Binding SelectedLibraryStatus, Mode=TwoWay}"
+                    HorizontalAlignment="Stretch" AutomationProperties.Name="Library status filter"/>
+        </StackPanel>
+        <StackPanel Grid.Column="1" Spacing="5">
+          <TextBlock Classes="eyebrow" Text="TAGS"/>
+          <ComboBox ItemsSource="{Binding LibraryTagFilters}"
+                    SelectedItem="{Binding SelectedLibraryTag, Mode=TwoWay}"
+                    HorizontalAlignment="Stretch" AutomationProperties.Name="Library tag filter"/>
+        </StackPanel>
+        <StackPanel Grid.Column="2" Spacing="5">
+          <TextBlock Classes="eyebrow" Text="CUSTOM"/>
+          <ComboBox ItemsSource="{Binding LibraryCustomListFilters}"
+                    SelectedItem="{Binding SelectedLibraryCustomList, Mode=TwoWay}"
+                    HorizontalAlignment="Stretch" AutomationProperties.Name="Library custom list filter"/>
+        </StackPanel>
+        <StackPanel Grid.Column="3" Spacing="5">
+          <TextBlock Classes="eyebrow" Text="SORT"/>
+          <ComboBox ItemsSource="{Binding LibrarySortOptions}"
+                    SelectedItem="{Binding SelectedLibrarySort, Mode=TwoWay}"
+                    HorizontalAlignment="Stretch" AutomationProperties.Name="Library sort order"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+
     <!-- ── Main content ────────────────────────────────────────── -->
-    <StackPanel Grid.Column="1" Spacing="12">
+    <StackPanel x:Name="LibraryRowsHost" Classes="library-content" Grid.Column="1" Spacing="12"
+                SizeChanged="OnContentSizeChanged">
 
       <!-- Search bar -->
       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
@@ -264,9 +299,10 @@
                                  Foreground="{DynamicResource TanaHubTextMutedBrush}"
                                  HorizontalAlignment="Center"/>
           <StackPanel Spacing="6" HorizontalAlignment="Center">
-            <TextBlock Text="{Binding LibraryEmptyMessage}" FontSize="16" FontWeight="SemiBold"
+            <TextBlock Text="{Binding LibraryEmptyMessage}" TextWrapping="Wrap" TextAlignment="Center" FontSize="16" FontWeight="SemiBold"
                        Foreground="{DynamicResource TanaHubTextPrimaryBrush}" HorizontalAlignment="Center"/>
-            <TextBlock Text="Find anime and manga on the Discover page and add them to your collection."
+            <TextBlock Text="Find your next title in Discover, or adjust your filters."
+                       TextWrapping="Wrap" TextAlignment="Center"
                        FontSize="12" Foreground="{DynamicResource TanaHubTextSecondaryBrush}"
                        HorizontalAlignment="Center"/>
           </StackPanel>
@@ -283,35 +319,35 @@
       <StackPanel IsVisible="{Binding IsLibraryListVisible}" Spacing="4">
 
         <!-- Column headers -->
-        <Border IsVisible="{Binding !IsLibraryEmpty}" Padding="12,7"
-                CornerRadius="8" Background="{DynamicResource TanaHubSurfaceRaisedBrush}">
-          <Grid ColumnDefinitions="48,*,104,78,60,140" ColumnSpacing="10">
-            <TextBlock Grid.Column="1" Text="TITLE" FontSize="10" FontWeight="SemiBold"
-                       VerticalAlignment="Center"
-                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
-            <TextBlock Grid.Column="2" Text="STATUS" FontSize="10" FontWeight="SemiBold"
-                       VerticalAlignment="Center"
-                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
-            <TextBlock Grid.Column="3" Text="PROGRESS" FontSize="10" FontWeight="SemiBold"
-                       VerticalAlignment="Center"
-                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
-            <TextBlock Grid.Column="4" Text="SCORE" FontSize="10" FontWeight="SemiBold"
-                       VerticalAlignment="Center"
-                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
-            <TextBlock Grid.Column="5" Text="ACTIONS" FontSize="10" FontWeight="SemiBold"
-                       VerticalAlignment="Center"
-                       Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
-          </Grid>
-        </Border>
+        <Grid IsVisible="{Binding !IsLibraryEmpty}">
+          <Border x:Name="LibraryColumnHeader" Classes="library-column-header" Padding="12,7"
+                  CornerRadius="8" Background="{DynamicResource TanaHubSurfaceRaisedBrush}">
+            <Grid Classes="library-columns" ColumnDefinitions="36,*,108,44,108">
+              <TextBlock Grid.Column="1" Text="TITLE" FontSize="10" FontWeight="SemiBold"
+                         VerticalAlignment="Center"
+                         Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+              <TextBlock Grid.Column="2" Text="PROGRESS" FontSize="10" FontWeight="SemiBold"
+                         VerticalAlignment="Center"
+                         Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+              <TextBlock Grid.Column="3" Text="SCORE" FontSize="10" FontWeight="SemiBold"
+                         VerticalAlignment="Center"
+                         Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+              <TextBlock Grid.Column="4" Text="ACTIONS" FontSize="10" FontWeight="SemiBold"
+                         VerticalAlignment="Center"
+                         Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+            </Grid>
+          </Border>
+        </Grid>
 
         <!-- List rows -->
         <ItemsControl IsVisible="{Binding !IsLibraryEmpty}" ItemsSource="{Binding LibraryEntries}">
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:LibraryEntryViewModel">
               <Button Classes="row" Padding="12,10" CornerRadius="8"
-                      Command="{Binding OpenDetailCommand}">
-                <Grid ColumnDefinitions="48,*,104,78,60,140" ColumnSpacing="10">
-                  <Border Width="36" Height="52" CornerRadius="7" ClipToBounds="True">
+                      Command="{Binding OpenDetailCommand}" ToolTip.Tip="{Binding Title}">
+                <Grid Classes="library-columns library-entry" ColumnDefinitions="36,*,108,44,108" RowDefinitions="Auto,Auto"
+                      Loaded="OnEntryLoaded" SizeChanged="OnEntrySizeChanged">
+                  <Border Classes="library-entry-poster" Width="36" Height="52" CornerRadius="7" ClipToBounds="True">
                     <Border.Background>
                       <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                         <GradientStop Color="#38215F" Offset="0"/>
@@ -320,36 +356,27 @@
                     </Border.Background>
                     <controls:RemoteImage SourceUri="{Binding PosterUri}"/>
                   </Border>
-                  <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="3">
+                  <StackPanel Classes="library-entry-title" Grid.Column="1" VerticalAlignment="Center" Spacing="3">
                     <TextBlock Text="{Binding Title}" FontSize="14" FontWeight="SemiBold"
                                Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
-                               TextTrimming="CharacterEllipsis"/>
-                    <TextBlock Text="{Binding Type}" FontSize="11"
+                               TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="{Binding StatusLabel}" FontSize="11"
                                Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
                     <TextBlock Text="{Binding TagsLabel}" FontSize="10"
                                Foreground="{DynamicResource TanaHubTextMutedBrush}"
                                TextTrimming="CharacterEllipsis"
                                IsVisible="{Binding TagsLabel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                   </StackPanel>
-                  <Border Grid.Column="2" Height="22" Padding="8,0" CornerRadius="6" VerticalAlignment="Center"
-                          Background="{DynamicResource TanaHubSurfaceElevatedBrush}">
-                    <TextBlock Text="{Binding Status}" FontSize="11" FontWeight="SemiBold"
-                               VerticalAlignment="Center" Foreground="{Binding StatusForeground}"/>
-                  </Border>
-                  <TextBlock Classes="mono" Grid.Column="3" Text="{Binding Progress}"
+                  <TextBlock Classes="mono library-entry-progress" Grid.Column="2" Text="{Binding ProgressLabel}"
                              FontSize="12" VerticalAlignment="Center"
                              Foreground="{DynamicResource TanaHubCyanBrush}"/>
-                  <TextBlock Classes="mono" Grid.Column="4" Text="{Binding Score}"
+                  <TextBlock Classes="mono library-entry-score" Grid.Column="3" Text="{Binding Score}"
                              FontSize="13" FontWeight="Bold" VerticalAlignment="Center"
-                             Foreground="{Binding ScoreForeground}"/>
-                  <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                             Foreground="{Binding ScoreForeground}" ToolTip.Tip="Score"/>
+                  <StackPanel Classes="library-entry-actions" Grid.Column="4" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                     <Button Classes="ghost" Width="30" Height="30" Padding="0"
-                            Command="{Binding IncrementCommand}" ToolTip.Tip="Increment progress">
+                            Command="{Binding IncrementCommand}" ToolTip.Tip="{Binding IncrementLabel}" AutomationProperties.Name="{Binding IncrementLabel}">
                       <material:MaterialIcon Width="16" Height="16" Kind="Plus"/>
-                    </Button>
-                    <Button Classes="ghost" Width="30" Height="30" Padding="0"
-                            Command="{Binding IncreaseScoreCommand}" ToolTip.Tip="Increase score">
-                      <material:MaterialIcon Width="16" Height="16" Kind="StarPlus"/>
                     </Button>
                     <Button Classes="ghost" Width="30" Height="30" Padding="0"
                             IsVisible="{Binding !IsCompleted}"
@@ -409,7 +436,7 @@
                                  Foreground="{DynamicResource TanaHubTextPrimaryBrush}"
                                  TextTrimming="CharacterEllipsis"/>
                       <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Classes="mono" Text="{Binding Progress}" FontSize="11"
+                        <TextBlock Classes="mono" Text="{Binding ProgressLabel}" FontSize="11"
                                    Foreground="{DynamicResource TanaHubCyanBrush}"/>
                         <TextBlock Classes="mono" Grid.Column="1" Text="{Binding Score}"
                                    FontSize="11" FontWeight="Bold" Foreground="{Binding ScoreForeground}"/>
@@ -419,17 +446,13 @@
                   <!-- Actions row: status chip on left, buttons on right -->
                   <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="10,8,10,10" ColumnSpacing="6">
                     <Border Classes="chip" Padding="6,3" VerticalAlignment="Center" HorizontalAlignment="Left">
-                      <TextBlock Text="{Binding Status}" FontSize="10"
+                      <TextBlock Text="{Binding StatusLabel}" FontSize="10"
                                  Foreground="{Binding StatusForeground}"/>
                     </Border>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                       <Button Classes="ghost" Width="30" Height="30" Padding="0"
-                              Command="{Binding IncrementCommand}" ToolTip.Tip="Increment progress">
+                              Command="{Binding IncrementCommand}" ToolTip.Tip="{Binding IncrementLabel}" AutomationProperties.Name="{Binding IncrementLabel}">
                         <material:MaterialIcon Width="14" Height="14" Kind="Plus"/>
-                      </Button>
-                      <Button Classes="ghost" Width="30" Height="30" Padding="0"
-                              Command="{Binding IncreaseScoreCommand}" ToolTip.Tip="Increase score">
-                        <material:MaterialIcon Width="14" Height="14" Kind="StarPlus"/>
                       </Button>
                       <Button Classes="danger" Width="30" Height="30" Padding="0"
                               Command="{Binding RemoveCommand}" ToolTip.Tip="Remove from library">
@@ -446,4 +469,5 @@
 
     </StackPanel>
   </Grid>
+  </Border>
 </UserControl>

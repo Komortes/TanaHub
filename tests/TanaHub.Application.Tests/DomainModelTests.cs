@@ -6,6 +6,15 @@ namespace TanaHub.Application.Tests;
 public sealed class DomainModelTests
 {
     [Fact]
+    public void UserMediaEntry_IncrementProgress_RejectsOverflowWithoutChangingEntry()
+    {
+        var entry = new UserMediaEntry("anilist:1", MediaType.Anime, MediaListStatus.Current) { Progress = int.MaxValue };
+        Assert.Throws<ArgumentOutOfRangeException>(() => entry.IncrementProgress());
+        Assert.Equal(int.MaxValue, entry.Progress);
+        Assert.Equal(int.MaxValue, (entry with { Progress = int.MaxValue - 1 }).IncrementProgress().Progress);
+    }
+
+    [Fact]
     public void MediaTitle_UsesEnglishTitleWhenAvailable()
     {
         var title = new MediaTitle("Sousou no Frieren", "Frieren: Beyond Journey's End", "葬送のフリーレン");

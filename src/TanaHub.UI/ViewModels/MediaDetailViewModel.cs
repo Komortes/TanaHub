@@ -1,12 +1,13 @@
 using System.Text.RegularExpressions;
 using Avalonia.Media;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Material.Icons;
 using TanaHub.Domain.Models;
 
 namespace TanaHub.UI.ViewModels;
 
-public sealed partial class MediaDetailViewModel
+public sealed partial class MediaDetailViewModel : ObservableObject
 {
     public MediaDetailViewModel(
         string id,
@@ -113,22 +114,51 @@ public sealed partial class MediaDetailViewModel
     public IReadOnlyList<string> Genres { get; }
     public Uri? PosterUri { get; }
     public Uri? BannerUri { get; }
+    public RelatedTitlesViewModel? RelatedTitles { get; init; }
+    public bool HasRelatedTitlesSection => RelatedTitles is not null;
     public string Episodes { get; }
     public string Duration { get; }
     public string Studio { get; }
     public string Chapters { get; }
     public string Volumes { get; }
-    public string LibraryStatus { get; }
-    public string LibraryProgress { get; }
-    public string LibraryScore { get; }
-    public bool IsInLibrary { get; }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsStatusCurrent), nameof(IsStatusPlanning), nameof(IsStatusPaused),
+        nameof(IsStatusCompleted), nameof(IsStatusDropped), nameof(IsStatusRepeating), nameof(StatusForeground))]
+    private string libraryStatus = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(LibraryCurrentProgress))]
+    private string libraryProgress = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UserScoreInt), nameof(UserScoreDisplay), nameof(IsScoreAtLeast1),
+        nameof(IsScoreAtLeast2), nameof(IsScoreAtLeast3), nameof(IsScoreAtLeast4), nameof(IsScoreAtLeast5),
+        nameof(IsScoreAtLeast6), nameof(IsScoreAtLeast7), nameof(IsScoreAtLeast8), nameof(IsScoreAtLeast9),
+        nameof(IsScoreAtLeast10))]
+    private string libraryScore = string.Empty;
+
+    [ObservableProperty]
+    private bool isInLibrary;
+
+    internal void UpdateLibraryEntry(UserMediaEntry? entry)
+    {
+        LibraryStatus = entry?.Status.ToString() ?? string.Empty;
+        LibraryProgress = entry is null ? string.Empty : ProgressDisplayFormatter.Format(entry.Progress, ProgressValue);
+        LibraryScore = entry?.Score?.ToString() ?? string.Empty;
+        IsInLibrary = entry is not null;
+        // Personal fields are editing drafts. Updating a score or status must not overwrite them.
+    }
 
     public bool IsAnime => MediaType == "Anime";
     public bool HasBanner => BannerUri is not null;
-    public bool HasRomajiTitle => !string.IsNullOrWhiteSpace(RomajiTitle);
+    public bool HasRomajiTitle => !string.IsNullOrWhiteSpace(RomajiTitle)
+        && !string.Equals(RomajiTitle, Title, StringComparison.OrdinalIgnoreCase);
     public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
     public bool HasStudio => IsAnime && !string.IsNullOrWhiteSpace(Studio) && Studio != "Unknown";
     public string IncrementLabel => IsAnime ? "+1 Episode" : "+1 Chapter";
+    public string CurrentStatusLabel => IsAnime ? "Watching" : "Reading";
+    public string TagsPlaceholder => IsAnime ? "rewatch, comfort, seasonal" : "reread, favorites, ongoing";
+    public MaterialIconKind ProgressIcon => IsAnime ? MaterialIconKind.PlayCircleOutline : MaterialIconKind.BookOpenPageVariant;
     public string ProgressLabel => IsAnime ? "Episodes" : "Chapters";
     public string ProgressValue => IsAnime ? Episodes : Chapters;
     public string LibraryCurrentProgress =>
@@ -192,10 +222,14 @@ public sealed partial class MediaDetailViewModel
     public IAsyncRelayCommand SetProgressMaxCommand { get; }
     public IAsyncRelayCommand SetProgressZeroCommand { get; }
     public IAsyncRelayCommand RemoveCommand { get; }
-    public string? Notes { get; }
-    public string? Review { get; }
-    public string TagsText { get; }
-    public string CustomListsText { get; }
+    [ObservableProperty]
+    private string? notes;
+    [ObservableProperty]
+    private string? review;
+    [ObservableProperty]
+    private string tagsText = string.Empty;
+    [ObservableProperty]
+    private string customListsText = string.Empty;
     public IAsyncRelayCommand<string?> SaveTagsCommand { get; }
     public IAsyncRelayCommand<string?> SaveCustomListsCommand { get; }
     public IReadOnlyList<CharacterInfo> Characters { get; }

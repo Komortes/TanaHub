@@ -13,31 +13,31 @@
     <Color x:Key="TanaHubSurfaceElevatedColor">#1E1A2E</Color>
     <Color x:Key="TanaHubSurfaceHoverColor">#231C34</Color>
     <!-- Accent-tinted borders — purple hue blends with the palette, no harsh white -->
-    <Color x:Key="TanaHubBorderColor">#9B6EF818</Color>
-    <Color x:Key="TanaHubBorderLightColor">#9B6EF830</Color>
+    <Color x:Key="TanaHubBorderColor">#189B6EF8</Color>
+    <Color x:Key="TanaHubBorderLightColor">#309B6EF8</Color>
 
     <!-- ── Accent / Primary ───────────────────────────────────── -->
     <Color x:Key="TanaHubAccentColor">#9B6EF8</Color>
     <Color x:Key="TanaHubAccentLightColor">#C8B8FF</Color>
-    <Color x:Key="TanaHubAccentGlowColor">#9B6EF82E</Color>
-    <Color x:Key="TanaHubAccentGlowStrongColor">#9B6EF848</Color>
+    <Color x:Key="TanaHubAccentGlowColor">#2E9B6EF8</Color>
+    <Color x:Key="TanaHubAccentGlowStrongColor">#489B6EF8</Color>
 
     <!-- ── Secondary palette ──────────────────────────────────── -->
     <Color x:Key="TanaHubCyanColor">#22D3EE</Color>
-    <Color x:Key="TanaHubCyanGlowColor">#22D3EE1E</Color>
+    <Color x:Key="TanaHubCyanGlowColor">#1E22D3EE</Color>
     <Color x:Key="TanaHubSakuraColor">#F472B6</Color>
     <Color x:Key="TanaHubAmberColor">#F59E0B</Color>
 
     <!-- ── Status colours ─────────────────────────────────────── -->
     <Color x:Key="TanaHubGreenColor">#10B981</Color>
-    <Color x:Key="TanaHubGreenGlowColor">#10B9811E</Color>
+    <Color x:Key="TanaHubGreenGlowColor">#1E10B981</Color>
     <Color x:Key="TanaHubOrangeColor">#F97316</Color>
     <Color x:Key="TanaHubRedColor">#EF4444</Color>
 
     <!-- ── Text ───────────────────────────────────────────────── -->
     <Color x:Key="TanaHubTextPrimaryColor">#EDE9FF</Color>
     <Color x:Key="TanaHubTextSecondaryColor">#A99EC0</Color>
-    <Color x:Key="TanaHubTextMutedColor">#6B6080</Color>
+    <Color x:Key="TanaHubTextMutedColor">#9B90AD</Color>
 
     <!-- ── Brushes ─────────────────────────────────────────────── -->
     <SolidColorBrush x:Key="TanaHubBackgroundBrush"      Color="{StaticResource TanaHubBackgroundColor}" />
@@ -62,6 +62,12 @@
     <SolidColorBrush x:Key="TanaHubTextPrimaryBrush"     Color="{StaticResource TanaHubTextPrimaryColor}" />
     <SolidColorBrush x:Key="TanaHubTextSecondaryBrush"   Color="{StaticResource TanaHubTextSecondaryColor}" />
     <SolidColorBrush x:Key="TanaHubTextMutedBrush"       Color="{StaticResource TanaHubTextMutedColor}" />
+
+    <!-- An adorner is drawn above the control and never changes its content size. -->
+    <Template x:Key="TanaHubFocusAdorner">
+      <Border BorderBrush="{DynamicResource TanaHubAccentLightBrush}"
+              BorderThickness="2" CornerRadius="8" IsHitTestVisible="False"/>
+    </Template>
 
     <!-- TextBox watermark / placeholder -->
     <SolidColorBrush x:Key="TextControlPlaceholderForeground"            Color="{StaticResource TanaHubTextMutedColor}"/>
@@ -98,33 +104,57 @@
     <Style Selector="Button">
       <Setter Property="Background" Value="{DynamicResource TanaHubAccentBrush}" />
       <Setter Property="BorderBrush" Value="{DynamicResource TanaHubAccentBrush}" />
-      <Setter Property="Foreground" Value="{DynamicResource TanaHubTextPrimaryBrush}" />
+      <Setter Property="Foreground" Value="#100B1B" />
       <Setter Property="CornerRadius" Value="8" />
       <Setter Property="Padding" Value="12,7" />
       <Setter Property="FontSize" Value="12" />
       <Setter Property="FontWeight" Value="SemiBold" />
       <Setter Property="HorizontalContentAlignment" Value="Center" />
       <Setter Property="VerticalContentAlignment" Value="Center" />
-      <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+      <Setter Property="FocusAdorner" Value="{StaticResource TanaHubFocusAdorner}"/>
       <Setter Property="Transitions">
         <Setter.Value>
           <Transitions>
-            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" Easing="CubicEaseOut"/>
-            <BrushTransition Property="Background" Duration="0:0:0.14"/>
-            <BrushTransition Property="BorderBrush" Duration="0:0:0.14"/>
+            <BrushTransition Property="Background" Duration="0:0:0.14" Easing="CubicEaseOut"/>
+            <BrushTransition Property="BorderBrush" Duration="0:0:0.14" Easing="CubicEaseOut"/>
+            <BrushTransition Property="Foreground" Duration="0:0:0.14" Easing="CubicEaseOut"/>
           </Transitions>
         </Setter.Value>
       </Setter>
     </Style>
 
     <Style Selector="Button:pressed">
-      <Setter Property="RenderTransform" Value="scale(0.95)"/>
+      <Setter Property="RenderTransform" Value="none"/>
     </Style>
 
-    <Style Selector="Button:pointerover">
+    <Style Selector="Button:pointerover:not(.score-bar):not(.status-pill)">
       <Setter Property="Background" Value="{DynamicResource TanaHubAccentLightBrush}" />
       <Setter Property="BorderBrush" Value="{DynamicResource TanaHubAccentLightBrush}" />
       <Setter Property="Foreground" Value="#100B1B" />
+    </Style>
+
+    <!-- Fluent sets colours directly on the presenter in these states. Keep it
+         bound to our button palette so hover/press/async-disable cannot flash gray. -->
+    <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button:pressed /template/ ContentPresenter#PART_ContentPresenter, Button:disabled /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{Binding $parent[Button].Background}"/>
+      <Setter Property="BorderBrush" Value="{Binding $parent[Button].BorderBrush}"/>
+      <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}"/>
+    </Style>
+    <Style Selector="Button /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Opacity" Value="1"/>
+      <Setter Property="Transitions">
+        <Setter.Value>
+          <Transitions>
+            <DoubleTransition Property="Opacity" Duration="0:0:0.14" Easing="CubicEaseOut"/>
+          </Transitions>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Opacity" Value="0.92"/>
+    </Style>
+    <Style Selector="Button:disabled /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Opacity" Value="0.6"/>
     </Style>
 
     <!-- Ghost / secondary button — use Classes="ghost" -->
@@ -138,9 +168,6 @@
       <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceRaisedBrush}" />
       <Setter Property="BorderBrush" Value="{DynamicResource TanaHubAccentBrush}" />
       <Setter Property="Foreground" Value="{DynamicResource TanaHubTextPrimaryBrush}" />
-    </Style>
-    <Style Selector="Button.ghost:pressed">
-      <Setter Property="RenderTransform" Value="scale(0.97)"/>
     </Style>
 
     <!-- Danger / destructive ghost -->
@@ -178,6 +205,7 @@
 
     <!-- Poster card — transparent outer shell, inner Border handles visuals and rounded clip -->
     <Style Selector="Button.card">
+      <Setter Property="Foreground" Value="{DynamicResource TanaHubTextPrimaryBrush}"/>
       <Setter Property="Background" Value="Transparent"/>
       <Setter Property="BorderThickness" Value="0"/>
       <Setter Property="Padding" Value="0"/>
@@ -187,11 +215,9 @@
     <Style Selector="Button.card:pointerover">
       <Setter Property="Background" Value="Transparent"/>
       <Setter Property="Foreground" Value="{DynamicResource TanaHubTextPrimaryBrush}"/>
-      <Setter Property="RenderTransform" Value="translateY(-2px)"/>
     </Style>
     <Style Selector="Button.card:pressed">
       <Setter Property="Background" Value="Transparent"/>
-      <Setter Property="RenderTransform" Value="scale(0.97)"/>
     </Style>
 
     <!-- Poster card inner surface — rounded clip + shadow that deepens on hover -->
@@ -208,11 +234,12 @@
       </Setter>
     </Style>
     <Style Selector="Button.card:pointerover Border.poster">
-      <Setter Property="BoxShadow" Value="0 8 26 0 #48000000, 0 0 0 1 #9B6EF855"/>
+      <Setter Property="BoxShadow" Value="0 8 26 0 #48000000, 0 0 0 1 #559B6EF8"/>
     </Style>
 
     <!-- Row card — borderless, elevation from background contrast + spacing -->
     <Style Selector="Button.row">
+      <Setter Property="Foreground" Value="{DynamicResource TanaHubTextPrimaryBrush}"/>
       <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceBrush}"/>
       <Setter Property="BorderThickness" Value="0"/>
       <Setter Property="Padding" Value="10,10"/>
@@ -224,9 +251,6 @@
     <Style Selector="Button.row:pointerover">
       <Setter Property="Background" Value="{DynamicResource TanaHubSurfaceRaisedBrush}"/>
       <Setter Property="Foreground" Value="{DynamicResource TanaHubTextPrimaryBrush}"/>
-    </Style>
-    <Style Selector="Button.row:pressed">
-      <Setter Property="RenderTransform" Value="scale(0.995)"/>
     </Style>
 
     <!-- ── TextBox ───────────────────────────────────────────── -->
@@ -294,7 +318,7 @@
       </Setter>
     </Style>
     <Style Selector="Button.card:pointerover Border.card">
-      <Setter Property="BoxShadow" Value="0 8 26 0 #48000000, 0 0 0 1 #9B6EF855"/>
+      <Setter Property="BoxShadow" Value="0 8 26 0 #48000000, 0 0 0 1 #559B6EF8"/>
     </Style>
 
     <!-- Flat list row — dense lists (schedule, search results). No shadow;

@@ -9,6 +9,151 @@ namespace TanaHub.Infrastructure.Tests;
 public sealed class SqliteUserLibraryServiceTests
 {
     [Fact]
+    public async Task UpdateStatusAsync_PreservesAnExplicitCompletionDate()
+    {
+        var completion = DateTimeOffset.UtcNow.AddDays(-20);
+        var dbPath = CreateDbPath();
+        var service = CreateService(dbPath, [new("anilist:1", MediaType.Anime, MediaListStatus.Paused) { CompletedAt = completion, Progress = 3 }]);
+        var result = await service.UpdateStatusAsync("anilist:1", MediaListStatus.Completed);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(completion, result.Value!.CompletedAt);
+        Assert.Equal(3, (await CreateService(dbPath).GetEntryAsync("anilist:1")).Value!.Progress);
+    }
+
+    [Fact]
+    public async Task UpdateStatusAsync_DoesNotInferDatesThatContradictTheSavedDate()
+    {
+        var future = DateTimeOffset.UtcNow.AddDays(20);
+        var past = DateTimeOffset.UtcNow.AddDays(-20);
+        var service = CreateService(CreateDbPath(), [
+            new("future", MediaType.Anime, MediaListStatus.Planning) { StartedAt = future },
+            new("past", MediaType.Anime, MediaListStatus.Completed) { CompletedAt = past }
+        ]);
+        var finished = await service.UpdateStatusAsync("future", MediaListStatus.Completed);
+        var started = await service.UpdateStatusAsync("past", MediaListStatus.Current);
+        Assert.True(finished.IsSuccess);
+        Assert.Null(finished.Value!.CompletedAt);
+        Assert.Equal(future, finished.Value.StartedAt);
+        Assert.True(started.IsSuccess);
+        Assert.Null(started.Value!.StartedAt);
+        Assert.Equal(past, started.Value.CompletedAt);
+    }
+
+    [Theory]
+    [InlineData(int.MaxValue, 1)]
+    [InlineData(int.MaxValue - 1, 2)]
+    public async Task IncrementProgressAsync_RejectsOverflowWithoutChangingStoredEntry(int progress, int amount)
+    {
+        var dbPath = CreateDbPath();
+        var service = CreateService(dbPath);
+        var original = (await service.UpsertEntryAsync(new UserMediaEntry("anilist:1", MediaType.Anime, MediaListStatus.Current)
+        {
+            Progress = progress,
+            Score = 9,
+            Notes = "Keep notes"
+        })).Value!;
+        var result = await service.IncrementProgressAsync(original.MediaId, amount);
+        Assert.True(result.IsFailure);
+        Assert.Equal("validation_error", result.Error.Code);
+        var saved = (await CreateService(dbPath).GetEntryAsync(original.MediaId)).Value!;
+        Assert.Equal(original.Progress, saved.Progress);
+        Assert.Equal(original.UpdatedAt, saved.UpdatedAt);
+        Assert.Equal(original.Notes, saved.Notes);
+        Assert.Equal(original.Score, saved.Score);
+    }
+
+    [Fact]
+    public async Task IncrementProgressAsync_AllowsMaximumRepresentableProgress()
+    {
+        var service = CreateService(CreateDbPath(), [new("anilist:1", MediaType.Anime, MediaListStatus.Current) { Progress = int.MaxValue - 1 }]);
+        var result = await service.IncrementProgressAsync("anilist:1");
+        Assert.True(result.IsSuccess);
+        Assert.Equal(int.MaxValue, result.Value!.Progress);
+    }
+
+    [Fact]
+    public async Task EntryOperations_PreserveUnicodeCaseInsensitiveIds()
+    {
+        var service = CreateService(CreateDbPath());
+        await service.UpsertEntryAsync(new UserMediaEntry("custom:ёж", MediaType.Anime, MediaListStatus.Current));
+
+        var found = await service.GetEntryAsync("CUSTOM:ЁЖ");
+        var updated = await service.UpdateNotesAsync("CUSTOM:ЁЖ", "Updated");
+        var upserted = await service.UpsertEntryAsync(new UserMediaEntry("CUSTOM:ЁЖ", MediaType.Anime, MediaListStatus.Completed));
+        var entries = await service.GetEntriesAsync(new UserLibraryQuery());
+        var removed = await service.RemoveEntryAsync("CUSTOM:ЁЖ");
+
+        Assert.True(found.IsSuccess);
+        Assert.Equal("Updated", updated.Value!.Notes);
+        Assert.Equal("custom:ёж", upserted.Value!.MediaId);
+        Assert.Single(entries.Value!.Items);
+        Assert.True(removed.Value);
+    }
+
+    [Fact]
+    public async Task MergeEntriesAsync_CoalescesDuplicateIdsAndPreservesFirstLocalFields()
+    {
+        var service = CreateService(CreateDbPath());
+        await service.UpsertEntryAsync(new UserMediaEntry("custom:ёж", MediaType.Anime, MediaListStatus.Current)
+        {
+            Review = "Local review",
+            Tags = ["Local tag"]
+        });
+
+        var merged = await service.MergeEntriesAsync([
+            new UserMediaEntry("CUSTOM:ЁЖ", MediaType.Anime, MediaListStatus.Completed) { Progress = 12 },
+            new UserMediaEntry("new:1", MediaType.Anime, MediaListStatus.Current) { Review = "First review", Progress = 1 },
+            new UserMediaEntry("NEW:1", MediaType.Anime, MediaListStatus.Completed) { Review = "Replacement review", Progress = 10 }
+        ]);
+        var existing = await service.GetEntryAsync("custom:ёж");
+        var added = await service.GetEntryAsync("new:1");
+        var entries = await service.GetEntriesAsync(new UserLibraryQuery());
+
+        Assert.True(merged.IsSuccess);
+        Assert.Equal(3, merged.Value);
+        Assert.Equal(2, entries.Value!.TotalCount);
+        Assert.Equal("Local review", existing.Value!.Review);
+        Assert.Equal(["Local tag"], existing.Value.Tags);
+        Assert.Equal(12, existing.Value.Progress);
+        Assert.Equal("new:1", added.Value!.MediaId);
+        Assert.Equal("First review", added.Value.Review);
+        Assert.Equal(10, added.Value.Progress);
+    }
+
+    [Fact]
+    public async Task MergeEntriesAsync_HandlesLargeImportsAndLeavesUnrelatedEntriesUnchanged()
+    {
+        var service = CreateService(CreateDbPath());
+        await service.UpsertEntryAsync(new UserMediaEntry("local:1", MediaType.Manga, MediaListStatus.Paused)
+        {
+            Progress = 7,
+            Notes = "Keep local entry"
+        });
+        var incoming = Enumerable.Range(1, 501)
+            .Select(id => new UserMediaEntry($"anilist:{id}", MediaType.Anime, MediaListStatus.Current))
+            .ToArray();
+        Assert.True((await service.MergeEntriesAsync(incoming)).IsSuccess);
+
+        var updated = await service.MergeEntriesAsync(incoming.Select(entry => new UserMediaEntry(
+            entry.MediaId.ToUpperInvariant(), entry.MediaType, entry.Status)
+        {
+            Progress = 3
+        }).ToArray());
+        var first = await service.GetEntryAsync("anilist:1");
+        var last = await service.GetEntryAsync("anilist:501");
+        var local = await service.GetEntryAsync("local:1");
+        var all = await service.GetEntriesAsync(new UserLibraryQuery());
+
+        Assert.True(updated.IsSuccess);
+        Assert.Equal(501, updated.Value);
+        Assert.Equal(502, all.Value!.TotalCount);
+        Assert.Equal(3, first.Value!.Progress);
+        Assert.Equal(3, last.Value!.Progress);
+        Assert.Equal(7, local.Value!.Progress);
+        Assert.Equal("Keep local entry", local.Value.Notes);
+    }
+
+    [Fact]
     public async Task UpsertEntryAsync_PersistsEntryToDisk()
     {
         var dbPath = CreateDbPath();

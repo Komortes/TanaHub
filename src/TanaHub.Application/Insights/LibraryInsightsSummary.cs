@@ -8,8 +8,8 @@ public sealed record LibraryInsightsSummary(
     double CompletionRate,
     double DroppedRatio,
     double? AverageScore,
-    int EpisodesWatched,
-    int ChaptersRead,
-    int EstimatedWatchMinutes,
+    long EpisodesWatched,
+    long ChaptersRead,
+    long EstimatedWatchMinutes,
     IReadOnlyList<LibraryInsightSegment> ByMediaType,
     IReadOnlyList<LibraryInsightSegment> ByStatus);

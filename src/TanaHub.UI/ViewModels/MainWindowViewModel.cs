@@ -33,9 +33,11 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private readonly IRecognitionInboxService recognitionInboxService;
     private readonly IFileOpenService fileOpenService;
     private readonly IAppUpdateService appUpdateService;
+    private readonly IMediaRelationsService? mediaRelationsService;
     private readonly HashSet<string> notifiedThisSession = new(StringComparer.OrdinalIgnoreCase);
     private AppSettings appSettings = new();
     private CancellationTokenSource? searchDebounce;
+    private int detailLoadVersion;
     private string previousPageKey = "home";
     private string? temporaryRecognitionSourcePath;
 
@@ -54,7 +56,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         IArtRecognitionService artRecognitionService,
         IRecognitionInboxService recognitionInboxService,
         IFileOpenService fileOpenService,
-        IAppUpdateService appUpdateService)
+        IAppUpdateService appUpdateService,
+        IMediaRelationsService? mediaRelationsService = null)
     {
         this.mediaCatalogService = mediaCatalogService;
         this.userLibraryService = userLibraryService;
@@ -71,13 +74,14 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         this.recognitionInboxService = recognitionInboxService;
         this.fileOpenService = fileOpenService;
         this.appUpdateService = appUpdateService;
+        this.mediaRelationsService = mediaRelationsService;
 
         NavigationItems =
         [
             new(
                 "home",
                 "Home",
-                "Continue watching, today's releases, recent updates, and quick stats.",
+                "Continue watching or reading, today's releases, and recent updates.",
                 "Home dashboard content will be connected after the first domain models are in place."),
             new(
                 "discover",
@@ -122,11 +126,23 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         allLibraryEntries = [];
         SetVisiblePage(selectedNavigationItem.Key);
 
-        _ = LoadPageDataAsync().ContinueWith(t =>
-        {
-            if (t.IsFaulted)
-                SearchStatus = $"Startup error: {t.Exception?.GetBaseException().Message}";
-        }, TaskScheduler.Current);
+        Initialization = InitializeAsync();
+    }
+
+    public Task Initialization { get; }
+
+    private async Task InitializeAsync()
+    {
+        var context = detailLoadVersion;
+        try { await LoadPageDataAsync(); }
+        catch (Exception ex) { ShowFeedback($"Startup error: {ex.Message}", context, isError: true); }
+    }
+
+    public NotificationViewModel Notification { get; } = new();
+
+    private void ShowFeedback(string message, int context, bool isError = false)
+    {
+        if (context == detailLoadVersion) Notification.Show(message, isError);
     }
 
     public string AppName => "TanaHub";
@@ -177,7 +193,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     public bool HasRecommendedItems => RecommendedItems.Count > 0;
 
     [ObservableProperty]
-    private string searchStatus = "Search uses AniList with local fallback.";
+    private string searchStatus = string.Empty;
 
     [ObservableProperty]
     private string appConnectionStatusDetail = "Loading cache status...";
@@ -240,6 +256,11 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     partial void OnSelectedNavigationItemChanged(NavigationItemViewModel? value)
     {
+        ++detailLoadVersion;
+        CancelRelatedTitlesLoad();
+        relatedTitleHistory.Clear();
+        Notification.DismissCommand.Execute(null);
+        searchDebounce?.Cancel();
         IsSearchDropdownOpen = false;
         CurrentPageTitle = value?.Title ?? AppName;
         CurrentPageSummary = value?.Summary ?? string.Empty;
@@ -252,8 +273,18 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void GoBack()
+    private async Task GoBackAsync()
     {
+        if (relatedTitleHistory.Count > 0)
+        {
+            var previousTitle = relatedTitleHistory[^1];
+            if (await LoadDetailAsync(previousTitle) && relatedTitleHistory.Count > 0)
+                relatedTitleHistory.RemoveAt(relatedTitleHistory.Count - 1);
+            return;
+        }
+        ++detailLoadVersion;
+        CancelRelatedTitlesLoad();
+        Notification.DismissCommand.Execute(null);
         IsDetailVisible = false;
         SelectedMedia = null;
         SetVisiblePage(previousPageKey);
@@ -269,18 +300,32 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private async Task OpenDetailAsync(string mediaId)
     {
+        relatedTitleHistory.Clear();
+        await LoadDetailAsync(mediaId);
+    }
+
+    private async Task<bool> LoadDetailAsync(string mediaId)
+    {
+        var version = ++detailLoadVersion;
+        CancelRelatedTitlesLoad();
+        Notification.DismissCommand.Execute(null);
+        searchDebounce?.Cancel();
         IsSearchDropdownOpen = false;
         previousPageKey = SelectedNavigationItem?.Key ?? "home";
 
         var mediaResult = await mediaCatalogService.GetByIdAsync(mediaId);
+        if (version != detailLoadVersion) return false;
         if (mediaResult.IsFailure)
         {
-            SearchStatus = mediaResult.Error.Message;
-            return;
+            ShowFeedback(mediaResult.Error.Message, version, isError: true);
+            if (IsDetailVisible && SelectedMedia?.RelatedTitles?.IsLoading == true)
+                RelatedTitlesLoad = StartRelatedTitlesLoadAsync(SelectedMedia.Id, version);
+            return false;
         }
 
         var item = mediaResult.Value!;
         var libraryEntry = await GetLibraryEntryAsync(mediaId);
+        if (version != detailLoadVersion) return false;
 
         var episodes = "—";
         var duration = "—";
@@ -335,9 +380,9 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             new AsyncRelayCommand(() => UpdateLibraryStatusAsync(mediaId, MediaListStatus.Paused)),
             new AsyncRelayCommand(() => UpdateLibraryStatusAsync(mediaId, MediaListStatus.Completed)),
             new AsyncRelayCommand(() => UpdateLibraryStatusAsync(mediaId, MediaListStatus.Dropped)),
-            new AsyncRelayCommand(() => IncreaseScoreAsync(mediaId, libraryEntry?.Score)),
-            new AsyncRelayCommand<string?>(s => SetScoreDirectAsync(mediaId, int.TryParse(s, out var v) ? v : 0)),
-            new AsyncRelayCommand<string?>(s => SetProgressAsync(mediaId, int.TryParse(s, out var v) ? v : 0)),
+            new AsyncRelayCommand(() => IncreaseScoreAsync(mediaId)),
+            new AsyncRelayCommand<string?>(s => SetNumericInputAsync(s, v => SetScoreDirectAsync(mediaId, v))),
+            new AsyncRelayCommand<string?>(s => SetNumericInputAsync(s, v => SetProgressAsync(mediaId, v))),
             new AsyncRelayCommand(() => SetProgressAsync(mediaId, int.TryParse(item is Anime a ? a.EpisodeCount?.ToString() : item is Manga m ? m.ChapterCount?.ToString() : null, out var total) ? total : 0)),
             new AsyncRelayCommand(() => SetProgressAsync(mediaId, 0)),
             new AsyncRelayCommand(() => RemoveFromLibraryAsync(mediaId)),
@@ -349,7 +394,11 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             new AsyncRelayCommand<string?>(lists => SaveCustomListsAsync(mediaId, lists)),
             item.Characters,
             new AsyncRelayCommand<string?>(notes => SaveNotesAsync(mediaId, notes)),
-            new AsyncRelayCommand<string?>(review => SaveReviewAsync(mediaId, review)));
+            new AsyncRelayCommand<string?>(review => SaveReviewAsync(mediaId, review)))
+        {
+            RelatedTitles = mediaRelationsService is null ? null :
+                new RelatedTitlesViewModel(() => RetryRelatedTitlesAsync(mediaId))
+        };
 
         CurrentPageTitle = item.Title.DisplayTitle;
         CurrentPageSummary = $"{item.Format} · {item.ReleaseStatus}";
@@ -360,6 +409,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         IsScheduleVisible = false;
         IsSettingsVisible = false;
         IsRecognizeVisible = false;
+        RelatedTitlesLoad = StartRelatedTitlesLoadAsync(mediaId, version);
+        return true;
     }
 
     private async Task<UserMediaEntry?> GetLibraryEntryAsync(string mediaId)
@@ -370,10 +421,13 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private async Task RefreshDetailIfOpenAsync(string mediaId)
     {
-        if (IsDetailVisible && SelectedMedia?.Id == mediaId)
-        {
-            await OpenDetailAsync(mediaId);
-        }
+        var detail = SelectedMedia;
+        if (!IsDetailVisible || detail?.Id != mediaId) return;
+        var version = detailLoadVersion;
+        var result = await userLibraryService.GetEntryAsync(mediaId);
+        if (version != detailLoadVersion || !ReferenceEquals(detail, SelectedMedia)) return;
+        if (result.IsSuccess) detail.UpdateLibraryEntry(result.Value);
+        else if (result.Error.Code == "not_found") detail.UpdateLibraryEntry(null);
     }
 
     private async Task LoadPageDataAsync()
@@ -382,7 +436,6 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         _ = RefreshUpdateStatusAsync(isManualCheck: false);
         await Task.WhenAll(
             LoadDiscoverBrowseAsync(),
-            LoadSearchResultsAsync(),
             LoadLibraryAsync(),
             LoadScheduleAsync(),
             LoadRecognitionInboxAsync());
@@ -398,12 +451,20 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         IsRecognizeVisible = pageKey == "recognize";
     }
 
+    [RelayCommand]
+    private void NavigateToPage(string key) => SelectNavigationItem(key);
+
     private void SelectNavigationItem(string key)
     {
         var item = NavigationItems.FirstOrDefault(item => item.Key == key);
         if (item is not null)
         {
-            SelectedNavigationItem = item;
+            // A section remains selected while its title detail is open.
+            // Re-selecting it must still navigate and cancel any pending title load.
+            if (ReferenceEquals(SelectedNavigationItem, item))
+                OnSelectedNavigationItemChanged(item);
+            else
+                SelectedNavigationItem = item;
         }
     }
 
@@ -420,6 +481,11 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        ++detailLoadVersion;
+        CancelRelatedTitlesLoad();
+        ++libraryLoadVersion;
+        Notification.Dispose();
+        CancelDiscoverSearch();
         searchDebounce?.Cancel();
         searchDebounce?.Dispose();
         searchDebounce = null;

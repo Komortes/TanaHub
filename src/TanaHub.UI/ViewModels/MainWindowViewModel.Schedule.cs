@@ -10,6 +10,12 @@ public sealed partial class MainWindowViewModel
     [ObservableProperty]
     private string selectedScheduleRange = "Today";
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasScheduleError))]
+    private string scheduleError = string.Empty;
+
+    public bool HasScheduleError => !string.IsNullOrWhiteSpace(ScheduleError);
+
     public bool HasScheduleItems => ScheduleItems.Count > 0;
     public bool IsScheduleTodaySelected => SelectedScheduleRange == "Today";
     public bool IsScheduleTomorrowSelected => SelectedScheduleRange == "Tomorrow";
@@ -55,6 +61,7 @@ public sealed partial class MainWindowViewModel
 
     private async Task LoadScheduleAsync()
     {
+        ScheduleError = string.Empty;
         var (from, to) = GetScheduleWindow();
         var result = await airingScheduleService.GetUpcomingAsync(from, to, pageSize: 50);
 
@@ -62,7 +69,7 @@ public sealed partial class MainWindowViewModel
 
         if (result.IsFailure)
         {
-            SearchStatus = result.Error.Message;
+            ScheduleError = result.Error.Message;
             OnPropertyChanged(nameof(HasScheduleItems));
             return;
         }

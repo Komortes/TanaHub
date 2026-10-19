@@ -21,9 +21,9 @@
     <Border Grid.Row="0" Background="{DynamicResource TanaHubSurfaceBrush}" BorderThickness="0,0,0,1">
       <Border.BorderBrush>
         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
-          <GradientStop Color="#9B6EF878" Offset="0"/>
-          <GradientStop Color="#22D3EE40" Offset="0.40"/>
-          <GradientStop Color="#2C224400" Offset="1"/>
+          <GradientStop Color="#789B6EF8" Offset="0"/>
+          <GradientStop Color="#4022D3EE" Offset="0.40"/>
+          <GradientStop Color="#002C2244" Offset="1"/>
         </LinearGradientBrush>
       </Border.BorderBrush>
 
@@ -63,7 +63,8 @@
           <TextBox
               x:Name="SearchBox"
               Height="34"
-              PlaceholderText="Search anime, manga, genres..."
+              PlaceholderText="Search anime and manga…"
+              AutomationProperties.Name="Search titles"
               Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
               LostFocus="SearchBox_OnLostFocus">
             <TextBox.InnerLeftContent>
@@ -239,11 +240,16 @@
             </Border>
 
             <ListBox
+                Tapped="Navigation_OnTapped"
                 Background="Transparent"
                 BorderThickness="0"
                 Padding="0"
                 ItemsSource="{Binding NavigationItems}"
                 SelectedItem="{Binding SelectedNavigationItem}">
+              <ListBox.KeyBindings>
+                <KeyBinding Gesture="Enter" Command="{Binding NavigateToPageCommand}"
+                            CommandParameter="{Binding SelectedNavigationItem.Key}"/>
+              </ListBox.KeyBindings>
               <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="vm:NavigationItemViewModel">
                   <Grid
@@ -281,10 +287,16 @@
                 <Style Selector="ListBoxItem">
                   <Setter Property="Padding" Value="0"/>
                   <Setter Property="Margin" Value="0,0,0,8"/>
+                  <Setter Property="FocusAdorner" Value="{StaticResource TanaHubFocusAdorner}"/>
                 </Style>
                 <Style Selector="ListBoxItem /template/ ContentPresenter">
                   <Setter Property="Background" Value="Transparent"/>
                   <Setter Property="CornerRadius" Value="12"/>
+                  <Setter Property="Transitions">
+                    <Transitions>
+                      <BrushTransition Property="Background" Duration="0:0:0.14" Easing="CubicEaseOut"/>
+                    </Transitions>
+                  </Setter>
                 </Style>
                 <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
                   <Setter Property="Background" Value="Transparent"/>
@@ -296,8 +308,6 @@
                 <!-- Keep keyboard focus visible without covering the sliding selection indicator -->
                 <Style Selector="ListBoxItem:focus-visible /template/ ContentPresenter">
                   <Setter Property="Background" Value="{DynamicResource TanaHubAccentGlowStrongBrush}"/>
-                  <Setter Property="BorderBrush" Value="{DynamicResource TanaHubAccentLightBrush}"/>
-                  <Setter Property="BorderThickness" Value="1"/>
                   <Setter Property="CornerRadius" Value="12"/>
                 </Style>
                 <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
@@ -348,10 +358,10 @@
       </Border>
 
       <!-- Main content -->
-      <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Disabled">
+      <ScrollViewer x:Name="MainContentScroll" Grid.Column="1" HorizontalScrollBarVisibility="Disabled">
         <Grid Margin="24,20" MaxWidth="1180">
           <StackPanel Spacing="22">
-            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
               <!-- Back button -->
               <Button
                   Grid.Column="0"
@@ -383,28 +393,20 @@
                 <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
                   <TextBlock
                       Text="{Binding CurrentPageTitle}"
+                      TextTrimming="CharacterEllipsis"
+                      ToolTip.Tip="{Binding CurrentPageTitle}"
                       FontSize="26"
                       FontWeight="Bold"
                       Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
                   <TextBlock
                       Text="{Binding CurrentPageSummary}"
+                      TextWrapping="Wrap"
                       FontSize="12"
                       Foreground="{DynamicResource TanaHubTextSecondaryBrush}"/>
                 </StackPanel>
               </Grid>
 
-              <!-- Search status -->
-              <Border
-                  Grid.Column="2"
-                  Padding="12,7"
-                  VerticalAlignment="Center"
-                  Background="{DynamicResource TanaHubSurfaceRaisedBrush}"
-                  CornerRadius="9">
-                <TextBlock
-                    Text="{Binding SearchStatus}"
-                    FontSize="11"
-                    Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
-              </Border>
+
             </Grid>
 
             <pages:HomeView IsVisible="{Binding IsHomeVisible}"/>
@@ -414,7 +416,7 @@
             <pages:RecognizeView IsVisible="{Binding IsRecognizeVisible}"/>
             <pages:SettingsView IsVisible="{Binding IsSettingsVisible}"/>
 
-            <ContentControl
+            <ContentControl x:Name="DetailContent"
                 IsVisible="{Binding IsDetailVisible}"
                 Content="{Binding SelectedMedia}">
               <ContentControl.ContentTemplate>
@@ -428,5 +430,27 @@
       </ScrollViewer>
 
     </Grid>
+    <!-- Feedback floats above the page without shifting content or scroll position. -->
+    <Border Grid.Row="1" ZIndex="20" IsVisible="{Binding Notification.IsVisible}"
+            HorizontalAlignment="Right" VerticalAlignment="Bottom" MaxWidth="440"
+            Margin="24" Padding="14,10" CornerRadius="12" BorderThickness="1"
+            Background="{DynamicResource TanaHubSurfaceElevatedBrush}"
+            BorderBrush="{DynamicResource TanaHubBorderLightBrush}"
+            BoxShadow="0 6 24 0 #55000000">
+      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+        <material:MaterialIcon Kind="{Binding Notification.Icon}" Width="20" Height="20"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource TanaHubAccentLightBrush}"/>
+        <TextBlock Grid.Column="1" Text="{Binding Notification.Message}" FontSize="13"
+                   AutomationProperties.LiveSetting="Polite"
+                   TextWrapping="Wrap" VerticalAlignment="Center"
+                   Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
+        <Button Grid.Column="2" Classes="ghost" Width="30" Height="30" Padding="5"
+                Command="{Binding Notification.DismissCommand}"
+                AutomationProperties.Name="Dismiss notification" ToolTip.Tip="Dismiss notification">
+          <material:MaterialIcon Kind="Close" Width="16" Height="16"/>
+        </Button>
+      </Grid>
+    </Border>
   </Grid>
 </Window>

@@ -134,7 +134,7 @@
           <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="14">
             <StackPanel Spacing="2">
               <TextBlock Text="Notifications" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TanaHubTextPrimaryBrush}"/>
-              <TextBlock Text="Episode and chapter release alerts" FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
+              <TextBlock Text="Anime episode release alerts" FontSize="11" Foreground="{DynamicResource TanaHubTextMutedBrush}"/>
             </StackPanel>
             <ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
                           IsChecked="{Binding NotificationsEnabled, Mode=OneWay}"
@@ -184,8 +184,10 @@
                     <TextBlock Text="Nebula"/>
                   </StackPanel>
                 </Button>
-                <Border Height="2" Background="{DynamicResource TanaHubAccentBrush}"
-                        IsVisible="{Binding IsNebulaThemeSelected}"/>
+                <Grid Height="2">
+                  <Border Background="{DynamicResource TanaHubAccentBrush}"
+                          IsVisible="{Binding IsNebulaThemeSelected}"/>
+                </Grid>
               </StackPanel>
               <StackPanel Spacing="2">
                 <Button Classes="ghost" Command="{Binding SelectThemeCommand}" CommandParameter="High contrast">
@@ -194,8 +196,10 @@
                     <TextBlock Text="High contrast"/>
                   </StackPanel>
                 </Button>
-                <Border Height="2" Background="{DynamicResource TanaHubAccentBrush}"
-                        IsVisible="{Binding IsHighContrastThemeSelected}"/>
+                <Grid Height="2">
+                  <Border Background="{DynamicResource TanaHubAccentBrush}"
+                          IsVisible="{Binding IsHighContrastThemeSelected}"/>
+                </Grid>
               </StackPanel>
             </StackPanel>
           </StackPanel>

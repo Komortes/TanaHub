@@ -11,7 +11,8 @@ internal sealed class OfflineCatalogCache
     private readonly string cachePath;
     private readonly ConcurrentDictionary<string, MediaItem> items = new(StringComparer.OrdinalIgnoreCase);
     private readonly SemaphoreSlim flushLock = new(1, 1);
-    private volatile bool dirty;
+    private long changeVersion;
+    private long persistedVersion;
 
     public OfflineCatalogCache(string cachePath) => this.cachePath = cachePath;
 
@@ -20,16 +21,20 @@ internal sealed class OfflineCatalogCache
         if (!File.Exists(cachePath)) return;
         try
         {
-            await using var stream = File.OpenRead(cachePath);
-            var dtos = await JsonSerializer.DeserializeAsync<List<CachedItemDto>>(stream, cancellationToken: ct);
+            using var stream = File.OpenRead(cachePath);
+            var dtos = await JsonSerializer.DeserializeAsync<List<CachedItemDto>>(stream, cancellationToken: ct)
+                .ConfigureAwait(false);
             if (dtos is null) return;
             foreach (var dto in dtos)
             {
                 var item = dto.ToMediaItem();
-                if (item is not null) items[item.Id] = item;
+                if (item is not null) items.TryAdd(item.Id, item);
             }
         }
-        catch { /* corrupt cache — start fresh */ }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // An unavailable or corrupt cache must not prevent startup.
+        }
     }
 
     public bool TryGet(string id, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out MediaItem? item)
@@ -38,30 +43,31 @@ internal sealed class OfflineCatalogCache
     public void Put(MediaItem item)
     {
         items[item.Id] = item;
-        dirty = true;
+        Interlocked.Increment(ref changeVersion);
     }
 
     public void PutRange(IEnumerable<MediaItem> newItems)
     {
-        foreach (var item in newItems) items[item.Id] = item;
-        dirty = true;
+        foreach (var item in newItems) Put(item);
     }
 
     public async Task FlushAsync(CancellationToken ct = default)
     {
-        if (!dirty) return;
-        await flushLock.WaitAsync(ct);
+        if (Volatile.Read(ref changeVersion) == Volatile.Read(ref persistedVersion)) return;
+        await flushLock.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            if (!dirty) return;
+            var snapshotVersion = Volatile.Read(ref changeVersion);
+            if (snapshotVersion == Volatile.Read(ref persistedVersion)) return;
             var dtos = items.Values.Select(CachedItemDto.From).ToList();
             var dir = Path.GetDirectoryName(cachePath);
             if (dir is not null) Directory.CreateDirectory(dir);
             var tmp = cachePath + ".tmp";
             await using (var stream = File.Create(tmp))
-                await JsonSerializer.SerializeAsync(stream, dtos, cancellationToken: ct);
+                await JsonSerializer.SerializeAsync(stream, dtos, cancellationToken: ct).ConfigureAwait(false);
             File.Move(tmp, cachePath, overwrite: true);
-            dirty = false;
+            // Writes arriving after this snapshot still need a subsequent flush.
+            Volatile.Write(ref persistedVersion, snapshotVersion);
         }
         finally
         {

@@ -12,6 +12,7 @@ namespace TanaHub.Infrastructure.Library;
 
 public sealed class SqliteUserLibraryService : IUserLibraryService
 {
+    private const string MediaIdCollation = "ORDINAL_IGNORE_CASE";
     private readonly IDbContextFactory<LibraryDbContext> dbContextFactory;
 
     public SqliteUserLibraryService(IDbContextFactory<LibraryDbContext> dbContextFactory)
@@ -81,8 +82,8 @@ public sealed class SqliteUserLibraryService : IUserLibraryService
         }
 
         await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        var rows = await db.Entries.AsNoTracking().ToListAsync(cancellationToken);
-        var entity = FindByIdIgnoreCase(rows, mediaId);
+        var entity = await FindByIdIgnoreCase(db, mediaId).AsNoTracking()
+            .FirstOrDefaultAsync(cancellationToken);
 
         return entity is not null
             ? Result<UserMediaEntry>.Success(ToDomain(entity))
@@ -96,14 +97,12 @@ public sealed class SqliteUserLibraryService : IUserLibraryService
         try
         {
             await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-            var rows = await db.Entries.ToListAsync(cancellationToken);
-            var existing = FindByIdIgnoreCase(rows, entry.MediaId);
+            var existing = await FindByIdIgnoreCase(db, entry.MediaId).FirstOrDefaultAsync(cancellationToken);
             var updatedAt = DateTimeOffset.UtcNow;
 
             if (existing is not null)
             {
                 ApplyDomainFields(existing, entry, existing.MediaId, updatedAt);
-                db.Entries.Update(existing);
             }
             else
             {
@@ -125,33 +124,48 @@ public sealed class SqliteUserLibraryService : IUserLibraryService
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(incomingEntries);
+        if (incomingEntries.Count == 0)
+        {
+            return Result<int>.Success(0);
+        }
 
         try
         {
             await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-            var rows = await db.Entries.ToListAsync(cancellationToken);
+            ConfigureMediaIdCollation(db);
+            var rows = new Dictionary<string, UserMediaEntryEntity>(StringComparer.OrdinalIgnoreCase);
+            // Bound parameter counts for large imports and only materialize entries being merged.
+            foreach (var ids in incomingEntries.Select(entry => entry.MediaId)
+                         .Distinct(StringComparer.OrdinalIgnoreCase).Chunk(500))
+            {
+                var matching = await db.Entries
+                    .Where(row => ids.Contains(EF.Functions.Collate(row.MediaId, MediaIdCollation)))
+                    .ToListAsync(cancellationToken);
+                foreach (var row in matching)
+                {
+                    rows.TryAdd(row.MediaId, row);
+                }
+            }
             var updatedAt = DateTimeOffset.UtcNow;
 
             foreach (var incoming in incomingEntries)
             {
-                var existing = FindByIdIgnoreCase(rows, incoming.MediaId);
-                if (existing is not null)
+                if (rows.TryGetValue(incoming.MediaId, out var existing))
                 {
                     var merged = incoming with
                     {
-                        Review = ToDomain(existing).Review,
+                        Review = existing.Review,
                         Tags = existing.Tags,
                         CustomLists = existing.CustomLists,
                         UpdatedAt = updatedAt
                     };
                     ApplyDomainFields(existing, merged, existing.MediaId, updatedAt);
-                    db.Entries.Update(existing);
                 }
                 else
                 {
                     var created = ToEntity(incoming with { UpdatedAt = updatedAt });
                     db.Entries.Add(created);
-                    rows.Add(created);
+                    rows.Add(created.MediaId, created);
                 }
             }
 
@@ -174,7 +188,14 @@ public sealed class SqliteUserLibraryService : IUserLibraryService
             return Failure<UserMediaEntry>("Amount must be greater than zero.");
         }
 
-        return await MutateAsync(mediaId, (entry, _) => entry.IncrementProgress(amount), cancellationToken);
+        try
+        {
+            return await MutateAsync(mediaId, (entry, _) => entry.IncrementProgress(amount), cancellationToken);
+        }
+        catch (ArgumentOutOfRangeException ex) when (ex.ParamName == nameof(amount))
+        {
+            return Failure<UserMediaEntry>("Progress cannot exceed 2,147,483,647.");
+        }
     }
 
     public async Task<Result<UserMediaEntry>> UpdateStatusAsync(
@@ -185,8 +206,10 @@ public sealed class SqliteUserLibraryService : IUserLibraryService
         return await MutateAsync(mediaId, (entry, updatedAt) => entry with
         {
             Status = status,
-            StartedAt = status == MediaListStatus.Current && entry.StartedAt is null ? updatedAt : entry.StartedAt,
-            CompletedAt = status == MediaListStatus.Completed ? updatedAt : entry.CompletedAt
+            StartedAt = status == MediaListStatus.Current && entry.StartedAt is null
+                && (entry.CompletedAt is null || entry.CompletedAt >= updatedAt) ? updatedAt : entry.StartedAt,
+            CompletedAt = status == MediaListStatus.Completed && entry.CompletedAt is null
+                && (entry.StartedAt is null || entry.StartedAt <= updatedAt) ? updatedAt : entry.CompletedAt
         }, cancellationToken);
     }
 
@@ -245,8 +268,7 @@ public sealed class SqliteUserLibraryService : IUserLibraryService
         try
         {
             await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-            var rows = await db.Entries.ToListAsync(cancellationToken);
-            var existing = FindByIdIgnoreCase(rows, mediaId);
+            var existing = await FindByIdIgnoreCase(db, mediaId).FirstOrDefaultAsync(cancellationToken);
             if (existing is null)
             {
                 return Result<bool>.Success(false);
@@ -265,12 +287,13 @@ public sealed class SqliteUserLibraryService : IUserLibraryService
     public static async Task ImportFromJsonIfNeededAsync(
         LibraryDbContext db, string jsonPath, CancellationToken cancellationToken = default)
     {
-        if (await db.Entries.AnyAsync(cancellationToken)) return;
+        if (await db.Entries.AnyAsync(cancellationToken).ConfigureAwait(false)) return;
         if (!File.Exists(jsonPath)) return;
 
         try
         {
-            var json = await File.ReadAllTextAsync(jsonPath, cancellationToken);
+            // Startup bridges this import synchronously; never queue continuations on the UI thread.
+            var json = await File.ReadAllTextAsync(jsonPath, cancellationToken).ConfigureAwait(false);
             var options = new JsonSerializerOptions { Converters = { new JsonStringEnumConverter() } };
             var dtos = JsonSerializer.Deserialize<List<LegacyLibraryEntryDto>>(json, options) ?? [];
 
@@ -294,7 +317,7 @@ public sealed class SqliteUserLibraryService : IUserLibraryService
                 });
             }
 
-            await db.SaveChangesAsync(cancellationToken);
+            await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             File.Move(jsonPath, jsonPath + ".bak", overwrite: true);
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
@@ -302,8 +325,6 @@ public sealed class SqliteUserLibraryService : IUserLibraryService
             try { File.Copy(jsonPath, jsonPath + ".bak", overwrite: true); } catch { /* best-effort */ }
         }
     }
-
-    internal static UserMediaEntryEntity ToEntityForSeeding(UserMediaEntry entry) => ToEntity(entry);
 
     private async Task<Result<UserMediaEntry>> MutateAsync(
         string mediaId,
@@ -313,8 +334,7 @@ public sealed class SqliteUserLibraryService : IUserLibraryService
         try
         {
             await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-            var rows = await db.Entries.ToListAsync(cancellationToken);
-            var existing = FindByIdIgnoreCase(rows, mediaId);
+            var existing = await FindByIdIgnoreCase(db, mediaId).FirstOrDefaultAsync(cancellationToken);
             if (existing is null)
             {
                 return Result<UserMediaEntry>.Failure(
@@ -325,7 +345,6 @@ public sealed class SqliteUserLibraryService : IUserLibraryService
             var mutated = mutate(ToDomain(existing), updatedAt) with { UpdatedAt = updatedAt };
             ApplyDomainFields(existing, mutated, existing.MediaId, updatedAt);
 
-            db.Entries.Update(existing);
             await db.SaveChangesAsync(cancellationToken);
             return Result<UserMediaEntry>.Success(ToDomain(existing));
         }
@@ -353,8 +372,18 @@ public sealed class SqliteUserLibraryService : IUserLibraryService
         target.UpdatedAt = updatedAt;
     }
 
-    private static UserMediaEntryEntity? FindByIdIgnoreCase(List<UserMediaEntryEntity> rows, string mediaId) =>
-        rows.FirstOrDefault(row => row.MediaId.Equals(mediaId, StringComparison.OrdinalIgnoreCase));
+    private static IQueryable<UserMediaEntryEntity> FindByIdIgnoreCase(LibraryDbContext db, string mediaId)
+    {
+        ConfigureMediaIdCollation(db);
+        return db.Entries.Where(row => EF.Functions.Collate(row.MediaId, MediaIdCollation) == mediaId);
+    }
+
+    private static void ConfigureMediaIdCollation(LibraryDbContext db)
+    {
+        // SQLite's built-in NOCASE only handles ASCII; IDs previously used .NET ordinal comparison.
+        ((SqliteConnection)db.Database.GetDbConnection()).CreateCollation(
+            MediaIdCollation, StringComparer.OrdinalIgnoreCase.Compare);
+    }
 
     private static UserMediaEntry ToDomain(UserMediaEntryEntity entity) => new(
         entity.MediaId,
