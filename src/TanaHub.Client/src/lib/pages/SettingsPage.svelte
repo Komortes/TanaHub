@@ -2,7 +2,9 @@
   import { tick } from 'svelte';
   import { Download, Upload, RefreshCw, ExternalLink, Check, Link2, ShieldCheck } from '@lucide/svelte';
   import { featureApi } from '../feature-api';
-  import { saveExport } from '../native';
+  import { saveExport, isDesktop } from '../native';
+  import { version } from '../../../package.json';
+  import DesktopUpdates from '../components/DesktopUpdates.svelte';
   import type { Settings, SettingsPatch, ImportPreview, UpdateCheck } from '../feature-types';
   let { data, loading = false, loadError = '', busy = '', onReload, onSave, onConnect, onSync, onDisconnect, onLibraryChanged }:
     { data: Settings | null; loading?: boolean; loadError?: string; busy?: string; onReload: () => void; onSave: (patch: SettingsPatch) => Promise<void>; onConnect: (id: string, secret?: string) => Promise<void>; onSync: () => Promise<{ importedCount: number }>; onDisconnect: () => Promise<void>; onLibraryChanged: () => void } = $props();
@@ -14,6 +16,7 @@
   let error = $state('');
   let feedbackSection = $state('preferences');
   let localBusy = $state('');
+  let updaterBusy = $state(false);
   let preview = $state<ImportPreview | null>(null);
   let importXml = $state('');
   let importName = $state('');
@@ -23,7 +26,7 @@
   let confirmImportButton = $state<HTMLButtonElement>();
   const titleCount = (count: number) => `${count} ${count === 1 ? 'title' : 'titles'}`;
   const importWarning = 'Existing titles may have progress, status, scores, notes and dates replaced. Reviews, tags and custom lists are kept.';
-  const disabled = $derived(!!busy || !!localBusy || loading);
+  const disabled = $derived(!!busy || !!localBusy || loading || updaterBusy);
   const clientIdChanged = $derived(clientId.trim() !== (data?.aniListClientId ?? '').trim());
   $effect(() => { if (!clientIdDirty) clientId = data?.aniListClientId ?? ''; });
   async function run(name: string, action: () => Promise<void>) {
@@ -129,7 +132,9 @@
         {#if preview}<div class="import-preview"><strong>{titleCount(preview.count)} in {importName}</strong><p class="hint">{importWarning}</p><ul>{#each preview.items.slice(0, 5) as entry}<li>{entry.media.title} <span>{entry.progress} {entry.mediaType === 'Manga' ? entry.progress === 1 ? 'chapter' : 'chapters' : entry.progress === 1 ? 'episode' : 'episodes'}</span></li>{/each}</ul>{#if preview.count > 5}<p class="hint">And {preview.count - 5} more titles.</p>{/if}<div class="actions"><button class="primary-button" disabled={disabled || !preview.count} onclick={() => void run('import', async () => { const result = await featureApi.importApply(importXml); preview = null; importXml = ''; onLibraryChanged(); message = `Imported ${titleCount(result.importedCount)}`; })}>Import {titleCount(preview.count)}</button><button class="text-button" disabled={disabled} onclick={() => { preview = null; importXml = ''; }}>Cancel</button></div></div>{/if}
         {@render feedback('library')}
       </section>
-      <section class="panel update-panel"><h2>About TanaHub</h2><p class="hint">TanaHub · {update?.currentVersion ?? '0.1.1'}</p><p class="hint">Checks stable releases. For preview builds and installers, browse all releases.</p><button class="ghost-button" disabled={disabled} onclick={() => void run('updates', async () => { update = await featureApi.updates(); message = update.isUpdateAvailable ? `Version ${update.latestRelease?.version} is available` : update.latestRelease ? 'You are up to date' : 'No stable release yet. Preview builds are available under Browse releases.'; })}><RefreshCw size={15} />{localBusy === 'updates' ? 'Checking…' : 'Check for updates'}</button>{#if update?.latestRelease}<button class="text-button" onclick={() => void run('open', () => featureApi.openExternal(update!.latestRelease!.releaseUrl))}>View release <ExternalLink size={13} /></button>{/if}<button class="text-button" disabled={disabled} onclick={() => void run('open', () => featureApi.openExternal('https://github.com/Komortes/TanaHub/releases'))}>Browse releases <ExternalLink size={13} /></button>{@render feedback('about')}</section>
+      {#if isDesktop()}<DesktopUpdates busy={!!busy || !!localBusy || loading} onBusyChange={value => updaterBusy = value} />{:else}
+      <section class="panel update-panel"><h2>About TanaHub</h2><p class="hint">TanaHub · {update?.currentVersion ?? version}</p><p class="hint">Checks stable releases. For preview builds and installers, browse all releases.</p><button class="ghost-button" disabled={disabled} onclick={() => void run('updates', async () => { update = await featureApi.updates(); message = update.isUpdateAvailable ? `Version ${update.latestRelease?.version} is available` : update.latestRelease ? 'You are up to date' : 'No stable release yet. Preview builds are available under Browse releases.'; })}><RefreshCw size={15} />{localBusy === 'updates' ? 'Checking…' : 'Check for updates'}</button>{#if update?.latestRelease}<button class="text-button" onclick={() => void run('open', () => featureApi.openExternal(update!.latestRelease!.releaseUrl))}>View release <ExternalLink size={13} /></button>{/if}<button class="text-button" disabled={disabled} onclick={() => void run('open', () => featureApi.openExternal('https://github.com/Komortes/TanaHub/releases'))}>Browse releases <ExternalLink size={13} /></button>{@render feedback('about')}</section>
+      {/if}
     </div>
   {/if}
 </section>

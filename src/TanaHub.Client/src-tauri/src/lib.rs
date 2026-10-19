@@ -188,6 +188,9 @@ impl BridgeState {
             .session
             .lock()
             .map_err(|_| "TanaHub core state is unavailable")?;
+        if self.0.closing.load(Ordering::SeqCst) {
+            return Err("TanaHub is closing".into());
+        }
         if let Some(process) = &session.process {
             let stopped = process
                 .child
@@ -315,6 +318,8 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .manage(BridgeState::default())
         .manage(AuthBridgeState::default())
         .setup(|app| {
@@ -327,7 +332,7 @@ pub fn run() {
             app.manage(artwork::ArtworkCache::new(root));
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![backend_request, save_export, open_external, cache_artwork])
+        .invoke_handler(tauri::generate_handler![backend_request, save_export, open_external, cache_artwork, update_support, prepare_update, resume_after_update])
         .build(tauri::generate_context!())
         .expect("Could not initialize the TanaHub desktop window");
     app.run(|handle, event| {
@@ -344,4 +349,64 @@ pub fn run() {
 #[tauri::command]
 async fn cache_artwork(cache: tauri::State<'_, artwork::ArtworkCache>, url: String) -> Result<Option<String>, String> {
     cache.resolve(&url).await
+}
+
+#[tauri::command]
+fn update_support() -> Value {
+    if cfg!(debug_assertions) {
+        json!({"supported": false, "reason": "In-app installation is available in packaged desktop builds. Run a release package or use Browse releases."})
+    } else if cfg!(target_os = "linux") && std::env::var_os("APPIMAGE").is_none() {
+        json!({"supported": false, "reason": "In-app updates on Linux require the AppImage. Update the DEB version through your package manager or Browse releases."})
+    } else {
+        json!({"supported": true, "reason": null})
+    }
+}
+
+#[tauri::command]
+async fn prepare_update(state: tauri::State<'_, BridgeState>, auth: tauri::State<'_, AuthBridgeState>) -> Result<(), String> {
+    let state = state.inner().clone();
+    let auth = auth.0.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        pause_for_update(&state, &auth)
+    }).await.map_err(|_| "Could not prepare the application for updating.")?
+}
+
+#[tauri::command]
+fn resume_after_update(state: tauri::State<'_, BridgeState>, auth: tauri::State<'_, AuthBridgeState>) {
+    state.0.closing.store(false, Ordering::SeqCst);
+    auth.0.0.closing.store(false, Ordering::SeqCst);
+}
+
+fn pause_for_update(state: &BridgeState, auth: &BridgeState) -> Result<(), String> {
+    // Never replace a running sidecar or interrupt an in-flight save/import/OAuth request.
+    let mut normal = state.0.session.try_lock().map_err(|_| "Finish the current library operation, then try again.")?;
+    let mut authentication = auth.0.session.try_lock().map_err(|_| "Finish connecting AniList, then try again.")?;
+    state.0.closing.store(true, Ordering::SeqCst);
+    auth.0.closing.store(true, Ordering::SeqCst);
+    normal.process = None;
+    authentication.process = None;
+    state.0.running_child.lock().map_err(|_| "Could not release the core.")?.take();
+    auth.0.running_child.lock().map_err(|_| "Could not release authentication.")?.take();
+    Ok(())
+}
+
+#[cfg(test)]
+mod update_tests {
+    use super::*;
+    #[test]
+    fn updating_waits_for_existing_library_and_authentication_operations() {
+        let state = BridgeState::default();
+        let auth = BridgeState::default();
+        let library_request = state.0.session.lock().unwrap();
+        assert!(pause_for_update(&state, &auth).is_err());
+        assert!(!state.0.closing.load(Ordering::SeqCst));
+        drop(library_request);
+        let authentication = auth.0.session.lock().unwrap();
+        assert!(pause_for_update(&state, &auth).is_err());
+        assert!(!state.0.closing.load(Ordering::SeqCst));
+        drop(authentication);
+        assert!(pause_for_update(&state, &auth).is_ok());
+        assert!(state.0.closing.load(Ordering::SeqCst));
+        assert!(auth.0.closing.load(Ordering::SeqCst));
+    }
 }

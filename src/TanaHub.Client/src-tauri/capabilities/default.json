@@ -3,5 +3,5 @@
   "identifier": "main-window",
   "description": "Local TanaHub window; exports require a user-selected save path and external links use the system browser.",
   "windows": ["main"],
-  "permissions": ["core:default", "allow-backend-request", "allow-save-export", "allow-open-external", "allow-cache-artwork", "clipboard-manager:allow-write-text"]
+  "permissions": ["core:default", "allow-backend-request", "allow-save-export", "allow-open-external", "allow-cache-artwork", "allow-update-support", "allow-prepare-update", "allow-resume-after-update", "updater:allow-check", "updater:allow-download", "updater:allow-install", "process:allow-restart", "clipboard-manager:allow-write-text"]
 }
