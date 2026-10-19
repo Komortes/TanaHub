@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import { ArrowLeft, ArrowUpRight, BookOpen, Calendar, Check, Clock3, Copy, Maximize2, Plus, Star, Tv, Users } from '@lucide/svelte';
   import { formatLabel } from '../types';
   import type { Entry, Media, Status } from '../types';
@@ -14,6 +15,7 @@
   let failedBanner = $state(false);
   let failedCharacters = $state<string[]>([]);
   let saving = $state(false);
+  let article: HTMLElement;
   let actionError = $state('');
   let coverOpen = $state(false);
   let expandedSynopsis = $state(false);
@@ -40,9 +42,17 @@
     if (busy || saving) return;
     saving = true;
     actionError = '';
+    const focused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     try { await onAdd(); }
     catch (reason) { actionError = reason instanceof Error ? reason.message : 'Could not add this title to your library.'; }
-    finally { saving = false; }
+    finally {
+      saving = false;
+      await tick();
+      if (article?.isConnected && focused && document.activeElement === document.body) {
+        const target = focused.isConnected && !focused.matches(':disabled') ? focused : article.querySelector<HTMLElement>('#title-progress');
+        target?.focus({ preventScroll: true });
+      }
+    }
   }
   async function copyTitle() {
     if (copyBusy) return;
@@ -65,7 +75,7 @@
   }
 </script>
 
-<article class="title-page" aria-labelledby="title-page-heading">
+<article bind:this={article} class="title-page" aria-labelledby="title-page-heading">
   <button class="back-button" onclick={onClose} disabled={busy || saving}><ArrowLeft size={16} />Back</button>
   <header class="title-header" class:has-banner={!!media.bannerUrl && !failedBanner}>
     {#if media.bannerUrl && !failedBanner}<img class="title-banner" src={media.bannerUrl} alt="" onerror={() => failedBanner = true} />{/if}

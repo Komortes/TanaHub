@@ -101,6 +101,8 @@ test('library and catalog keep independent searches and media types across navig
   await page.getByRole('button', { name: 'My library', exact: true }).click();
   await expect(page.getByRole('searchbox', { name: 'Search your library' })).toHaveValue('Berserk');
   await expect(page.getByRole('button', { name: 'Manga', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  // The restored search is debounced; wait for its normal request before counting a no-op click.
+  await expect(page.getByRole('button', { name: 'Open Berserk', exact: true })).toBeVisible();
   const count = library.requests.filter(request => request.method === 'library.list').length;
   await page.getByRole('button', { name: 'My library', exact: true }).click();
   await expect(page.getByRole('searchbox', { name: 'Search your library' })).toHaveValue('Berserk');

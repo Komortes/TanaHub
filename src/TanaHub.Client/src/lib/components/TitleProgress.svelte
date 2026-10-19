@@ -3,10 +3,11 @@
   import { Check, Minus, Plus, RotateCcw, X } from '@lucide/svelte';
   import type { Entry, Media } from '../types';
   import { maxProgress } from '../types';
+  import { rememberDraft, restoreDraft } from '../drafts';
 
   let { media, entry, busy = false, onIncrement, onSet, onDraftChange }:
     { media: Media; entry: Entry; busy?: boolean; onIncrement: () => Promise<void>; onSet: (value: number) => Promise<void>; onDraftChange: (dirty: boolean) => void } = $props();
-  let draft = $state<number | undefined>(untrack(() => entry.progress));
+  let draft = $state<number | undefined>(untrack(() => restoreDraft<number | null>(entry.mediaId, 'progress', entry.progress) ?? undefined));
   let previousProgress = untrack(() => `${entry.mediaId}:${entry.progress}`);
   let validation = $state('');
   let confirmReset = $state(false);
@@ -25,6 +26,7 @@
     if (current !== previousProgress) { draft = entry.progress; previousProgress = current; validation = ''; confirmReset = false; }
   });
   $effect(() => onDraftChange(dirty));
+  $effect(() => rememberDraft(entry.mediaId, 'progress', entry.progress, draft ?? null));
   function cancelDraft() { draft = entry.progress; validation = ''; input?.focus({ preventScroll: true }); }
   function cancelReset() { confirmReset = false; input?.focus({ preventScroll: true }); }
   async function save() {
@@ -48,11 +50,12 @@
       <input bind:this={input} id="title-progress" class="mono" type="number" min="0" max={maxProgress} step="1" bind:value={draft} disabled={busy} aria-label="Set progress" aria-invalid={!!validation} aria-describedby={validation ? 'progress-validation' : 'progress-hint'} onkeydown={(event) => { if (event.key === 'Escape' && !busy) { event.preventDefault(); cancelDraft(); } }} />
       <button type="button" class="stepper-plus" aria-label={`+1 ${unit}`} disabled={busy || dirty || entry.progress >= maxProgress || (total !== null && entry.progress >= total)} onclick={() => void act(onIncrement)}><Plus size={17} /><span>+1 {unit}</span></button>
     </div>
-    {#if dirty}<div class="draft-actions"><span>Unsaved progress</span><button class="apply-button" type="submit" disabled={busy || !valid}><Check size={13} />Set progress</button><button type="button" class="cancel-button" aria-label="Cancel progress edit" disabled={busy} onclick={cancelDraft}><X size={13} /></button></div>{/if}
+    {#if dirty}<div class="draft-actions"><span>Unsaved progress</span><button class="apply-button" type="submit" disabled={busy || !valid}><Check size={13} />Set progress</button><button type="button" class="cancel-button" aria-label="Cancel progress edit" disabled={busy} onclick={cancelDraft}><X size={13} /></button></div><p class="progress-hint">Draft kept in this window. Set progress to save it.</p>{/if}
   </form>
   <div class="progress-track" class:unknown={total === null} role={total === null ? 'presentation' : 'progressbar'} aria-label={total === null ? undefined : `${media.type === 'Manga' ? 'Chapters' : 'Episodes'} completed`} aria-valuemin={total === null ? undefined : 0} aria-valuemax={total ?? undefined} aria-valuenow={total === null ? undefined : Math.min(entry.progress,total)} aria-valuetext={total === null ? undefined : `${entry.progress} ${unit}${entry.progress === 1 ? '' : 's'} of ${total}`}><span style:transform={`scaleX(${fraction})`}></span></div>
   <p class="progress-hint" id="progress-hint">{#if remaining !== null}{remaining} {unit}{remaining === 1 ? '' : 's'} left{#if minutes !== null && remaining > 0}<span> · about {timeRemaining}</span>{/if}{:else}Track at your own pace.{/if}{#if entry.status === 'Completed' && entry.progress === 0}<span> · Marked completed; progress not logged.</span>{/if}</p>
   {#if validation}<p id="progress-validation" class="error-text" role="alert">{validation}</p>{/if}
+  {#if entry.status === 'Planning' && entry.progress === 0}<p class="progress-hint">Logging your first {unit} moves this title to {media.type === 'Manga' ? 'Reading' : 'Watching'}.</p>{/if}
   <details class="more-actions">
     <summary>More progress actions</summary>
     <div class="secondary-actions">

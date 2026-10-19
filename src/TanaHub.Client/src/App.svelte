@@ -15,6 +15,7 @@
   import type { Settings, SettingsPatch } from './lib/feature-types';
   import type { Entry, Layout, Media, MediaType, PageName, Status } from './lib/types';
   import { mediaKey } from './lib/types';
+  import { clearDrafts } from './lib/drafts';
 
   function preferences(): { layout: Layout; coverSize: number } {
     try {
@@ -269,6 +270,7 @@
     if (!selected) return; const id = selected.id; busyIds = [...busyIds, mediaKey(id)];
     try {
       const result = await api.remove(id); if (!result.removed) throw new Error('This title could not be removed. Please try again.');
+      clearDrafts(id);
       const wasListed = entries.some(entry => mediaKey(entry.mediaId) === mediaKey(id)); const { [mediaKey(id)]: ignored, ...rest } = knownEntries; knownEntries = rest;
       entries = entries.filter(entry => mediaKey(entry.mediaId) !== mediaKey(id));
       if (mediaKey(id) === mediaKey(returnMediaId)) { returnFocus = null; returnFocusLabel = ''; returnFocusTitle = ''; }
@@ -307,7 +309,7 @@
             <div class="empty-state"><div class="empty-icon">{#if hasCollectionFilters}<SearchX size={32} strokeWidth={1.3} />{:else if page === 'discover'}<Compass size={32} strokeWidth={1.3} />{:else}<BookOpen size={32} strokeWidth={1.3} />{/if}</div><h2>{hasCollectionFilters ? 'No matching titles' : page === 'discover' ? 'No titles found' : 'Your next story starts here'}</h2><p>{hasCollectionFilters ? 'Try changing or resetting your filters.' : page === 'discover' ? 'Try another search or media type.' : 'Discover something you love and add it to your library.'}</p>{#if hasCollectionFilters}<button class="ghost-button" onclick={resetFilters}>Reset filters</button>{:else if page === 'library'}<div class="empty-actions"><button class="primary-button" onclick={() => navigate('discover')}><Compass size={16} />Discover titles</button><button class="ghost-button" onclick={openImport}>Import a list</button></div><p class="onboarding-note">No account required. Your library stays on this device.</p>{/if}</div>
           {:else if !error || visibleMedia.length}
             <div class:media-grid={layout === 'grid'} class:media-list={layout === 'list'} style:--cover-size={`${coverSize}px`}>
-              {#each visibleMedia as media (mediaKey(media.id))}<MediaCard {media} entry={knownEntries[mediaKey(media.id)]} {layout} busy={busyIds.includes(mediaKey(media.id))} onOpen={() => void openDetails(media)} onProgress={() => void cardAction(() => mutate(media.id, () => api.progress(media.id), 'Progress saved'))} onRate={(anchor) => rating = { entry: knownEntries[mediaKey(media.id)], anchor }} onAdd={() => void cardAction(() => mutate(media.id, () => api.add(media.id), 'Saved to your library'))} />{/each}
+              {#each visibleMedia as media (mediaKey(media.id))}<MediaCard {media} entry={knownEntries[mediaKey(media.id)]} {layout} busy={busyIds.includes(mediaKey(media.id))} onOpen={() => void openDetails(media)} onProgress={() => cardAction(() => mutate(media.id, () => api.progress(media.id), 'Progress saved'))} onRate={(anchor) => rating = { entry: knownEntries[mediaKey(media.id)], anchor }} onAdd={() => cardAction(() => mutate(media.id, () => api.add(media.id), 'Saved to your library'))} />{/each}
             </div>
             {#if hasNext}<div class="load-more"><button class="ghost-button" disabled={loadingMore} onclick={loadMore}>{loadingMore ? 'Loading…' : 'Load more titles'}</button></div>{/if}
           {/if}

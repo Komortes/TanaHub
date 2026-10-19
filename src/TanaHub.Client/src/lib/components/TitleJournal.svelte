@@ -2,17 +2,19 @@
   import { tick, untrack } from 'svelte';
   import { Check, Folder, Pencil, Plus, Save, Tag, Trash2, X } from '@lucide/svelte';
   import type { Entry } from '../types';
+  import { rememberDraft, restoreDraft } from '../drafts';
   import TitleDates from './TitleDates.svelte';
 
   let { entry, busy = false, onNotes, onReview, onOrganization, onDates, onRemove }:
     { entry: Entry; busy?: boolean; onNotes: (notes: string) => Promise<void>; onReview: (review: string) => Promise<void>; onOrganization: (tags: string[], lists: string[]) => Promise<void>; onDates: (startedAt: string | null, completedAt: string | null) => Promise<void>; onRemove: () => Promise<void> } = $props();
   type Editor = 'notes' | 'review' | 'organization';
-  let notes = $state(untrack(() => entry.notes ?? ''));
-  let review = $state(untrack(() => entry.review ?? ''));
-  let tagsText = $state(untrack(() => (entry.tags ?? []).join(', ')));
-  let listsText = $state(untrack(() => (entry.customLists ?? []).join(', ')));
+  let notes = $state(untrack(() => restoreDraft(entry.mediaId, 'notes', entry.notes ?? '')));
+  let review = $state(untrack(() => restoreDraft(entry.mediaId, 'review', entry.review ?? '')));
+  const organization = untrack(() => restoreDraft(entry.mediaId, 'organization', [(entry.tags ?? []).join(', '), (entry.customLists ?? []).join(', ')]));
+  let tagsText = $state(organization[0]);
+  let listsText = $state(organization[1]);
   let previous = untrack(() => savedValues(entry));
-  let editing = $state({ notes: false, review: false, organization: false });
+  let editing = $state(untrack(() => ({ notes: notes !== (entry.notes ?? ''), review: review !== (entry.review ?? ''), organization: tagsText !== (entry.tags ?? []).join(', ') || listsText !== (entry.customLists ?? []).join(', ') })));
   let saving = $state('');
   let error = $state('');
   let confirmRemove = $state(false);
@@ -29,6 +31,13 @@
   const reviewTooLong = $derived(review.trim().length > reviewLimit);
   const organizationDirty = $derived(JSON.stringify(tags) !== JSON.stringify(entry.tags ?? []) || JSON.stringify(lists) !== JSON.stringify(entry.customLists ?? []));
   const hasOrganization = $derived(!!(entry.tags?.length || entry.customLists?.length));
+
+  $effect(() => rememberDraft(entry.mediaId, 'notes', entry.notes ?? '', notes));
+  $effect(() => rememberDraft(entry.mediaId, 'review', entry.review ?? '', review));
+  $effect(() => {
+    const saved = [(entry.tags ?? []).join(', '), (entry.customLists ?? []).join(', ')];
+    rememberDraft(entry.mediaId, 'organization', saved, organizationDirty ? [tagsText, listsText] : saved);
+  });
 
   function savedValues(value: Entry) { return { id: value.mediaId, notes: value.notes, review: value.review, tags: JSON.stringify(value.tags ?? []), lists: JSON.stringify(value.customLists ?? []) }; }
   function parseItems(value: string) {
@@ -86,6 +95,7 @@
 
 <section class="journal-panel" aria-labelledby="journal-heading" aria-busy={locked} bind:this={panel}>
   <div class="section-heading"><h2 id="journal-heading">Your space</h2><span>Private, on this device</span></div>
+  {#if notesDirty || reviewDirty || organizationDirty}<p class="draft-help">Drafts stay in this window when you switch pages. Save to keep them in your library.</p>{/if}
   <div class="journal-section">
     <div class="editor-heading"><h3>Personal notes</h3>{#if notesDirty}<span class="draft-label">Unsaved draft</span>{/if}<button id="notes-editor-toggle" class="editor-toggle" aria-expanded={editing.notes} aria-controls="notes-editor" onclick={() => toggleEditor('notes')} disabled={locked}>{#if editing.notes}<X size={13} />Close notes editor{:else if notesDirty}<Pencil size={13} />Continue editing notes{:else if entry.notes}<Pencil size={13} />Edit notes{:else}<Plus size={13} />Add notes{/if}</button></div>
     {#if editing.notes}
@@ -136,6 +146,7 @@
   h2 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -.015em; }
   h3 { margin: 0; font-size: 12px; font-weight: 500; color: var(--secondary); }
   .section-heading > span { color: var(--secondary); font-size: 11px; }
+  .draft-help { margin: 0 0 8px; color: var(--secondary); font-size: 11px; line-height: 1.6; }
   .journal-section + .journal-section { border-top: 1px solid var(--border); }
   .editor-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; min-height: 48px; }
   .editor-toggle { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; min-height: 36px; padding: 7px 0 7px 8px; font-size: 11px; background: transparent; border: 0; color: var(--lavender); }

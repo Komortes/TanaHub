@@ -1,10 +1,24 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import { Plus, Star, BookOpen, Play } from '@lucide/svelte';
   import { formatLabel, statusLabel, unitLabel, maxProgress } from '../types';
   import type { Entry, Layout, Media } from '../types';
   let { media, entry, layout, busy = false, onOpen, onProgress, onRate, onAdd }:
-    { media: Media; entry?: Entry; layout: Layout; busy?: boolean; onOpen: () => void; onProgress: () => void; onRate: (anchor: DOMRect) => void; onAdd: () => void } = $props();
+    { media: Media; entry?: Entry; layout: Layout; busy?: boolean; onOpen: () => void; onProgress: () => Promise<void>; onRate: (anchor: DOMRect) => void; onAdd: () => Promise<void> } = $props();
   let failed = $state(false);
+  let card: HTMLElement;
+  async function act(action: () => Promise<void>) {
+    const focused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const ownedFocus = !!focused && card?.contains(focused);
+    try { await action(); }
+    finally {
+      await tick();
+      if (ownedFocus && card?.isConnected && !card.closest('[hidden], [inert]') && focused && document.activeElement === document.body) {
+        const target = focused.isConnected && !focused.matches(':disabled') ? focused : card.querySelector<HTMLElement>('.progress-button:not(:disabled)') ?? card.querySelector<HTMLElement>('.title-button');
+        target?.focus({ preventScroll: true });
+      }
+    }
+  }
   $effect(() => { media.posterUrl; failed = false; });
   const hasTotal = $derived(media.totalUnits !== null && media.totalUnits > 0);
   const progressRatio = $derived(hasTotal ? Math.max(0, Math.min(1, (entry?.progress ?? 0) / media.totalUnits!)) : 0);
@@ -15,7 +29,7 @@
   ].filter(Boolean).join(' · '));
 </script>
 
-<article class="media-card" class:list-card={layout === 'list'} aria-label={media.title}>
+<article bind:this={card} class="media-card" class:list-card={layout === 'list'} aria-label={media.title}>
   <button class="poster" onclick={onOpen} aria-label={`Open ${media.title}`}>
     {#if media.posterUrl && !failed}
       <img src={media.posterUrl} alt={`Cover of ${media.title}`} loading="lazy" decoding="async" onerror={() => failed = true} />
@@ -33,7 +47,7 @@
           {#if entry.status === 'Watching'}<Play size={11} fill="currentColor" />{/if}
           {statusLabel(entry.status, media.type)}
         </span>
-        <button class="progress-button" aria-label={`Add ${media.type === 'Manga' ? 'chapter' : 'episode'} to ${media.title}`} title={media.type === 'Manga' ? 'Read one more chapter' : 'Watched one more episode'} onclick={onProgress} disabled={busy || entry.progress >= maxProgress || (hasTotal && entry.progress >= media.totalUnits!)}><Plus size={17} /></button>
+        <button class="progress-button" aria-label={`Add ${media.type === 'Manga' ? 'chapter' : 'episode'} to ${media.title}`} title={entry.status === 'Planning' && entry.progress === 0 ? `Start ${media.type === 'Manga' ? 'reading' : 'watching'} and record the first ${media.type === 'Manga' ? 'chapter' : 'episode'}` : media.type === 'Manga' ? 'Read one more chapter' : 'Watched one more episode'} onclick={() => void act(onProgress)} disabled={busy || entry.progress >= maxProgress || (hasTotal && entry.progress >= media.totalUnits!)}><Plus size={17} /></button>
       </div>
       <div class="card-bottom">
         <div class="progress-info">
@@ -43,7 +57,7 @@
         <button class="rating-button" class:unrated={entry.score === null} aria-label={`Rate ${media.title}`} title="Set your rating" onclick={(event) => onRate(event.currentTarget.getBoundingClientRect())} disabled={busy}><Star size={17} fill={entry.score !== null ? 'currentColor' : 'none'} /><span class="mono">{entry.score ?? '—'}<span class="rating-total">/10</span></span></button>
       </div>
     {:else}
-      <div class="tracking-row catalog-action"><button class="add-button" onclick={onAdd} disabled={busy} aria-label={`Add ${media.title} to library`}><Plus size={15} /><span>Add to library</span></button></div>
+      <div class="tracking-row catalog-action"><button class="add-button" onclick={() => void act(onAdd)} disabled={busy} aria-label={`Add ${media.title} to library`}><Plus size={15} /><span>Add to library</span></button></div>
       <div class="card-bottom catalog-bottom">
         <div class="progress-info"><div class="progress-track catalog-track" aria-hidden="true"></div><span class="progress-text total">Score</span></div>
         {#if media.averageScore !== null}<span class="community-score" title="Community score"><Star size={16} fill="currentColor" /><span class="mono">{media.averageScore}<span class="rating-total">/100</span></span></span>{:else}<span class="community-score">Unrated</span>{/if}

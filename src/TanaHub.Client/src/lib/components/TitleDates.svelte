@@ -2,13 +2,15 @@
   import { tick, untrack } from 'svelte';
   import { CalendarDays, Pencil, Plus, Save, X } from '@lucide/svelte';
   import type { Entry } from '../types';
+  import { rememberDraft, restoreDraft } from '../drafts';
 
   let { entry, busy = false, onSave }:
     { entry: Entry; busy?: boolean; onSave: (startedAt: string | null, completedAt: string | null) => Promise<void> } = $props();
-  let start = $state(untrack(() => dayValue(entry.startedAt)));
-  let completion = $state(untrack(() => dayValue(entry.completedAt)));
+  const draft = untrack(() => restoreDraft(entry.mediaId, 'dates', [dayValue(entry.startedAt), dayValue(entry.completedAt)]));
+  let start = $state(draft[0]);
+  let completion = $state(draft[1]);
   let previous = untrack(() => ({ id: entry.mediaId, start: entry.startedAt, completion: entry.completedAt }));
-  let editing = $state(false);
+  let editing = $state(untrack(() => start !== dayValue(entry.startedAt) || completion !== dayValue(entry.completedAt)));
   let saving = $state(false);
   let error = $state('');
   let toggle = $state<HTMLButtonElement>();
@@ -16,6 +18,7 @@
   const locked = $derived(busy || saving);
   const dirty = $derived(start !== dayValue(entry.startedAt) || completion !== dayValue(entry.completedAt));
   const invalidOrder = $derived(!!start && !!completion && completion < start);
+  $effect(() => rememberDraft(entry.mediaId, 'dates', [dayValue(entry.startedAt), dayValue(entry.completedAt)], [start, completion]));
 
   function dayValue(value: string | null | undefined) {
     if (!value) return '';
