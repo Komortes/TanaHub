@@ -1,13 +1,13 @@
 # Release guide
 
-The primary release target is the Tauri + Svelte client with its self-contained .NET sidecar. Version `0.1.0` is the first public preview. Creating a tag, uploading source changes and publishing a release are separate maintainer actions.
+The primary release target is the Tauri + Svelte client with its self-contained .NET sidecar. Version `0.1.1` is the current preview; `0.1.0` is the first public preview. Creating a tag, uploading source changes and publishing a release are separate maintainer actions.
 
 ## Version and notes
 
 Keep these versions equal: `Directory.Build.props`, the client `package.json` and npm lockfile, `src-tauri/tauri.conf.json`, `Cargo.toml` and the client package in `Cargo.lock`.
 
 ```sh
-node scripts/check-release-version.mjs v0.1.0
+node scripts/check-release-version.mjs v0.1.1
 node --test scripts/tests/release.test.mjs
 ```
 
@@ -72,7 +72,7 @@ macOS uses an ad-hoc signature by default and is not notarized. Windows installe
 
 Linux AppImage downloads need `chmod +x` before launch. Windows NSIS installers use [Tauri's default WebView2 installation behavior](https://v2.tauri.app/distribute/windows-installer/#webview2-installation-options) and may need an internet connection when WebView2 is missing.
 
-Native macOS `.app` startup, catalog access, editing and persistence have been exercised on an isolated profile. The release workflow builds Windows/Linux packages and tests their self-contained cores on their native runners. Interactive Windows/Linux installation, native file dialogs, real AniList OAuth and live recognition uploads still need end-to-end validation. Automated fixtures do not replace those checks.
+Native macOS `.app` startup, catalog access, editing, persistence and CSV/MAL XML file dialogs have been exercised on isolated profiles. The release workflow builds Windows/Linux packages and tests their self-contained cores on their native runners. Interactive Windows/Linux installation and file dialogs, real AniList OAuth and live recognition uploads still need end-to-end validation. Automated fixtures do not replace those checks.
 
 To check a downloaded platform checksum file, put it beside the assets and run `shasum -a 256 -c <checksum-file>` on macOS or `sha256sum -c <checksum-file>` on Linux. On Windows, use `Get-FileHash <asset> -Algorithm SHA256` and compare with the listed digest. Checksums detect changed bytes; they do not replace code signing.
 

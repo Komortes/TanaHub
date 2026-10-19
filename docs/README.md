@@ -11,7 +11,7 @@
 | [Bridge protocol](../src/TanaHub.Bridge/README.md) | Requests, responses and boundary validation |
 | [Smoke test](smoke-test.md) | Manual platform and user-flow verification |
 | [Release guide](release.md) | Versioning, packaging, draft releases, checksums and rollback |
-| [0.1.0 preview notes](releases/0.1.0.md) | Reviewable release description and known limits |
+| [0.1.1 preview notes](releases/0.1.1.md) | Reviewable release description and known limits |
 | [Changelog](../CHANGELOG.md) | Release history and user-facing changes |
 | [Security](../SECURITY.md) | Reporting and local-data safeguards |
 | [Architecture decisions](decisions) | Decisions and their historical context |

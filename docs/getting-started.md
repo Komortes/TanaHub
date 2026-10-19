@@ -4,11 +4,11 @@ TanaHub keeps your library on your computer. You do not need an account, an AniL
 
 ## Install or run
 
-Download **TanaHub 0.1.0 Preview** from the [release page](https://github.com/Komortes/TanaHub/releases/tag/v0.1.0). Use the package for your OS and architecture. Packaged builds include the .NET runtime; you do not need Node, Rust or a .NET SDK.
+Download **TanaHub 0.1.1 Preview** from the [release page](https://github.com/Komortes/TanaHub/releases/tag/v0.1.1). Use the package for your OS and architecture. Packaged builds include the .NET runtime; you do not need Node, Rust or a .NET SDK.
 
 - **Apple Silicon macOS 15+:** open the `.dmg`, then drag TanaHub to Applications. The preview is ad-hoc signed and not notarized. If Gatekeeper blocks it, attempt to open it once, then use **System Settings → Privacy & Security → Open Anyway** for TanaHub if you trust this download. Do not disable Gatekeeper globally. Intel Macs are not included in this preview.
 - **Windows x64:** run the `.exe` installer. It is unsigned, so SmartScreen may warn about an unrecognized app; **More info → Run anyway** is available when allowed by your system policy. WebView2 may be downloaded during setup if missing.
-- **Linux x64:** install the `.deb` with `sudo apt install ./TanaHub-0.1.0-linux-x64.deb`, or mark the `.AppImage` executable with `chmod +x TanaHub-0.1.0-linux-x64.AppImage` and launch it. AppImage requires FUSE 2 support; on Ubuntu 22.04 install `libfuse2` if needed. On systems without FUSE, `./TanaHub-0.1.0-linux-x64.AppImage --appimage-extract-and-run` is an alternative.
+- **Linux x64:** install the `.deb` with `sudo apt install ./TanaHub-0.1.1-linux-x64.deb`, or mark the `.AppImage` executable with `chmod +x TanaHub-0.1.1-linux-x64.AppImage` and launch it. AppImage requires FUSE 2 support; on Ubuntu 22.04 install `libfuse2` if needed. On systems without FUSE, `./TanaHub-0.1.1-linux-x64.AppImage --appimage-extract-and-run` is an alternative.
 
 Each platform has a `SHA256SUMS.txt` asset; [verify checksums](release.md#signing-and-validation-limits) if desired. macOS startup and editing have been exercised interactively. Windows/Linux packages have automated native build and core checks; interactive installation and full end-to-end validation remain preview limitations. Linux packages are built on Ubuntu 22.04; compatibility with older distributions is unverified.
 
@@ -31,11 +31,11 @@ You can also run `npm run doctor` from `src/TanaHub.Client`. It checks Node, SDK
 
 1. Open **Discover**, select Anime or Manga, and search for a title. Catalog access needs an internet connection. AniList is the default source for both types; MangaDex is an optional source for manga in Settings.
 2. Open the title and choose **Add to library**. New entries start in Planning.
-3. In **Your tracking**, use **+1 episode/chapter** or type a progress value and choose **Set progress**. In current source builds, the first positive progress moves a new Planning title to Watching or Reading. You can also choose the status yourself; paused, dropped and completed titles keep their chosen status. In the published **0.1.0 Preview**, choose Watching or Reading manually.
+3. In **Your tracking**, use **+1 episode/chapter** or type a progress value and choose **Set progress**. Your first positive progress moves a new Planning title to Watching or Reading. You can also choose the status yourself; paused, dropped and completed titles keep their chosen status.
 4. Open the rating control, choose a score and save it. Notes, reviews, organisation and tracking dates also have explicit Save actions; typing a draft does not save it.
 5. Return to **My library**. All shows anime and manga together. Each collection remembers its own search and media type when you switch sections.
 
-Current source builds keep unsaved notes, reviews, tags, lists, dates and progress drafts in the same window across page changes and reloads. Save or discard a draft explicitly. Drafts are not part of a library backup and are not guaranteed after closing the window. The published 0.1.0 Preview does not retain drafts across page changes.
+TanaHub keeps unsaved notes, reviews, tags, lists, dates and progress drafts in the same window across page changes and reloads. Save or discard a draft explicitly. Drafts are not part of a library backup and are not guaranteed after closing the window.
 
 Tracking is saved locally. Catalog and recognition providers can fail or apply rate limits without deleting your library. Previously loaded catalog data is available through the offline cache when enabled; titles not yet cached still need a connection.
 
@@ -48,7 +48,7 @@ From an empty library, **Import a list** opens **Settings → Your library data*
 
 Both imports can replace progress, status, scores, notes and tracking dates for matching titles. Reviews, tags and custom lists are preserved. Other local titles are retained. Review the confirmation before proceeding.
 
-Current source builds retain titles and episode/chapter totals supplied by MAL XML, including offline and after restarting. An import matches an already tracked title when its local metadata has the same MAL ID and media type, preventing duplicates when reimporting an export. Existing duplicates are not removed automatically. These improvements are newer than the published 0.1.0 Preview.
+MAL XML imports retain titles and episode/chapter totals supplied by MAL XML, including offline and after restarting. An import matches an already tracked title when its local metadata has the same MAL ID and media type, preventing duplicates when reimporting an export. Existing duplicates are not removed automatically.
 
 ## Export and backup
 

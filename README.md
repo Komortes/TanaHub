@@ -5,7 +5,7 @@
 **Your anime and manga library, on your desktop.**<br>
 Track your progress, rate your favourites and keep your next watch close.
 
-[![Preview v0.1.0](https://img.shields.io/badge/preview-v0.1.0-9B6EF8)](https://github.com/Komortes/TanaHub/releases/tag/v0.1.0) [![CI](https://github.com/Komortes/TanaHub/actions/workflows/ci.yml/badge.svg)](https://github.com/Komortes/TanaHub/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-22D3EE)](LICENSE)
+[![Preview v0.1.1](https://img.shields.io/badge/preview-v0.1.1-9B6EF8)](https://github.com/Komortes/TanaHub/releases/tag/v0.1.1) [![CI](https://github.com/Komortes/TanaHub/actions/workflows/ci.yml/badge.svg)](https://github.com/Komortes/TanaHub/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-22D3EE)](LICENSE)
 
 [**Download preview**](#getting-started) · [User guide](docs/getting-started.md) · [Run from source](#run-from-source) · [Contributing](CONTRIBUTING.md)
 
@@ -19,13 +19,13 @@ TanaHub brings anime and manga into one local library. Find titles, save what yo
 
 ## Getting started
 
-Download **[TanaHub 0.1.0 Preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.0)** for your platform:
+Download **[TanaHub 0.1.1 Preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.1)** for your platform:
 
 | Platform | Installer |
 |---|---|
-| **macOS 15+ · Apple Silicon** | [Download DMG](https://github.com/Komortes/TanaHub/releases/download/v0.1.0/TanaHub-0.1.0-osx-arm64.dmg) |
-| **Windows · x64** | [Download EXE](https://github.com/Komortes/TanaHub/releases/download/v0.1.0/TanaHub-0.1.0-win-x64.exe) |
-| **Linux · x64** | [Download DEB](https://github.com/Komortes/TanaHub/releases/download/v0.1.0/TanaHub-0.1.0-linux-x64.deb) · [Download AppImage](https://github.com/Komortes/TanaHub/releases/download/v0.1.0/TanaHub-0.1.0-linux-x64.AppImage) |
+| **macOS 15+ · Apple Silicon** | [Download DMG](https://github.com/Komortes/TanaHub/releases/download/v0.1.1/TanaHub-0.1.1-osx-arm64.dmg) |
+| **Windows · x64** | [Download EXE](https://github.com/Komortes/TanaHub/releases/download/v0.1.1/TanaHub-0.1.1-win-x64.exe) |
+| **Linux · x64** | [Download DEB](https://github.com/Komortes/TanaHub/releases/download/v0.1.1/TanaHub-0.1.1-linux-x64.deb) · [Download AppImage](https://github.com/Komortes/TanaHub/releases/download/v0.1.1/TanaHub-0.1.1-linux-x64.AppImage) |
 
 Packages include the .NET runtime. You do not need Node, Rust or a .NET SDK to use the app. SHA-256 checksums and an alternative macOS app archive are on the release page.
 
@@ -35,7 +35,7 @@ Packages include the .NET runtime. You do not need Node, Rust or a .NET SDK to u
 ### Your first title
 
 1. Open **Discover** and search for an anime or manga.
-2. Choose **Add to library**, then record your progress and personal rating. Source builds start Watching or Reading with your first episode/chapter; in **0.1.0 Preview**, choose that status manually.
+2. Choose **Add to library**, then record your progress and personal rating. Your first episode/chapter starts Watching or Reading automatically.
 3. Return to **My library** to filter your collection and continue watching or reading.
 
 See the [user guide](docs/getting-started.md) for imports, exports, backups and optional integrations.
