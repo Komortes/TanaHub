@@ -1,5 +1,30 @@
 # Autonomous development progress
 
+## Repository presentation — 19 October 2026
+
+- Reworked the README around the application: crisp existing SVG wordmark,
+  preview/CI/license badges, real library screenshot, platform downloads and a
+  three-step first-title guide. Developer checks and the repository map are
+  collapsible; existing setup commands and documentation anchors are retained.
+- Added docs/screenshots/library.png (1440 × 780) and tracking.png (885 × 260,
+  a direct element capture). Combined size is approximately 642 KiB. The screenshot
+  guide records their provenance and refresh workflow.
+- Captured the real Svelte client and .NET/SQLite core on port 1422 with the
+  isolated /tmp/tanahub-readme-demo-oct19 profile. Twelve sample titles came from
+  AniList; six are visible in the Watching / Reading filter. No RPC mocks, edited
+  interface elements, personal library or credentials were used.
+- Verified Library → Frieren → +1 episode → Back: progress persisted from 12 to
+  13, and collection filters survived. Covers and fonts loaded, both captures
+  were inspected, no horizontal overflow occurred and the browser reported no
+  application errors or warnings. Used the existing Chromium installation with
+  Playwright CLI; the Browser plugin is not available.
+- GitHub's Markdown API rendered both screenshot links, the SVG, the preview
+  note and all three disclosure sections correctly. Local links, existing
+  navigation headings, PNG dimensions and git diff --check passed. CLI logs stay
+  ignored alongside raw captures; selected documentation images are versioned.
+- This is a documentation/presentation change; the public v0.1.0 installers and
+  release tag retain their tested source revision.
+
 ## Public preview publication — 19 October 2026
 
 The user explicitly authorized committing and pushing the prepared work, checking
