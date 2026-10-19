@@ -14,6 +14,7 @@ use std::{
 use tauri::Manager;
 use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_opener::OpenerExt;
+mod artwork;
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(45);
 const MAX_RESPONSE_BYTES: u64 = 8 * 1024 * 1024;
@@ -316,7 +317,17 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .manage(BridgeState::default())
         .manage(AuthBridgeState::default())
-        .invoke_handler(tauri::generate_handler![backend_request, save_export, open_external])
+        .setup(|app| {
+            let root = std::env::var_os("TANAHUB_DATA_DIRECTORY")
+                .map(PathBuf::from).filter(|path| path.is_absolute())
+                .map(|path| path.join("artwork-cache"))
+                .or_else(|| app.path().app_cache_dir().ok().map(|path| path.join("artwork")));
+            let root = root.filter(|path| std::fs::create_dir_all(path).is_ok()
+                && app.asset_protocol_scope().allow_directory(path, true).is_ok());
+            app.manage(artwork::ArtworkCache::new(root));
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![backend_request, save_export, open_external, cache_artwork])
         .build(tauri::generate_context!())
         .expect("Could not initialize the TanaHub desktop window");
     app.run(|handle, event| {
@@ -328,4 +339,9 @@ pub fn run() {
             handle.state::<AuthBridgeState>().0.shutdown();
         }
     });
+}
+
+#[tauri::command]
+async fn cache_artwork(cache: tauri::State<'_, artwork::ArtworkCache>, url: String) -> Result<Option<String>, String> {
+    cache.resolve(&url).await
 }

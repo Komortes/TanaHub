@@ -21,8 +21,9 @@
       "backgroundColor": "#09080F"
     }],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: data: https:; connect-src 'self' ipc: http://ipc.localhost; font-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'",
-      "devCsp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: data: https:; connect-src 'self' ipc: http://ipc.localhost ws://127.0.0.1:1420; font-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'"
+      "assetProtocol": { "enable": true, "scope": [] },
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: http://asset.localhost data: https:; connect-src 'self' ipc: http://ipc.localhost; font-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'",
+      "devCsp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: http://asset.localhost data: https:; connect-src 'self' ipc: http://ipc.localhost ws://127.0.0.1:1420; font-src 'self' data:; object-src 'none'; base-uri 'none'; frame-src 'none'"
     }
   },
   "bundle": {
