@@ -15,6 +15,10 @@ Changes are recorded here for each release.
 
 - Small title-header covers now choose thumbnails or previews according to their rendered size and screen density. Enlarge still loads the original.
 
+### Maintenance
+
+- Updated Vite to 8.3.3 for upstream development-server and launch-editor security fixes.
+
 ## [0.1.3 preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.3) — 2026-10-19
 
 ### Added
