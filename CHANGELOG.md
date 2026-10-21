@@ -2,7 +2,7 @@
 
 Changes are recorded here for each release.
 
-## 0.1.4 preview (unreleased)
+## [0.1.4 preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.4) — 2026-10-21
 
 ### Fixed
 

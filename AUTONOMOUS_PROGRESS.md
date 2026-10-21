@@ -1,10 +1,61 @@
 # Autonomous development progress
 
+## 0.1.4 validation — 22 October 2026
+
+Published [0.1.4 Preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.4)
+at 2026-10-21 21:59:10 UTC with the artwork recovery fixes and installers for
+Apple Silicon macOS, Windows x64 and Linux x64. Tag v0.1.4 resolves to tested
+commit 570e5255ce8ecfdbe414de92ace3d8bcf648dd7b; earlier tags and assets are intact.
+
+- [Source CI](https://github.com/Komortes/TanaHub/actions/runs/39679828505)
+  passes all four jobs. [Release](https://github.com/Komortes/TanaHub/actions/runs/39679840748)
+  passes all eight jobs: four checks, three packages and draft creation. Each
+  native platform passes 363 .NET tests, six Rust tests and its self-contained
+  core checks. All 166 release browser scenarios pass without retries; frontend
+  diagnostics report zero errors and warnings.
+- The release audit found newly reported Vite 8.3.2 development-server advisories.
+  Updated only Vite to 8.3.3 and repeated the build, transport and all 166 browser
+  scenarios locally. npm audit now reports zero vulnerabilities; the .NET
+  dependency audit reports none. Independent review found no actionable defects
+  in the patch, version alignment or release documentation.
+- All 13 assets match GitHub sizes/SHA-256 digests. Three checksum manifests and
+  four version-bound signatures verify independently, including the extra DEB
+  signature. latest.json contains the three verified update payloads and the
+  exact version-specific notes; CI generated it automatically.
+- The downloaded macOS archive passes deep/strict codesign and reports 0.1.4;
+  both shell and core are arm64. DMG integrity verification and the exact bundled
+  core's real SQLite/RPC mutation, validation and restart checks pass. The app
+  opens its original cover, restores focus on Escape and displays six cached
+  character photos. All LibraryEntries fields and 30 cache-file inodes/sizes
+  remain unchanged. Related titles fall back clearly to saved data while the
+  provider is unavailable; the native log is empty.
+- Linux DEB metadata reports 0.1.4/amd64 and AppImage is x86_64. Windows packaging
+  builds the x64 NSIS payload; its installer bootstrap itself is PE32. Interactive
+  Windows/Linux installation remains unverified.
+- [Update channel](https://github.com/Komortes/TanaHub/actions/runs/39683089467)
+  succeeds. Anonymous requests return HTTP 200 for the release, all four
+  installer links and latest.json. Public preview.json matches the verified
+  signed packages, notes and publication time. README, installation/update/release
+  guides and Changelog now target the published 0.1.4; 34 local document links
+  resolve. Documentation-only publication changes use link/command verification
+  as specified by CONTRIBUTING.md.
+- A copy of published 0.1.3 announces 0.1.4 at startup, downloads and verifies it,
+  installs and restarts (PID 75743 -> 75842). Both updated binaries match the
+  downloaded CI archive and strict codesign passes. Settings then shows 0.1.4
+  and You are up to date without a manual check. Every LibraryEntries field and
+  all 30 cache-file inodes/sizes survive; default settings remain unchanged.
+  The test app quits cleanly and its native log is empty. Evidence is outside
+  source under /private/tmp/tanahub-014-qa/ and ignored artifacts/github-release/v0.1.4/.
+
+No database migration, native permission or signing-key change was introduced.
+macOS remains ad-hoc signed/not notarized and Windows installers remain unsigned;
+update signatures are verified separately. Real OAuth and recognition uploads
+remain preview validation limits.
+
 ## New-user journey and artwork recovery — 20 October 2026
 
 The user requested another first-use audit, photo/cover loading fixes and
-commits/push. These client fixes are unreleased; published 0.1.3 packages and
-download links remain unchanged.
+commits/push. These client fixes shipped in 0.1.4, recorded above.
 
 - Started the published macOS app with an empty isolated profile. Discover loaded
   real AniList covers, Attack on Titan opened with its banner, original cover,

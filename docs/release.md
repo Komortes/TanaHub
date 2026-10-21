@@ -1,6 +1,6 @@
 # Release guide
 
-The primary release target is the Tauri + Svelte client with its self-contained .NET sidecar. Version `0.1.4` is prepared for the next preview; `0.1.0` is the first public preview. Creating a tag, uploading source changes and publishing a release are separate maintainer actions.
+The primary release target is the Tauri + Svelte client with its self-contained .NET sidecar. Version `0.1.4` is the current preview; `0.1.0` is the first public preview. Creating a tag, uploading source changes and publishing a release are separate maintainer actions.
 
 ## Version and notes
 

@@ -5,7 +5,7 @@
 **Your anime and manga library, on your desktop.**<br>
 Track your progress, rate your favourites and keep your next watch close.
 
-[![Preview v0.1.3](https://img.shields.io/badge/preview-v0.1.3-9B6EF8)](https://github.com/Komortes/TanaHub/releases/tag/v0.1.3) [![CI](https://github.com/Komortes/TanaHub/actions/workflows/ci.yml/badge.svg)](https://github.com/Komortes/TanaHub/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-22D3EE)](LICENSE)
+[![Preview v0.1.4](https://img.shields.io/badge/preview-v0.1.4-9B6EF8)](https://github.com/Komortes/TanaHub/releases/tag/v0.1.4) [![CI](https://github.com/Komortes/TanaHub/actions/workflows/ci.yml/badge.svg)](https://github.com/Komortes/TanaHub/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-22D3EE)](LICENSE)
 
 [**Download preview**](#getting-started) · [User guide](docs/getting-started.md) · [Run from source](#run-from-source) · [Contributing](CONTRIBUTING.md)
 
@@ -19,15 +19,15 @@ TanaHub brings anime and manga into one local library. Find titles, save what yo
 
 ## Getting started
 
-Download **[TanaHub 0.1.3 Preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.3)** for your platform:
+Download **[TanaHub 0.1.4 Preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.4)** for your platform:
 
 | Platform | Installer |
 |---|---|
-| **macOS 15+ · Apple Silicon** | [Download DMG](https://github.com/Komortes/TanaHub/releases/download/v0.1.3/TanaHub-0.1.3-osx-arm64.dmg) |
-| **Windows · x64** | [Download EXE](https://github.com/Komortes/TanaHub/releases/download/v0.1.3/TanaHub-0.1.3-win-x64.exe) |
-| **Linux · x64** | [Download DEB](https://github.com/Komortes/TanaHub/releases/download/v0.1.3/TanaHub-0.1.3-linux-x64.deb) · [Download AppImage](https://github.com/Komortes/TanaHub/releases/download/v0.1.3/TanaHub-0.1.3-linux-x64.AppImage) |
+| **macOS 15+ · Apple Silicon** | [Download DMG](https://github.com/Komortes/TanaHub/releases/download/v0.1.4/TanaHub-0.1.4-osx-arm64.dmg) |
+| **Windows · x64** | [Download EXE](https://github.com/Komortes/TanaHub/releases/download/v0.1.4/TanaHub-0.1.4-win-x64.exe) |
+| **Linux · x64** | [Download DEB](https://github.com/Komortes/TanaHub/releases/download/v0.1.4/TanaHub-0.1.4-linux-x64.deb) · [Download AppImage](https://github.com/Komortes/TanaHub/releases/download/v0.1.4/TanaHub-0.1.4-linux-x64.AppImage) |
 
-Packages include the .NET runtime. You do not need Node, Rust or a .NET SDK to use the app. SHA-256 checksums and an alternative macOS app archive are on the release page.
+Packages include the .NET runtime. You do not need Node, Rust or a .NET SDK to use the app. SHA-256 checksums and an alternative macOS app archive are on the release page. Read [what changed in 0.1.4](docs/releases/0.1.4.md).
 
 > [!NOTE]
 > This is an early preview. macOS builds are ad-hoc signed and not notarized; Windows installers are unsigned. Automated builds and core checks pass on all three platforms; interactive Windows/Linux installation checks are still pending. Read the [installation instructions](docs/getting-started.md#install-or-run) for OS trust warnings, AppImage setup and backing up an existing library.
@@ -38,7 +38,7 @@ Packages include the .NET runtime. You do not need Node, Rust or a .NET SDK to u
 2. Choose **Add to library**, then record your progress and personal rating. Your first episode/chapter starts Watching or Reading automatically.
 3. Return to **My library** to filter your collection and continue watching or reading.
 
-See the [user guide](docs/getting-started.md) for imports, exports, backups and optional integrations, and [updating TanaHub](docs/updating.md) for in-app updates. Version 0.1.3 checks for updates at startup and offers **Download update** and **Install and restart** above the current page. In 0.1.2, use Settings → Check for updates to upgrade; 0.1.0/0.1.1 need a one-time installation of the latest preview.
+See the [user guide](docs/getting-started.md) for imports, exports, backups and optional integrations, and [updating TanaHub](docs/updating.md) for in-app updates. Versions 0.1.3 and newer check for updates at startup and offer **Download update** and **Install and restart** above the current page. In 0.1.2, use Settings → Check for updates to upgrade; 0.1.0/0.1.1 need a one-time installation of the latest preview.
 
 ## Inside the app
 
