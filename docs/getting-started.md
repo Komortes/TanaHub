@@ -4,11 +4,11 @@ TanaHub keeps your library on your computer. You do not need an account, an AniL
 
 ## Install or run
 
-Download **TanaHub 0.1.3 Preview** from the [release page](https://github.com/Komortes/TanaHub/releases/tag/v0.1.3). Use the package for your OS and architecture. Packaged builds include the .NET runtime; you do not need Node, Rust or a .NET SDK.
+Download **TanaHub 0.1.4 Preview** from the [release page](https://github.com/Komortes/TanaHub/releases/tag/v0.1.4). Use the package for your OS and architecture. Packaged builds include the .NET runtime; you do not need Node, Rust or a .NET SDK.
 
 - **Apple Silicon macOS 15+:** open the `.dmg`, then drag TanaHub to Applications. The preview is ad-hoc signed and not notarized. If Gatekeeper blocks it, attempt to open it once, then use **System Settings → Privacy & Security → Open Anyway** for TanaHub if you trust this download. Do not disable Gatekeeper globally. Intel Macs are not included in this preview.
 - **Windows x64:** run the `.exe` installer. It is unsigned, so SmartScreen may warn about an unrecognized app; **More info → Run anyway** is available when allowed by your system policy. WebView2 may be downloaded during setup if missing.
-- **Linux x64:** install the `.deb` with `sudo apt install ./TanaHub-0.1.3-linux-x64.deb`, or mark the `.AppImage` executable with `chmod +x TanaHub-0.1.3-linux-x64.AppImage` and launch it. AppImage requires FUSE 2 support; on Ubuntu 22.04 install `libfuse2` if needed. On systems without FUSE, `./TanaHub-0.1.3-linux-x64.AppImage --appimage-extract-and-run` is an alternative.
+- **Linux x64:** install the `.deb` with `sudo apt install ./TanaHub-0.1.4-linux-x64.deb`, or mark the `.AppImage` executable with `chmod +x TanaHub-0.1.4-linux-x64.AppImage` and launch it. AppImage requires FUSE 2 support; on Ubuntu 22.04 install `libfuse2` if needed. On systems without FUSE, `./TanaHub-0.1.4-linux-x64.AppImage --appimage-extract-and-run` is an alternative.
 
 Each platform has a `SHA256SUMS.txt` asset; [verify checksums](release.md#signing-and-validation-limits) if desired. macOS startup and editing have been exercised interactively. Windows/Linux packages have automated native build and core checks; interactive installation and full end-to-end validation remain preview limitations. Linux packages are built on Ubuntu 22.04; compatibility with older distributions is unverified.
 
@@ -58,7 +58,7 @@ For a complete backup, close TanaHub and copy its entire `TanaHub/` app-data fol
 
 ## Keep TanaHub up to date
 
-Version 0.1.3 checks for updates in the background at startup. When a newer version is available, choose **Download update**, then **Install and restart** in the notice above the current page. **Later** hides it until the next launch. Settings also provides a manual check; in 0.1.2 use **Settings → Check for updates** to acquire 0.1.3. Save your drafts first. The signed application package replaces the current version and keeps your library. On Linux, this requires the AppImage; DEB installations use the package manager. See [updating TanaHub](updating.md).
+Versions 0.1.3 and newer check for updates in the background at startup. When a newer version is available, choose **Download update**, then **Install and restart** in the notice above the current page. **Later** hides it until the next launch. Settings also provides a manual check; in 0.1.2 use **Settings → Check for updates** to acquire the latest preview. Save your drafts first. The signed application package replaces the current version and keeps your library. On Linux, this requires the AppImage; DEB installations use the package manager. See [updating TanaHub](updating.md).
 
 ## If something does not work
 

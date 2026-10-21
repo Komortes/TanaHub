@@ -1,6 +1,6 @@
 # Updating TanaHub
 
-Version 0.1.3 checks for updates automatically at startup. In 0.1.2, use the manual
+Versions 0.1.3 and newer check for updates automatically at startup. In 0.1.2, use the manual
 check in Settings to upgrade. Install the latest preview once if you use 0.1.0 or
 0.1.1; those versions cannot acquire an updater through their old checker.
 
@@ -76,7 +76,7 @@ routes:
    and run, from the repository root:
 
    ```sh
-   node scripts/sign-release.mjs artifacts/release-ready /absolute/private/tanahub.key v0.1.3
+   node scripts/sign-release.mjs artifacts/release-ready /absolute/private/tanahub.key v0.1.4
    ```
 
    This signs the macOS app archive, Windows EXE and Linux AppImage, binds their
