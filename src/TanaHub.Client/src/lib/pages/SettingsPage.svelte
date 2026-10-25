@@ -24,6 +24,7 @@
   let confirmAniListImport = $state(false);
   let aniListImportButton = $state<HTMLButtonElement>();
   let confirmImportButton = $state<HTMLButtonElement>();
+  let importFile = $state<HTMLInputElement>();
   const titleCount = (count: number) => `${count} ${count === 1 ? 'title' : 'titles'}`;
   const importWarning = 'Existing titles may have progress, status, scores, notes and dates replaced. Reviews, tags and custom lists are kept.';
   const disabled = $derived(!!busy || !!localBusy || loading || updaterBusy);
@@ -38,7 +39,8 @@
     finally {
       localBusy = '';
       await tick();
-      const target = name === 'sync' && !confirmAniListImport ? aniListImportButton : focused;
+      const target = name === 'sync' && !confirmAniListImport ? aniListImportButton
+        : name === 'import' && !preview ? importFile : focused;
       if (document.activeElement === document.body && target?.isConnected && !target.matches(':disabled')) target.focus({ preventScroll: true });
     }
   }
@@ -77,6 +79,11 @@
       const xml = await file.text();
       preview = await featureApi.importPreview(xml); importXml = xml; importName = file.name;
     });
+  }
+  async function cancelImport() {
+    preview = null; importXml = '';
+    await tick();
+    if (importFile?.isConnected && document.activeElement === document.body) importFile.focus({ preventScroll: true });
   }
 </script>
 
@@ -128,8 +135,8 @@
       </section>
       <section class="panel" aria-labelledby="library-data-heading"><h2 id="library-data-heading" tabindex="-1">Your library data</h2><p class="hint">Take your collection with you or bring in a MyAnimeList export.</p>
         <div class="actions"><button class="ghost-button" disabled={disabled} onclick={() => void exportLibrary('csv')}><Download size={15} />Export CSV</button><button class="ghost-button" disabled={disabled} onclick={() => void exportLibrary('malXml')}><Download size={15} />Export MAL XML</button></div>
-        <label class="import-button ghost-button" class:disabled><Upload size={15} />Import MAL XML<input aria-label="Import MAL XML" type="file" accept=".xml,application/xml,text/xml" disabled={disabled} onchange={(event) => void pickImport(event)} /></label>
-        {#if preview}<div class="import-preview"><strong>{titleCount(preview.count)} in {importName}</strong><p class="hint">{importWarning}</p><ul>{#each preview.items.slice(0, 5) as entry}<li>{entry.media.title} <span>{entry.progress} {entry.mediaType === 'Manga' ? entry.progress === 1 ? 'chapter' : 'chapters' : entry.progress === 1 ? 'episode' : 'episodes'}</span></li>{/each}</ul>{#if preview.count > 5}<p class="hint">And {preview.count - 5} more titles.</p>{/if}<div class="actions"><button class="primary-button" disabled={disabled || !preview.count} onclick={() => void run('import', async () => { const result = await featureApi.importApply(importXml); preview = null; importXml = ''; onLibraryChanged(); message = `Imported ${titleCount(result.importedCount)}`; })}>Import {titleCount(preview.count)}</button><button class="text-button" disabled={disabled} onclick={() => { preview = null; importXml = ''; }}>Cancel</button></div></div>{/if}
+        <label class="import-button ghost-button" class:disabled><Upload size={15} />Import MAL XML<input bind:this={importFile} aria-label="Import MAL XML" type="file" accept=".xml,application/xml,text/xml" disabled={disabled} onchange={(event) => void pickImport(event)} /></label>
+        {#if preview}<div class="import-preview"><strong>{titleCount(preview.count)} in {importName}</strong><p class="hint">{importWarning}</p><ul>{#each preview.items.slice(0, 5) as entry}<li>{entry.media.title} <span>{entry.progress} {entry.mediaType === 'Manga' ? entry.progress === 1 ? 'chapter' : 'chapters' : entry.progress === 1 ? 'episode' : 'episodes'}</span></li>{/each}</ul>{#if preview.count > 5}<p class="hint">And {preview.count - 5} more titles.</p>{/if}<div class="actions"><button class="primary-button" disabled={disabled || !preview.count} onclick={() => void run('import', async () => { const result = await featureApi.importApply(importXml); preview = null; importXml = ''; onLibraryChanged(); message = `Imported ${titleCount(result.importedCount)}`; })}>Import {titleCount(preview.count)}</button><button class="text-button" disabled={disabled} onclick={cancelImport}>Cancel</button></div></div>{/if}
         {@render feedback('library')}
       </section>
       {#if isDesktop()}<DesktopUpdates busy={!!busy || !!localBusy || loading} onBusyChange={value => updaterBusy = value} />{:else}

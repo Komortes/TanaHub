@@ -1,5 +1,38 @@
 # Autonomous development progress
 
+## Overnight interface iteration — 26 October 2026
+
+The user authorized autonomous iterative UI work, ordinary design decisions,
+gradual commits and continued development overnight. The direction is a personal
+media library: cover-led shelves, quiet graphite/paper surfaces and a progress
+bookmark, with the next episode/chapter ahead of analytics. Published 0.1.4
+installers remain unchanged; this work is unreleased on main.
+
+Browser plugin is unavailable. Use the repository Playwright workflow and the
+shared headless Chromium under /private/tmp/tanahub-interface-20261026/playwright-browsers.
+Parent visual QA uses port 1424; isolated agent regressions use 1426 and separate
+output directories. Public AniList titles/covers populate an in-memory test
+library; no personal data or recognition uploads are involved. Evidence and logs
+stay outside source under /private/tmp/tanahub-interface-20261026/.
+
+### Iteration 1 — preserve completed actions during refresh
+
+- Reproduced delayed recognition-history refresh restoring a deleted row or
+  losing a newly saved match. Confirmed writes now merge onto the response while
+  keeping other newly fetched source rows; failed writes leave the history intact.
+- MAL XML Cancel and successful import return keyboard focus to the file control;
+  a failed import keeps the confirmation usable and focused for retry.
+- Red reproduction: five failures, two passing failure-path guards. All seven new
+  cases now pass; existing feature coverage plus regressions passes 29/29. Svelte
+  check reports zero errors/warnings. Independent read-only review approved the
+  merge/failure handling and visible import-focus target.
+
+Next priorities: finish neutral surfaces/navigation; stop hidden recognition from
+handling title-page paste; put continuation before Home statistics; flatten the
+library shelf and its controls; improve title-page reading hierarchy. After every
+three iterations, review the wider UI and revisit this list. Continue beyond the
+first five useful increments and record the next concrete tasks here.
+
 ## 0.1.4 validation — 22 October 2026
 
 Published [0.1.4 Preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.4)

@@ -2,6 +2,13 @@
 
 Changes are recorded here for each release.
 
+## Unreleased
+
+### Fixed
+
+- Recognition-history refresh preserves successful concurrent saves and deletions while including newly fetched rows.
+- Cancelling or completing MAL XML import restores keyboard focus to the import control; failed imports remain usable for retry.
+
 ## [0.1.4 preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.4) — 2026-10-21
 
 ### Fixed

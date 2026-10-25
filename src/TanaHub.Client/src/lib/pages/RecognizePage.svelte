@@ -28,6 +28,7 @@
   let fileGeneration = 0;
   let runGeneration = 0;
   let historyGeneration = 0;
+  let historyChanges: Map<string, RecognitionHistoryItem | null> | null = null;
   let active = true;
   const providerName = $derived(provider === 'trace' ? 'trace.moe' : 'SauceNAO');
   const matchKey = (match: RecognitionMatch) => `${match.mediaId ?? match.sourceUrl ?? match.title}:${match.episode ?? ''}`;
@@ -40,10 +41,20 @@
   });
   async function loadHistory() {
     const current = ++historyGeneration;
+    const changes = new Map<string, RecognitionHistoryItem | null>();
+    historyChanges = changes;
     historyLoading = true; historyError = '';
-    try { const data = await featureApi.recognitionHistory(); if (active && current === historyGeneration) history = data.items; }
+    try {
+      const data = await featureApi.recognitionHistory();
+      if (active && current === historyGeneration) {
+        // Keep confirmed writes that finished after this snapshot was requested.
+        // Other rows from the refreshed source still belong in the result.
+        const saved = [...changes.values()].reverse().filter((item): item is RecognitionHistoryItem => item !== null);
+        history = [...saved, ...data.items.filter(item => !changes.has(item.id))];
+      }
+    }
     catch (reason) { if (active && current === historyGeneration) historyError = reason instanceof Error ? reason.message : 'Could not load recognition history.'; }
-    finally { if (active && current === historyGeneration) historyLoading = false; }
+    finally { if (active && current === historyGeneration) { historyLoading = false; historyChanges = null; } }
   }
   function changeProvider(next: 'trace' | 'art') { provider = next; result = null; error = ''; notice = ''; savedMatches = []; runGeneration += 1; }
   function clearImage() { sourceName = ''; imageBase64 = ''; mime = ''; preview = ''; fileSize = 0; result = null; error = ''; notice = ''; savedMatches = []; reading = false; fileGeneration += 1; if (fileInput) fileInput.value = ''; }
@@ -110,12 +121,14 @@
   async function saveMatch(match: RecognitionMatch) {
     const saved = await featureApi.saveRecognition({ provider, mediaId: match.mediaId, title: match.title, romaji: match.romaji, nativeTitle: match.nativeTitle, episode: match.episode, similarity: match.similarity, thumbnailUrl: match.thumbnailUrl, sourceName });
     if (!active) return;
+    historyChanges?.set(saved.id, saved);
     savedMatches = [...savedMatches, matchKey(match)]; history = [saved, ...history.filter(item => item.id !== saved.id)]; notice = 'Match saved to recognition history.';
   }
   async function removeHistory(item: RecognitionHistoryItem) {
     const response = await featureApi.removeRecognition(item.id);
     if (!response.removed) throw new Error('This history item could not be removed. Try again.');
     if (active) {
+      historyChanges?.set(item.id, null);
       history = history.filter(record => record.id !== item.id);
       if (!history.some(record => record.mediaId === item.mediaId && record.title === item.title && record.episode === item.episode)) {
         const removedKeys = (result?.matches ?? []).filter(match => match.mediaId === item.mediaId && match.title === item.title && match.episode === item.episode).map(matchKey);
