@@ -300,7 +300,7 @@
     {:else if page === 'schedule'}
       <SchedulePage {revision} active={!selected} onOpenId={(id) => void openId(id)} />
     {:else if page === 'recognize'}
-      <RecognizePage onOpenId={(id) => void openId(id)} onAddId={(id) => mutate(id, () => api.add(id), 'Saved to your library')} onNavigate={navigate} />
+      <RecognizePage active={!selected} onOpenId={(id) => void openId(id)} onAddId={(id) => mutate(id, () => api.add(id), 'Saved to your library')} onNavigate={navigate} />
     {:else if page === 'settings'}
       <SettingsPage data={settings} loading={settingsLoading} loadError={settingsError} busy={settingsBusy} onReload={() => void loadSettings()} onSave={saveSettings} onConnect={(id, secret) => settingsAction('connect', async () => { settings = await featureApi.connect(id, secret); notify('AniList connected'); })} onSync={() => settingsAction('sync', async () => { const result = await featureApi.sync(); settings = result.settings; libraryChanged(); return result; })} onDisconnect={() => settingsAction('disconnect', async () => { settings = await featureApi.disconnect(); })} onLibraryChanged={libraryChanged} />
     {:else}

@@ -6,7 +6,7 @@
   import MiniCover from './MiniCover.svelte';
   import RecognitionMatchCard from './RecognitionMatchCard.svelte';
 
-  let { onOpenId, onAddId, onNavigate }: { onOpenId: (id: string) => void; onAddId: (id: string) => Promise<void>; onNavigate: (page: PageName) => void } = $props();
+  let { onOpenId, onAddId, onNavigate, active: pageActive = true }: { onOpenId: (id: string) => void; onAddId: (id: string) => Promise<void>; onNavigate: (page: PageName) => void; active?: boolean } = $props();
   let provider = $state<'trace' | 'art'>('trace');
   let fileInput: HTMLInputElement;
   let sourceName = $state('');
@@ -26,6 +26,7 @@
   let busy = $state<string[]>([]);
   let savedMatches = $state<string[]>([]);
   let fileGeneration = 0;
+  let clipboardGeneration = 0;
   let runGeneration = 0;
   let historyGeneration = 0;
   let historyChanges: Map<string, RecognitionHistoryItem | null> | null = null;
@@ -38,6 +39,10 @@
     active = true;
     void loadHistory();
     return () => { active = false; fileGeneration += 1; runGeneration += 1; historyGeneration += 1; };
+  });
+  $effect(() => {
+    // A clipboard request from the previous visit must stay cancelled after Back.
+    if (!pageActive) clipboardGeneration += 1;
   });
   async function loadHistory() {
     const current = ++historyGeneration;
@@ -83,20 +88,27 @@
     finally { if (active && current === fileGeneration) reading = false; }
   }
   function paste(event: ClipboardEvent) {
-    if (working || (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName))) return;
+    if (!pageActive || working || (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName))) return;
     const file = [...(event.clipboardData?.files ?? [])].find(item => item.type.startsWith('image/'));
     if (file) { event.preventDefault(); void selectFile(file); }
   }
   async function pasteImage() {
+    if (!pageActive) return;
+    const current = ++clipboardGeneration;
     if (!navigator.clipboard?.read) { error = 'Paste an image with Ctrl+V or ⌘V, or choose an image file.'; return; }
     try {
       const items = await navigator.clipboard.read();
+      if (!active || !pageActive || current !== clipboardGeneration) return;
       for (const item of items) {
         const contentType = item.types.find(type => ['image/png', 'image/jpeg', 'image/webp'].includes(type));
-        if (contentType) { const blob = await item.getType(contentType); await selectFile(new File([blob], `Clipboard image.${contentType.split('/')[1]}`, { type: contentType })); return; }
+        if (contentType) {
+          const blob = await item.getType(contentType);
+          if (!active || !pageActive || current !== clipboardGeneration) return;
+          await selectFile(new File([blob], `Clipboard image.${contentType.split('/')[1]}`, { type: contentType })); return;
+        }
       }
       error = 'The clipboard does not contain a supported image.';
-    } catch { error = 'Paste an image with Ctrl+V or ⌘V, or choose an image file.'; }
+    } catch { if (active && pageActive && current === clipboardGeneration) error = 'Paste an image with Ctrl+V or ⌘V, or choose an image file.'; }
   }
   async function recognize() {
     if (working || reading || !imageBase64) return;

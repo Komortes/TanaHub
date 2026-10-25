@@ -43,11 +43,31 @@ stay outside source under /private/tmp/tanahub-interface-20261026/.
 - Recorded the domain, visual intent and compatibility constraints in
   docs/design/interface.md. Screenshots remain in the external QA directory.
 
-Next priorities: stop hidden recognition from handling title-page paste; put
-continuation before Home statistics; flatten the library shelf and its controls;
-improve title-page reading hierarchy. After every three iterations, review the
-wider UI and revisit this list. Continue beyond the first five useful increments
-and record the next concrete tasks here.
+### Iteration 3 — scope image paste to the active recognition page
+
+- The retained hidden Recognize page no longer consumes title-page image paste.
+  Visibility and request-generation checks protect both clipboard read stages,
+  including stale errors that arrive after returning with Back.
+- The initial reproduction failed two hidden-page cases. Independent review found
+  that a request must stay cancelled after Back; four further read/getType success
+  and failure reproductions failed before generation invalidation was added.
+- All nine paste regressions now pass; combined feature/recovery/paste coverage
+  passes 38/38. Svelte check has zero errors/warnings and the final independent
+  review approves the cancellation guards. No real image uploads were performed.
+
+### Broader review after iteration 3
+
+The next interface work should change hierarchy, not only color: Home still puts
+six equal analytics cards before the useful titles; library cards and filter rows
+have too many enclosing panels; genre labels resemble buttons. Keep every
+tracking, filtering and keyboard action while reducing that surface noise.
+Review also identified a remaining clipboard intent race: a manual file selection
+or Clear can be overwritten by an older pending clipboard request. Reproduce and
+fix that separately, then recheck the complete browser suite.
+
+Next priorities: continuation before Home statistics; clipboard/manual-file intent;
+library shelf and controls; title-page reading hierarchy. Continue beyond the
+first five useful increments, recording each check and the next concrete tasks.
 
 ## 0.1.4 validation — 22 October 2026
 
