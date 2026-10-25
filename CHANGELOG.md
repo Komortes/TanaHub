@@ -14,6 +14,7 @@ Changes are recorded here for each release.
 
 - Quieter graphite and paper surfaces put cover art first. Navigation separates library browsing from secondary tools and keeps readable labels and usable targets on narrow windows.
 - Home starts with in-progress titles and episode/chapter actions. Library statistics follow recommendations, with quieter charts and compact activity rows.
+- Title pages distinguish tracking controls, reading and supporting facts. Genres and metadata use plain text; cover-viewer focus and compact poster sizes are preserved.
 
 ## [0.1.4 preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.4) — 2026-10-21
 

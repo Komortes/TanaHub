@@ -78,9 +78,22 @@ fix that separately, then recheck the complete browser suite.
   current titles first without page overflow; the wider 16-view capture has no
   browser errors. Independent code review found no actionable regression.
 
-Next priorities: title-page reading hierarchy; clipboard/manual-file intent;
-library shelf and controls. Continue beyond the first five useful increments,
-recording each check and the next concrete tasks.
+### Iteration 5 — clarify the title-page reading hierarchy
+
+- Removed the enclosing header panel and aligned identity consistently with and
+  without a banner. The quiet banner remains; the cover still renders at 140px
+  on desktop and 100px in compact windows. Header focus outlines are not clipped.
+- Genre/format/year fragments now read as metadata rather than buttons. Synopsis
+  and characters use rules; facts form a quiet side rail that stacks on mobile.
+  Community remains labelled on narrow screens. Editing components and all
+  handlers/DOM order remain unchanged.
+- Read-only review approved the CSS boundary. Wide, 320/360px and high-contrast
+  captures are usable without overflow; build reports zero diagnostics. The full
+  browser run passes 191/191, including missing/failed covers, lightbox retry and
+  focus, responsive poster dimensions, tracking and preserved journal drafts.
+
+Next priorities: clipboard/manual-file intent; library shelf and controls.
+Continue beyond the first five useful increments, recording checks and next tasks.
 
 ## 0.1.4 validation — 22 October 2026
 
