@@ -92,8 +92,34 @@ fix that separately, then recheck the complete browser suite.
   browser run passes 191/191, including missing/failed covers, lightbox retry and
   focus, responsive poster dimensions, tracking and preserved journal drafts.
 
-Next priorities: clipboard/manual-file intent; library shelf and controls.
-Continue beyond the first five useful increments, recording checks and next tasks.
+### Iteration 6 — preserve the latest image-source choice
+
+- Reproduced all eight pending-clipboard cases: stale reads/blobs could overwrite
+  a newer file or keyboard image paste, repopulate Clear, or show an obsolete
+  failure. Accepted file selection and Clear now invalidate the old clipboard
+  generation. Cancelling the file picker remains a no-op.
+- Eight regressions failed first; all 46 feature/recovery/paste scenarios pass
+  after two generation increments. Independent review found no remaining issue
+  in the shared input path; Svelte diagnostics are clean.
+
+### Broader review after iteration 6
+
+- The complete browser suite passes 191/191 without retries. Build reports zero
+  errors/warnings. Sixteen populated screenshots cover Home, title, collection,
+  Discover and Settings in narrow, tablet, wide and high-contrast layouts with no
+  browser errors or horizontal page overflow. Screenshot selection explicitly
+  distinguishes the anime/manga entries that share a name.
+- Home is now action-first and title metadata no longer resembles a filter set.
+  The library still has enclosing cards, floating hover motion and several heavy
+  filter rows. These are the next two separate visual increments. Preserve the
+  mixed tracked/catalog baselines and readable maximum-progress text.
+- First three commits are pushed; CI is running its four platform/frontend jobs.
+  Published 0.1.4 assets and update feeds remain unchanged. Later native WebKit
+  verification should check the complete visual changes before closing the run.
+
+Next priorities: flat library shelf; lighter collection controls; broader
+first-use/empty/error/contrast review; native WebKit verification. Continue beyond
+the first five increments, recording checks and the next concrete tasks.
 
 ## 0.1.4 validation — 22 October 2026
 

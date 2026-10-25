@@ -36,6 +36,37 @@ async function pasteText(page: Page, text: string) {
   }, text);
 }
 
+async function holdFirstClipboardOperation(page: Page, phase: 'read' | 'image', outcome: 'resolve' | 'reject') {
+  await page.addInitScript(({ bytes, phase, outcome }) => {
+    let reads = 0;
+    const image = () => new Blob([Uint8Array.from(atob(bytes), character => character.charCodeAt(0))], { type: 'image/png' });
+    const pending = <T,>(value: T) => new Promise<T>((resolve, reject) => {
+      (window as unknown as { finishClipboardOperation: () => void }).finishClipboardOperation = () => {
+        (window as unknown as { clipboardOperationCompleted: boolean }).clipboardOperationCompleted = true;
+        if (outcome === 'reject') reject(new Error('An outdated clipboard request failed.'));
+        else resolve(value);
+      };
+    });
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {
+      read: () => {
+        const first = reads++ === 0;
+        const items = [{ types: ['image/png'], getType: () => first && phase === 'image' ? pending(image()) : Promise.resolve(image()) }];
+        return first && phase === 'read' ? pending(items) : Promise.resolve(items);
+      },
+    } });
+  }, { bytes: tinyPng, phase, outcome });
+}
+
+async function startHeldClipboardPaste(page: Page) {
+  await page.getByRole('button', { name: 'Paste image', exact: true }).click();
+  await expect.poll(() => page.evaluate(() => typeof (window as unknown as { finishClipboardOperation?: () => void }).finishClipboardOperation)).toBe('function');
+}
+
+async function finishHeldClipboardPaste(page: Page) {
+  await page.evaluate(() => (window as unknown as { finishClipboardOperation: () => void }).finishClipboardOperation());
+  await expect.poll(() => page.evaluate(() => (window as unknown as { clipboardOperationCompleted?: boolean }).clipboardOperationCompleted)).toBe(true);
+}
+
 test('pasting an image on title details does not replace the preserved recognition source or results', async ({ page, library }) => {
   await recognizeOriginal(page);
   await openMatch(page);
@@ -117,32 +148,13 @@ test('a pending Paste image read cannot change a recognition session after openi
 for (const phase of ['read', 'image'] as const) {
   for (const outcome of ['resolve', 'reject'] as const) {
     test(`a stale clipboard ${phase} ${outcome} after Back keeps the session and allows a new explicit paste`, async ({ page, library }) => {
-      await page.addInitScript(({ bytes, phase, outcome }) => {
-        let reads = 0;
-        const image = () => new Blob([Uint8Array.from(atob(bytes), character => character.charCodeAt(0))], { type: 'image/png' });
-        const pending = <T,>(value: T) => new Promise<T>((resolve, reject) => {
-          (window as unknown as { finishClipboardOperation: () => void }).finishClipboardOperation = () => {
-            (window as unknown as { clipboardOperationCompleted: boolean }).clipboardOperationCompleted = true;
-            if (outcome === 'reject') reject(new Error('An outdated clipboard request failed.'));
-            else resolve(value);
-          };
-        });
-        Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {
-          read: () => {
-            const first = reads++ === 0;
-            const items = [{ types: ['image/png'], getType: () => first && phase === 'image' ? pending(image()) : Promise.resolve(image()) }];
-            return first && phase === 'read' ? pending(items) : Promise.resolve(items);
-          },
-        } });
-      }, { bytes: tinyPng, phase, outcome });
+      await holdFirstClipboardOperation(page, phase, outcome);
       await recognizeOriginal(page);
-      await page.getByRole('button', { name: 'Paste image', exact: true }).click();
-      await expect.poll(() => page.evaluate(() => typeof (window as unknown as { finishClipboardOperation?: () => void }).finishClipboardOperation)).toBe('function');
+      await startHeldClipboardPaste(page);
       await openMatch(page);
       await page.getByRole('button', { name: 'Back', exact: true }).click();
       await expect(page.getByText('Original.png', { exact: true })).toBeVisible();
-      await page.evaluate(() => (window as unknown as { finishClipboardOperation: () => void }).finishClipboardOperation());
-      await expect.poll(() => page.evaluate(() => (window as unknown as { clipboardOperationCompleted?: boolean }).clipboardOperationCompleted)).toBe(true);
+      await finishHeldClipboardPaste(page);
       await expect(page.getByText('Original.png', { exact: true })).toBeVisible();
       await expect(page.getByRole('article', { name: `Match ${frieren}`, exact: true })).toBeVisible();
       await expect(page.getByRole('alert')).toHaveCount(0);
@@ -158,4 +170,55 @@ for (const phase of ['read', 'image'] as const) {
       expect(uploads[1].params.sourceName).toBe('Clipboard image.png');
     });
   }
+}
+
+const newerSourceCases = [
+  { action: 'file choice', phase: 'read', outcome: 'resolve' },
+  { action: 'file choice', phase: 'read', outcome: 'reject' },
+  { action: 'file choice', phase: 'image', outcome: 'resolve' },
+  { action: 'file choice', phase: 'image', outcome: 'reject' },
+  { action: 'keyboard image paste', phase: 'image', outcome: 'resolve' },
+  { action: 'keyboard image paste', phase: 'read', outcome: 'reject' },
+  { action: 'Clear image', phase: 'read', outcome: 'resolve' },
+  { action: 'Clear image', phase: 'image', outcome: 'reject' },
+] as const;
+
+for (const { action, phase, outcome } of newerSourceCases) {
+  test(`a newer ${action} survives a stale clipboard ${phase} ${outcome}`, async ({ page, library }) => {
+    await holdFirstClipboardOperation(page, phase, outcome);
+    await recognizeOriginal(page);
+    await startHeldClipboardPaste(page);
+    const findMatches = page.getByRole('button', { name: 'Find matches with trace.moe', exact: true });
+    let currentSource = 'Newer.png';
+    if (action === 'file choice') {
+      await page.getByLabel('Choose recognition image', { exact: true }).setInputFiles({ name: currentSource, mimeType: 'image/png', buffer: Buffer.from(tinyPng, 'base64') });
+    } else if (action === 'keyboard image paste') {
+      expect(await pasteImage(page, currentSource)).toBe(true);
+    } else {
+      await page.getByRole('button', { name: 'Clear recognition image', exact: true }).click();
+    }
+    if (action !== 'Clear image') await expect(page.getByText(currentSource, { exact: true })).toBeVisible();
+    await finishHeldClipboardPaste(page);
+    if (action === 'Clear image') {
+      await expect(page.getByRole('heading', { name: 'Choose or drop an image', exact: true })).toBeVisible();
+      await expect(findMatches).toBeDisabled();
+    } else {
+      await expect(page.getByText(currentSource, { exact: true })).toBeVisible();
+      await expect(findMatches).toBeEnabled();
+    }
+    await expect(page.getByRole('article', { name: `Match ${frieren}`, exact: true })).toHaveCount(0);
+    await expect(page.getByRole('alert')).toHaveCount(0);
+    expect(library.requests.filter(request => request.method === 'recognition.run')).toHaveLength(1);
+
+    if (action === 'Clear image') {
+      await page.getByRole('button', { name: 'Paste image', exact: true }).click();
+      currentSource = 'Clipboard image.png';
+      await expect(page.getByText(currentSource, { exact: true })).toBeVisible();
+    }
+    await findMatches.click();
+    await expect(page.getByRole('article', { name: `Match ${frieren}`, exact: true })).toBeVisible();
+    const uploads = library.requests.filter(request => request.method === 'recognition.run');
+    expect(uploads).toHaveLength(2);
+    expect(uploads[1].params.sourceName).toBe(currentSource);
+  });
 }

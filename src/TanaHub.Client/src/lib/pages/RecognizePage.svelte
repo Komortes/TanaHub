@@ -62,9 +62,10 @@
     finally { if (active && current === historyGeneration) { historyLoading = false; historyChanges = null; } }
   }
   function changeProvider(next: 'trace' | 'art') { provider = next; result = null; error = ''; notice = ''; savedMatches = []; runGeneration += 1; }
-  function clearImage() { sourceName = ''; imageBase64 = ''; mime = ''; preview = ''; fileSize = 0; result = null; error = ''; notice = ''; savedMatches = []; reading = false; fileGeneration += 1; if (fileInput) fileInput.value = ''; }
+  function clearImage() { sourceName = ''; imageBase64 = ''; mime = ''; preview = ''; fileSize = 0; result = null; error = ''; notice = ''; savedMatches = []; reading = false; fileGeneration += 1; clipboardGeneration += 1; if (fileInput) fileInput.value = ''; }
   async function selectFile(file?: File) {
     if (!file || working) return;
+    clipboardGeneration += 1;
     const current = ++fileGeneration;
     const supported = ['image/jpeg', 'image/png', 'image/webp'];
     const inferred = /\.jpe?g$/i.test(file.name) ? 'image/jpeg' : /\.png$/i.test(file.name) ? 'image/png' : /\.webp$/i.test(file.name) ? 'image/webp' : '';
