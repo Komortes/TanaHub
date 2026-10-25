@@ -65,9 +65,22 @@ Review also identified a remaining clipboard intent race: a manual file selectio
 or Clear can be overwritten by an older pending clipboard request. Reproduce and
 fix that separately, then recheck the complete browser suite.
 
-Next priorities: continuation before Home statistics; clipboard/manual-file intent;
-library shelf and controls; title-page reading hierarchy. Continue beyond the
-first five useful increments, recording each check and the next concrete tasks.
+### Iteration 4 — put the next episode or chapter first
+
+- Moved all six Home statistics below recommendations; retained every metric,
+  text value, media filter and chart. Replaced metric cards with a semantic
+  definition list and restrained bars.
+- In-progress titles and their existing actions now lead the page. Flat rows use
+  smaller covers, readable captions and a progress bookmark; recent/airing rows
+  use quiet separators. Tracking, failure handling and focus logic are unchanged.
+- Feature scenarios pass as part of the 46-case concurrent verification batch.
+  Build has zero diagnostics. Populated Home views at 320/360/768/1440px show
+  current titles first without page overflow; the wider 16-view capture has no
+  browser errors. Independent code review found no actionable regression.
+
+Next priorities: title-page reading hierarchy; clipboard/manual-file intent;
+library shelf and controls. Continue beyond the first five useful increments,
+recording each check and the next concrete tasks.
 
 ## 0.1.4 validation — 22 October 2026
 
