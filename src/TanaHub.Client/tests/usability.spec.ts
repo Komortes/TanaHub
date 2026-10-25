@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures';
 
-for (const width of [320, 432, 768]) {
+for (const width of [320, 360, 432, 768]) {
   test(`navigation labels and touch targets stay usable at ${width}px`, async ({ page, library }) => {
     await page.setViewportSize({ width, height: 800 });
     await page.goto('/');
@@ -11,6 +11,15 @@ for (const width of [320, 432, 768]) {
       const box = await button.boundingBox();
       expect(box!.width).toBeGreaterThanOrEqual(44);
       expect(box!.height).toBeGreaterThanOrEqual(44);
+    }
+    if (width <= 640) {
+      const labels = await nav.locator('button > span').evaluateAll(nodes => nodes.map(node => {
+        const bounds = node.getBoundingClientRect();
+        return { left: bounds.left, right: bounds.right };
+      }));
+      for (let index = 1; index < labels.length; index += 1) {
+        expect(labels[index].left - labels[index - 1].right, 'Adjacent navigation labels need readable separation').toBeGreaterThanOrEqual(4);
+      }
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
   });

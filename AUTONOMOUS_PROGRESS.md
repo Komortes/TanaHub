@@ -27,11 +27,27 @@ stay outside source under /private/tmp/tanahub-interface-20261026/.
   check reports zero errors/warnings. Independent read-only review approved the
   merge/failure handling and visible import-focus target.
 
-Next priorities: finish neutral surfaces/navigation; stop hidden recognition from
-handling title-page paste; put continuation before Home statistics; flatten the
-library shelf and its controls; improve title-page reading hierarchy. After every
-three iterations, review the wider UI and revisit this list. Continue beyond the
-first five useful increments and record the next concrete tasks here.
+### Iteration 2 — establish the library's visual foundation
+
+- Replaced neon surface accents with graphite, paper, a warm bookmark accent and
+  restrained sage progress. Kept system typography and existing saved theme values;
+  high contrast has its own stronger surfaces and boundaries.
+- Navigation now separates primary browsing from Schedule/Recognize and anchors
+  Settings below. Compact layouts retain all six labels and at least 44px targets.
+  A 320px screenshot exposed adjacent labels nearly touching despite no page
+  overflow: a failing spacing regression led to content-sized mobile columns.
+- Build passes with zero Svelte errors/warnings; all 53 affected browser scenarios
+  pass. All four navigation sizes (320/360/432/768px) pass. Eleven populated
+  screenshots include narrow, rail, wide and high-contrast layouts; no page
+  overflow or browser errors. Independent review found no actionable defect.
+- Recorded the domain, visual intent and compatibility constraints in
+  docs/design/interface.md. Screenshots remain in the external QA directory.
+
+Next priorities: stop hidden recognition from handling title-page paste; put
+continuation before Home statistics; flatten the library shelf and its controls;
+improve title-page reading hierarchy. After every three iterations, review the
+wider UI and revisit this list. Continue beyond the first five useful increments
+and record the next concrete tasks here.
 
 ## 0.1.4 validation — 22 October 2026
 
