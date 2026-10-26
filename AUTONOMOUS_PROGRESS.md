@@ -377,7 +377,35 @@ app and CI. Preserve explicit installation/restart and the published 0.1.4 chann
   and core-test jobs passed at a47850b. Latest frontend CI exposed a test fixture
   omission, now reproduced and fixed separately before the next push.
 
-Next: commit the CI fixture correction/documentation, push and verify all four jobs.
+### Iteration 21 — make the Statistics check independent of a local core
+
+- GitHub run 40252829957 at a47850b passed all three core/native jobs, but one
+  browser scenario reached the real development bridge because it omitted the
+  non-automatic `library` fixture. Both CI attempts returned HTTP 500 with the
+  missing-core message; the Statistics heading was already present. A prepared
+  local core had hidden this test setup error.
+- Reproduced the same failure against a no-core Vite server on 1430, then added
+  the fixture to that one test. All 13 Statistics scenarios pass against that
+  same server. Assertions, timeouts, product routing and CI configuration remain
+  unchanged. Failure trace, screenshots and red/green logs are retained outside
+  source. The disposable server was stopped.
+- Updated getting started, interface direction and bridge contracts for the
+  current unreleased Statistics/themes/check-history/reminder behavior. Published
+  0.1.4 installation links and package/feed/signing configuration are unchanged.
+
+### Broader review after iteration 21
+
+Twenty-one small iterations have addressed the confirmed interface defects and
+the user's useful feature direction. Full 247 browser/391 .NET tests, format,
+transport and actual isolated macOS checks pass. The Statistics CI environment
+gap is reproduced and fixed; verify the next push across all four jobs before
+calling this checkpoint complete. Windows/Linux interactive WebViews, live OAuth,
+real notification permissions and real recognition uploads were not exercised.
+
+Further feature candidates should first establish a concrete user benefit (for
+example a version-specific update reminder deadline) and stay separate from
+installation consent. Do not add charts, destinations or recurring prompts merely
+to extend the work. Reassess new confirmed bugs before starting another change.
 
 ## 0.1.4 validation — 22 October 2026
 

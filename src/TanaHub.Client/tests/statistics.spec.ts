@@ -54,7 +54,7 @@ test('a direct Statistics route reloads, uses only local summary data, and has a
   await expect(page.getByRole('heading', { name: 'Home', level: 1, exact: true })).toBeFocused();
 });
 
-test('Statistics follows browser Back and Forward and the Home navigation item exits its subpage', async ({ page }) => {
+test('Statistics follows browser Back and Forward and the Home navigation item exits its subpage', async ({ page, library }) => {
   await page.goto('/#home');
   const open = page.getByRole('button', { name: 'Statistics', exact: true });
   await open.click();

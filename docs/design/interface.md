@@ -4,6 +4,9 @@ The interface is a personal anime and manga library. It serves someone returning
 for the next episode or chapter, finding a title, or recording a thought after
 watching. Current titles and progress take precedence over collection statistics.
 
+This document describes the current development branch. Its interface and feature
+changes are unreleased; published 0.1.4 Preview installers remain unchanged.
+
 ## A personal shelf
 
 The product's vocabulary is a library, a watchlist, a volume, a season, a bookmark,
@@ -18,7 +21,11 @@ should connect the screens through actual tracking information, not decoration.
 ## Hierarchy
 
 - Home starts with in-progress titles and their next-episode/chapter action.
-  Statistics remain available at a quieter level; charts do not displace actions.
+  Its Statistics button opens `#home/statistics`, with Back to Home and normal
+  browser history. Statistics shares Home's Anime/Manga/All filter; returning
+  restores the entry point and retained Home context. Keep the six global
+  navigation destinations rather than adding a seventh compact-navigation item.
+  Statistics reads the local summary without recommendations or airing checks.
 - The collection is a shelf of covers and captions, rather than a grid of raised
   containers. List view uses row separators. Titles and quick actions keep aligned
   baselines, including long names and unknown totals.
@@ -46,6 +53,34 @@ the `Nebula dark` wire value and the existing default. System stores the prefere
 and resolves it separately for the document, with one removable OS-change observer.
 Light uses paper surfaces and dark ink; text on a primary action has a separate
 on-accent token. Check native controls, imagery, dialogs and focus in each palette.
+
+Cache only one of the four confirmed preferences, never System's resolved Light
+or Dark palette. Apply that preference synchronously before mounting so a delayed
+settings read does not repaint a saved Light choice as Dark. Bootstrap creates no
+observer; the App effect owns one System observer, including while settings load,
+and removes it on preference changes or disposal. Backend settings take precedence
+over the cache. Invalid or unavailable browser storage must leave the app usable;
+a rejected save must leave the confirmed preference intact.
+
+## Settings feedback
+
+Desktop About TanaHub distinguishes Last attempt, Last successful check and Check
+status. Persist completed check outcomes rather than an in-flight Checking state;
+failed or unsupported attempts preserve the prior successful-check time. Download
+or installation failures do not rewrite a successful check as a failed one. This
+history is optional when browser storage is unavailable. It is feedback, not a
+restored update payload or permission to skip a fresh check before downloading.
+
+The Notifications switch waits for the read-only platform capability check.
+Loading, unsupported and failed checks disable it without changing the saved
+preference; a failed check offers Retry reminder check. Current macOS and Linux
+adapters are supported; Windows reports unsupported in this build. Platform
+support does not establish OS permission or guarantee visible delivery. Explain
+that reminders are checked when Home's All/Anime view or today's Schedule loads
+or refreshes, while the app runs; do not imply a timer or a service running after
+the app closes.
+
+## Verification
 
 Validate first-use, populated, filtered-empty, loading and failed states. Inspect
 at 320/360, 768, 1024 and 1440px; verify both pointer and keyboard use. Browser

@@ -2,6 +2,10 @@
 
 The Tauri frontend talks to the existing C# application and infrastructure through a local stdio process. The bridge uses the same SQLite library, offline catalog cache and settings as the Avalonia app. `TANAHUB_DATA_DIRECTORY` keeps its current meaning: an absolute override of the default application-data `TanaHub` directory. Test runs always set an isolated temporary directory.
 
+This reference describes the current source checkout. The Light/System theme
+options and notification capability/result handling below are unreleased changes;
+the published 0.1.4 Preview installers remain unchanged.
+
 Build with `dotnet build src/TanaHub.Bridge/TanaHub.Bridge.csproj`; run the resulting executable or `dotnet src/TanaHub.Bridge/bin/Debug/net10.0/TanaHub.Bridge.dll`. Avoid `dotnet run` in a protocol connection because build messages may appear on stdout.
 
 Each UTF-8 newline carries one request and one response. Requests run in order. EOF exits the process. Diagnostics go to stderr; stdout contains JSON only.
@@ -46,6 +50,7 @@ Media additionally includes nullable `nativeTitle`, `episodeCount`, `durationMin
 | `home.recommendations` | optional `type`, `limit=8` (1–24) | `{items:Media[],genres:[{name,weight}],notice:string\|null}` |
 | `schedule.list` | ISO `from`, `to`, `libraryOnly=false`; positive range at most 31 days | `{items:[{mediaId,title,episode,airingAt,format,releaseStatus,posterUrl,inLibrary,status}],from,to}` |
 | `schedule.notify` | today's `from`, `to` range (at most 26 hours) | `{notifiedCount}`; reuses last fetched schedule, library membership, saved notification preference and session deduplication |
+| `notifications.support` | none | `{supported:boolean,reason:string\|null}`; read-only platform capability, no preference change or notification |
 | `media.related` | `mediaId`, `forceRefresh=false` | `{titles:[{mediaId,title,mediaType,format,relation,source,sourceRelation,aniListId,malId,mangaDexId,year,episodeCount,chapterCount,volumeCount,posterUrl}],notice,isStale}` |
 | `library.progress.set` | `mediaId`, `progress` integer 0–2147483647 | Entry |
 | `library.review` | `mediaId`, `review` (normalized text up to 4000 characters or null) | Entry; null/blank clears |
@@ -68,10 +73,26 @@ Media additionally includes nullable `nativeTitle`, `episodeCount`, `durationMin
 
 `library.list` also supports `tag`, `customList`, and `sort: Updated|Title|Score|Progress`; text search includes tags and custom lists. Sort and search precede pagination. `catalog.search` also supports `genres: string[]`, `seasonYear` (1900–2200), `format`, `releaseStatus`, `countryCode` (two characters), using the existing application query contract.
 
-Insights reuse `LibraryInsightsCalculator`: `totalEntries`, `completedEntries`, `backlogEntries`, `droppedEntries`, `completionRate`, `droppedRatio`, `averageScore`, `episodesWatched`, `chaptersRead`, `estimatedWatchMinutes`, `byMediaType`, `byStatus`. Segments are `{key,count,completedCount,completionRate,averageScore}`; `Current` is presented as `Watching`. Optional home type filters all metrics and collections. Recommendations reuse `LibraryRecommendationBuilder` and exclude all owned titles.
+Insights reuse `LibraryInsightsCalculator`: `totalEntries`, `completedEntries`, `backlogEntries`, `droppedEntries`, `completionRate`, `droppedRatio`, `averageScore`, `episodesWatched`, `chaptersRead`, `estimatedWatchMinutes`, `byMediaType`, `byStatus`. Segments are `{key,count,completedCount,completionRate,averageScore}`; `Current` is presented as `Watching`. Optional home type filters all metrics and collections. The Tauri Home Statistics subpage reuses `home.get`; it does not add a bridge method or call recommendations or schedule methods. Recommendations reuse `LibraryRecommendationBuilder` and exclude all owned titles.
 
-Settings: `{theme,notificationsEnabled,offlineCacheEnabled,recognitionServicesEnabled,preferredSyncSource,aniListClientId,hasAniListClientSecret,hasSauceNaoApiKey,isAniListConnected,aniListUsername,aniListUserId,aniListLastSyncAt}`. Editable fields are theme (`Nebula dark` or `High contrast`), the three booleans, preferredSyncSource (`AniList`, `MyAnimeList`, `MangaDex`), aniListClientId, aniListClientSecret and sauceNaoApiKey. Omitted credentials preserve saved values; empty strings explicitly clear. Secrets and access tokens are never included in outputs, diagnostics, or auth error payloads. The existing encrypted settings service remains responsible for storage.
+Settings: `{theme,notificationsEnabled,offlineCacheEnabled,recognitionServicesEnabled,preferredSyncSource,aniListClientId,hasAniListClientSecret,hasSauceNaoApiKey,isAniListConnected,aniListUsername,aniListUserId,aniListLastSyncAt}`. Editable fields are theme (`Nebula dark`, `High contrast`, `Light` or `System`), the three booleans, preferredSyncSource (`AniList`, `MyAnimeList`, `MangaDex`), aniListClientId, aniListClientSecret and sauceNaoApiKey. Dark is the UI label for the unchanged `Nebula dark` wire/default value. System remains stored as `System`; the frontend resolves its current palette. A frontend startup cache contains only a confirmed preference and never overrides a later `settings.get`/`settings.save` response. Omitted credentials preserve saved values; empty strings explicitly clear. Secrets and access tokens are never included in outputs, diagnostics, or auth error payloads. The existing encrypted settings service remains responsible for storage.
+
+`notifications.support` reports platform capability, not OS permission or a
+guarantee that a notification will be displayed. macOS and Linux return supported;
+Windows returns unsupported with an explanation in this build. Missing commands,
+permission restrictions and delivery failures can still prevent a supported
+adapter from sending a reminder. `schedule.notify` returns zero when notifications
+are disabled or the platform is unsupported. Successful notification commands are
+counted and deduplicated for the bridge session; a failed command produces
+`notification_failed` and is not marked sent, so a later refresh can retry it.
+Cancellation remains a cancellation. The current frontend calls this method after
+loading Home's All/Anime view or today's Schedule in the local timezone; there is
+no background scheduler checking after the application closes.
+
+Completed native update-check history is frontend metadata and adds no fields to
+`updates.check`. That bridge method retains its stable-release metadata contract;
+the desktop preview updater and installation flow use the Tauri updater.
 
 RecognitionMatch: `{mediaId,title,romaji,nativeTitle,episode,similarity,thumbnailUrl,sourceUrl,author}`. Similarity is 0–1; all fields except title and similarity may be null. Trace results reuse the existing rank/dedupe selector and automatically save the best match. Art results use the optional saved SauceNAO key and can work anonymously; art history is explicitly saved because legacy persistence has no author/source URL fields. Recognition requires `uploadConfirmed:true` for each explicit search. The client shows the selected provider beside its Find matches action; choosing, pasting, or dropping an image does not upload it. The persisted `recognitionServicesEnabled` field remains in the settings contract for the legacy desktop client but does not gate explicit bridge searches and is not changed by them.
 
-RecognitionHistoryItem: `{id,createdAt,provider,sourceName,mediaId,title,romajiTitle,nativeTitle,episode,similarity,thumbnailUrl}`. History omits legacy local source paths. Additional error codes are `unavailable` and `authorization_failed`. The existing OAuth flow can last five minutes; the host should isolate it from normal library requests and allow sufficient timeout. No credentials are returned after connection.
+RecognitionHistoryItem: `{id,createdAt,provider,sourceName,mediaId,title,romajiTitle,nativeTitle,episode,similarity,thumbnailUrl}`. History omits legacy local source paths. Additional error codes are `unavailable`, `authorization_failed` and `notification_failed`. The existing OAuth flow can last five minutes; the host should isolate it from normal library requests and allow sufficient timeout. No credentials are returned after connection.

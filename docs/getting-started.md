@@ -39,6 +39,32 @@ TanaHub keeps unsaved notes, reviews, tags, lists, dates and progress drafts in 
 
 Tracking is saved locally. Catalog and recognition providers can fail or apply rate limits without deleting your library. Previously loaded catalog data is available through the offline cache when enabled; titles not yet cached still need a connection.
 
+## Current development branch (unreleased)
+
+The following features are available in the current source checkout. They are not
+included in the published **0.1.4 Preview** installers linked above.
+
+- **Statistics:** open **Home → Statistics** for library metrics and breakdowns by
+  media type and status. Watch time is an estimate. Home and Statistics share the
+  Anime/Manga/All titles filter. **Back to Home** returns to the same Home context;
+  browser Back and Forward also work. Statistics does not add a navigation item.
+- **Appearance:** **Settings → Theme** offers System, Dark, Light and High contrast.
+  System follows your operating system's appearance. Later starts apply your last
+  confirmed choice while settings load. A failed save keeps the previous choice.
+- **Episode reminders:** Settings checks platform support before enabling the
+  Notifications switch. Checks happen when Home loads or refreshes with **All
+  titles** or **Anime** selected, or when today's Schedule loads or refreshes. No
+  background checks run after you close TanaHub. macOS and Linux are supported;
+  Linux requires `notify-send` and a desktop notification service. Windows
+  reminders are unsupported in this build. Your OS
+  notification settings still apply. If a reminder fails, refresh Home or Today in
+  Schedule to retry; if the availability check fails, use **Retry reminder check**.
+- **Update check history:** desktop **Settings → About TanaHub** shows Last attempt,
+  Last successful check and Check status. Completed check history survives a
+  restart when browser storage is available. A failed check keeps the previous
+  successful-check time; a download or installation error remains separate from
+  the check result.
+
 ## Bring an existing list
 
 From an empty library, **Import a list** opens **Settings → Your library data** directly. Otherwise open that section in Settings yourself.
