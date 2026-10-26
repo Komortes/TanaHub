@@ -407,6 +407,52 @@ example a version-specific update reminder deadline) and stay separate from
 installation consent. Do not add charts, destinations or recurring prompts merely
 to extend the work. Reassess new confirmed bugs before starting another change.
 
+### Verified CI checkpoint after iteration 21
+
+- Main and origin/main agree at 4115d5bdd7a9d371ead732234be6c6bdb8801ea2.
+  GitHub CI run 40288771751 completed successfully in all four jobs: frontend/
+  browser and core/native shell on macOS, Windows and Ubuntu. The failing
+  Statistics environment scenario is now green on GitHub as well as locally.
+- A separate full no-core browser run passes 247/247, confirming no other fixture
+  omissions were hidden by the locally prepared bridge. Notification screenshots
+  at 320/1440 verify supported, unsupported/saved-on and failed/retry states with
+  no overflow, console errors, preference writes or real notifications.
+
+### Iteration 22 — an explicit, restrained update reminder deadline
+
+The available-update notice currently offers Later for one launch only, so a user
+who restarts often sees the same prompt each time. Replace that choice only for
+an available, error-free version with Remind in 24 hours. Keep downloaded-update
+and error Later choices session-only. Preserve startup checks so another version
+can appear immediately; Settings/manual download stay available throughout.
+
+Review targets: independent optional storage, a bounded per-version deadline,
+live expiry without focus theft, manual override, and unchanged native resource/
+signature/install consent. Eighteen focused cases gave ten intended missing-
+feature failures and eight existing guards passing before implementation.
+
+- Implemented a tiny `{version,until}` reminder record, restored independently of
+  completed-check history. Reject malformed, expired and implausibly distant
+  deadlines; unavailable storage retains a usable current-window reminder.
+- A disposable timer returns the available notice at expiry without changing
+  focus or making another feed request. Startup still checks once. Another
+  version, accepted manual check or download clears the reminder. Ready/error
+  Later remains session-only, with no persisted native objects or installers.
+- Settings uses its existing message to show the deadline and keeps Download
+  update enabled; no extra panel/navigation/notification permission. Nothing
+  downloads or installs when a deadline expires.
+- All 44 updater scenarios pass, including the original signature, install,
+  restart and resource guards. The final complete browser suite passes 265/265
+  (1.7m), build/check have zero diagnostics, and four 320/1440 captures have no
+  overflow/runtime errors. Independent read-only review found no P1/P2.
+- Backend/native source is unchanged from the verified 391-test/macOS checkpoint
+  and all-platform CI21. Reminder persistence/expiry was exercised through the
+  native updater browser harness; no real update was downloaded or installed.
+
+Next: push this final client iteration, verify the exact CI run, and record the
+finished checkpoint. This reviewed queue has no further confirmed defects; any
+later feature should first establish a concrete benefit and its own evidence.
+
 ## 0.1.4 validation — 22 October 2026
 
 Published [0.1.4 Preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.4)

@@ -64,6 +64,10 @@ included in the published **0.1.4 Preview** installers linked above.
   restart when browser storage is available. A failed check keeps the previous
   successful-check time; a download or installation error remains separate from
   the check result.
+- **Update reminders:** choose **Remind in 24 hours** on an available update to
+  pause that version's notice. Settings shows the deadline and keeps Download
+  update available. A different version appears immediately. Expiry only shows
+  the notice; downloading and installation remain explicit actions.
 
 ## Bring an existing list
 

@@ -10,6 +10,7 @@ Changes are recorded here for each release.
 - Light and System appearance choices. System follows OS changes without rewriting the saved preference; existing Dark and High contrast settings remain supported.
 - Settings shows the latest update-check attempt, result and successful check time. Completed history survives restart/offline checks; automatic startup failures remain quiet elsewhere.
 - Settings checks desktop reminder support and explains availability before enabling Notifications. Unsupported platforms keep the saved preference without offering a non-working switch; failed checks have an explicit retry.
+- Available updates offer Remind in 24 hours for that version, including across restarts. Settings keeps the download available and shows the deadline; another version or a manual check/download overrides the reminder.
 
 ### Fixed
 

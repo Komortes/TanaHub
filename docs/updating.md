@@ -46,6 +46,21 @@ library use. The browser preview and unsupported native package types do not
 request the native update feed. No operating-system notification permission is
 needed.
 
+### Current development branch (unreleased)
+
+The following reminder behavior is not included in the published 0.1.4 Preview
+installers. An available-update notice offers **Remind in 24 hours**. This pauses
+the notice for that exact version until the displayed deadline, including after
+restarting when browser storage is available. Startup still checks for updates;
+a different version appears immediately. An open window shows the reminder again
+when the deadline expires without moving keyboard focus.
+
+Settings continues to show the available version, its reminder deadline and
+**Download update**. Downloading or explicitly checking for updates clears the
+reminder. Nothing downloads or installs because a deadline expires. **Later** on
+a downloaded update or an error hides that notice only for the current launch;
+it does not save a deadline or restore downloaded installers after restarting.
+
 ## Artwork cache
 
 The desktop client stores supported provider artwork in its OS app-cache folder,

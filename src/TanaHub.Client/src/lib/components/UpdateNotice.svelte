@@ -12,7 +12,11 @@
     // Keep keyboard users on the next action unless they navigated or moved focus.
     if (document.activeElement === document.body) actionButton?.focus({ preventScroll: true });
   }
-  async function later() { updates.dismissed = true; await tick(); onDismiss(); }
+  async function later() {
+    if (updates.phase === 'available' && !updates.error) updates.remindIn24Hours();
+    else updates.dismissed = true;
+    await tick(); onDismiss();
+  }
 </script>
 
 {#if !inSettings && updates.showNotice}
@@ -28,7 +32,7 @@
       {#if updates.phase === 'available'}<button bind:this={actionButton} class="primary-button" disabled={busy} onclick={download}>Download update</button>
       {:else if updates.phase === 'ready'}<button bind:this={actionButton} class="primary-button" disabled={busy} onclick={() => { if (!busy) void updates.install(); }}>Install and restart</button>
       {:else if updates.phase !== 'downloading'}<button bind:this={actionButton} class="primary-button" disabled={busy || updates.working} onclick={() => { if (!busy) void updates.check(); }}>Retry check</button>{/if}
-      {#if updates.phase !== 'downloading'}<button class="ghost-button" title="Remind me next launch" onclick={later}>Later</button>{/if}
+      {#if updates.phase !== 'downloading'}<button class="ghost-button" title={updates.phase === 'available' && !updates.error ? 'Remind me about this version in 24 hours' : 'Remind me next launch'} onclick={later}>{updates.phase === 'available' && !updates.error ? 'Remind in 24 hours' : 'Later'}</button>{/if}
     </div>
   </section>
 {/if}

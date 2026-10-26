@@ -117,10 +117,10 @@ test('startup check announces an available update without interrupting focus or 
   expect(await checkCount(page)).toBe(1);
 });
 
-test('Later dismisses the startup notification for this launch and a new launch checks again', async ({ page, library }) => {
+test('a 24-hour reminder hides the same version across navigation and a new launch still checks', async ({ page, library }) => {
   await desktop(page);
   await page.goto('/');
-  await notice(page).getByRole('button', { name: 'Later', exact: true }).click();
+  await notice(page).getByRole('button', { name: 'Remind in 24 hours', exact: true }).click();
   await expect(notice(page)).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'My library', exact: true })).toBeFocused();
   await page.getByRole('button', { name: 'Discover', exact: true }).click();
@@ -128,7 +128,11 @@ test('Later dismisses the startup notification for this launch and a new launch 
   await expect(notice(page)).toHaveCount(0);
   expect(await checkCount(page)).toBe(1);
   await page.reload();
-  await expect(notice(page)).toBeVisible();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await expect(page.getByText(/Version 0\.1\.3 is available/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Download update', exact: true })).toBeEnabled();
+  await page.getByRole('button', { name: 'My library', exact: true }).click();
+  await expect(notice(page)).toHaveCount(0);
   expect(await checkCount(page)).toBe(1);
 });
 
