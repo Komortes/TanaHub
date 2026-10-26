@@ -42,7 +42,7 @@
     loading = true; recommendationLoading = true; airingLoading = true;
     error = ''; recommendationError = ''; airingError = ''; notificationError = '';
     void featureApi.home(selectedType).then(result => { if (current === generation) summary = result; })
-      .catch(reason => { if (current === generation) error = reason instanceof Error ? reason.message : 'Could not load your dashboard.'; })
+      .catch(reason => { if (current === generation) error = reason instanceof Error ? reason.message : 'Could not load Home.'; })
       .finally(() => { if (current === generation) loading = false; });
     void featureApi.recommendations(8, selectedType).then(result => { if (current === generation) recommendations = result; })
       .catch(reason => { if (current === generation) recommendationError = reason instanceof Error ? reason.message : 'Recommendations are unavailable right now.'; })
@@ -84,7 +84,7 @@
 
 <header class="home-header"><h1 bind:this={heading} tabindex="-1">Home</h1><button class="ghost-button" aria-label="Refresh dashboard" onclick={() => refresh += 1} disabled={loading}><RefreshCw size={15} />Refresh</button></header>
 <div class="home-type" aria-label="Dashboard media type">{#each ['', 'Anime', 'Manga'] as item}<button aria-pressed={type === item} class:selected={type === item} onclick={() => type = item as MediaType | ''}>{item || 'All titles'}</button>{/each}<span>{summary?.insights.totalEntries ?? '—'} {summary?.insights.totalEntries === 1 ? 'title' : 'titles'} tracked</span></div>
-{#if error}<div class="load-error" role="alert"><AlertCircle size={20} /><div><strong>Your dashboard could not load</strong><p>{error}</p></div><button class="ghost-button" onclick={retryDashboard}>Try again</button></div>{/if}
+{#if error}<div class="load-error" role="alert"><AlertCircle size={20} /><div><strong>Home could not load</strong><p>{error}</p></div><button class="ghost-button" onclick={retryDashboard}>Try again</button></div>{/if}
 {#if actionError}<p class="error-text" role="alert">{actionError}</p>{/if}
 <div class="dashboard-columns">
   <div class="dashboard-main">
@@ -95,13 +95,13 @@
           {#each summary.continueItems.slice(0, 8) as entry (entry.mediaId)}
             <article class="continue-card" aria-label={entry.media.title}>
               <button class="cover-button" aria-label={`Open ${entry.media.title}`} onclick={() => onOpen(entry.media)}><MiniCover url={entry.media.posterUrl} thumbnail={entry.media.thumbnailUrl} preview={entry.media.previewUrl} title={entry.media.title} /></button>
-              <div class="continue-info"><button class="title-link" title={entry.media.title} onclick={() => onOpen(entry.media)}>{entry.media.title}</button><span class="entry-status">{statusLabel(entry.status, entry.mediaType)}</span><div class="entry-bottom"><span class="mono progress-position">{unitLabel(entry.mediaType)} {entry.progress}<span class="secondary"> / {entry.media.totalUnits ?? '—'}</span></span><button class="rate-button" aria-label={`Rate ${entry.media.title}`} onclick={(event) => onRate(entry, event.currentTarget.getBoundingClientRect())} disabled={busy.includes(entry.mediaId)}><Star size={14} fill={entry.score === null ? 'none' : 'currentColor'} /><span class="mono">{entry.score ?? '—'}</span></button></div><button class="progress-action" aria-label={`Add ${entry.mediaType === 'Manga' ? 'chapter' : 'episode'} to ${entry.media.title}`} onclick={() => void progress(entry)} disabled={busy.includes(entry.mediaId) || entry.progress >= maxProgress || (entry.media.totalUnits !== null && entry.media.totalUnits > 0 && entry.progress >= entry.media.totalUnits)}><Plus size={15} />{entry.mediaType === 'Manga' ? 'Read a chapter' : 'Watched an episode'}</button></div>
+              <div class="continue-info"><button class="title-link" title={entry.media.title} onclick={() => onOpen(entry.media)}><span>{entry.media.title}</span></button><span class="entry-status">{statusLabel(entry.status, entry.mediaType)}</span><div class="entry-bottom"><span class="mono progress-position">{unitLabel(entry.mediaType)} {entry.progress}<span class="secondary"> / {entry.media.totalUnits ?? '—'}</span></span><button class="rate-button" aria-label={`Rate ${entry.media.title}`} onclick={(event) => onRate(entry, event.currentTarget.getBoundingClientRect())} disabled={busy.includes(entry.mediaId)}><Star size={14} fill={entry.score === null ? 'none' : 'currentColor'} /><span class="mono">{entry.score ?? '—'}</span></button></div><button class="progress-action" aria-label={`Add ${entry.mediaType === 'Manga' ? 'chapter' : 'episode'} to ${entry.media.title}`} onclick={() => void progress(entry)} disabled={busy.includes(entry.mediaId) || entry.progress >= maxProgress || (entry.media.totalUnits !== null && entry.media.totalUnits > 0 && entry.progress >= entry.media.totalUnits)}><Plus size={15} />{entry.mediaType === 'Manga' ? 'Read a chapter' : 'Watched an episode'}</button></div>
             </article>
           {/each}
         </div>
       {:else if loading}<p class="section-notice" role="status">Loading in-progress titles…</p>
       {:else if error}<p class="section-notice">In-progress titles are unavailable until the dashboard reloads.</p>
-      {:else}<div class="quiet-empty"><BookOpen size={26} strokeWidth={1.4} /><h3>Nothing in progress</h3><p>Add a title and start tracking at your own pace.</p><button class="ghost-button" onclick={() => onNavigate('discover')}>Discover titles</button></div>{/if}
+      {:else}<div class="quiet-empty"><BookOpen size={26} strokeWidth={1.4} /><h3>Nothing in progress</h3><p>Start a title from your library, or find one in Discover.</p><button class="ghost-button" onclick={() => onNavigate('discover')}>Discover titles</button></div>{/if}
     </section>
     <section aria-label="Recommendations">
       <div class="section-heading"><h2>Recommended for you</h2><button class="section-link" onclick={() => onNavigate('discover')}>Discover<ChevronRight size={14} /></button></div>
@@ -151,7 +151,8 @@
   .continue-card { display: grid; grid-template-columns: 64px minmax(0,1fr); border-bottom: 1px solid var(--border); padding: 16px 0; gap: 14px; }
   .cover-button { padding: 0; border: 0; background: transparent; align-self: start; }
   .continue-info { min-width: 0; display: flex; flex-direction: column; justify-content: center; }
-  .title-link { display: -webkit-box; line-clamp: 2; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; height: 2.9em; color: var(--text); font-size: 14px; line-height: 1.45; font-weight: 550; text-align: left; border: 0; background: transparent; padding: 0; border-radius: 2px; }
+  .title-link { display: block; overflow: hidden; overflow-wrap: anywhere; height: 2.9em; color: var(--text); font-size: 14px; line-height: 1.45; font-weight: 550; text-align: left; border: 0; background: transparent; padding: 0; border-radius: 2px; }
+  .title-link > span { display: -webkit-box; line-clamp: 2; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 2.9em; }
   .title-link:hover { color: var(--bookmark-bright); }
   .entry-status { font-size: 11px; color: var(--secondary); margin-top: 4px; }
   .entry-bottom { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 6px; margin: 4px 0; font-size: 12px; }

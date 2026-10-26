@@ -23,6 +23,7 @@ Changes are recorded here for each release.
 - Settings calls the default theme Dark while preserving saved preferences. The native window starts with the same graphite background as the interface.
 - Schedule uses a timetable with aligned times, day separators and quiet range tabs. Scrollable status/range controls reserve enough room for keyboard focus outlines.
 - Recognition emphasizes image choice and explicit search. Empty matches, result cards and saved history use a quieter hierarchy while retaining upload instructions and all actions.
+- First-use messages explain the empty state and the next action directly. Home title captions align their first line for short and long names.
 
 ## [0.1.4 preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.4) — 2026-10-21
 

@@ -240,8 +240,18 @@ native startup color, and validate the actual WebKit app with isolated data.
   mocked search, saved match and mobile results without overflow/errors. No image
   was uploaded to a real recognition service. Independent review is clean.
 
-Next: commit empty-copy/overlay polish; implement Statistics, themes and updater
-status in bounded increments; fix the confirmed notification delivery-count gap.
+### Iteration 14 — use direct state copy and aligned Home captions
+
+- Replaced the generic empty-library slogan with Your library is empty and direct
+  Discover/import guidance. Home's empty/error wording uses its actual page name
+  and explains the next action. Existing no-account/local-data guidance stays.
+- Applied the proven inner-caption wrapper to Home's title buttons so short and
+  long names start on the same line; reserved height and accessible names remain.
+- Full 202-case run, build and populated responsive captures pass. Independent
+  review confirms this changes copy/presentation without changing actions or data.
+
+Next: commit neutral overlays; implement Statistics, themes and updater status in
+bounded increments; fix the confirmed notification delivery-count gap.
 
 ## 0.1.4 validation — 22 October 2026
 
