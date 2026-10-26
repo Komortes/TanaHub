@@ -163,8 +163,23 @@ rendered pass after these structural changes. Complete that read-only audit,
 retain the saved theme wire value while replacing its old display name, align the
 native startup color, and validate the actual WebKit app with isolated data.
 
-Next priorities: theme/startup consistency; broader empty/error/contrast review;
-native WebKit and final CI verification. Keep ordinary decisions autonomous.
+### Iteration 10 — finish theme and native startup consistency
+
+- Settings now labels the default theme Dark while keeping `Nebula dark` as the
+  saved/core wire value. Existing settings remain compatible. The native window
+  background matches the new base ink, removing the old purple startup backdrop.
+- The full browser suite passes 195/195 without retries, client build has zero
+  errors/warnings, transport recovery tests pass, release-version validation
+  remains 0.1.4 and diff check is clean. Independent review approves the focus,
+  display-name compatibility and native-color boundaries.
+- Native app build is in progress for actual WebKit verification. Its fresh
+  isolated profile has notifications disabled; no personal library is involved.
+  A parallel read-only journey audit covers empty/add/continue, filtered-empty,
+  failed-load retry and rating dismissal. Review remaining pages before choosing
+  the next useful iteration instead of stopping automatically at ten.
+
+Next priorities: native WebKit and journey-audit results; remaining-page hierarchy
+review; verify the next pushed CI batch. Keep ordinary decisions autonomous.
 
 ## 0.1.4 validation — 22 October 2026
 

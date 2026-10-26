@@ -101,7 +101,7 @@
   {#if data}
     <div class="settings-grid">
       <section class="panel"><h2>Appearance &amp; preferences</h2>
-        <label class="field">Theme<select aria-label="Theme" value={data.theme} disabled={disabled} onchange={(event) => void select(event, 'theme')}><option>Nebula dark</option><option>High contrast</option></select></label>
+        <label class="field">Theme<select aria-label="Theme" value={data.theme} disabled={disabled} onchange={(event) => void select(event, 'theme')}><option value="Nebula dark">Dark</option><option>High contrast</option></select></label>
         <label class="toggle"><span><strong>Notifications</strong><small>Reminders for titles airing today.</small></span><input type="checkbox" role="switch" aria-label="Notifications" checked={data.notificationsEnabled} disabled={disabled} onchange={(event) => void toggle(event, 'notificationsEnabled')} /></label>
         <label class="toggle"><span><strong>Offline cache</strong><small>Keep previously loaded titles available.</small></span><input type="checkbox" role="switch" aria-label="Offline cache" checked={data.offlineCacheEnabled} disabled={disabled} onchange={(event) => void toggle(event, 'offlineCacheEnabled')} /></label>
         <label class="field">Catalog source<select aria-label="Catalog source" value={data.preferredSyncSource} disabled={disabled} onchange={(event) => void select(event, 'preferredSyncSource')}><option value="AniList">AniList · anime and manga</option>{#if data.preferredSyncSource === 'MyAnimeList'}<option value="MyAnimeList" disabled>MyAnimeList · uses AniList</option>{/if}<option value="MangaDex">MangaDex · manga</option></select></label>
