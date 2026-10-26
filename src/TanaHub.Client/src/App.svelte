@@ -174,7 +174,7 @@
     if (failedCollection && failedCollection.version === requestVersion && failedCollection.next > 1) {
       loadingMore = true;
       void load(failedCollection.query, failedCollection.version, failedCollection.next);
-    } else retry += 1;
+    } else { focusMainHeading(); retry += 1; }
   }
   function resetFilters() {
     search = '';

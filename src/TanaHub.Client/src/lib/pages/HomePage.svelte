@@ -24,6 +24,7 @@
   let actionError = $state('');
   let busy = $state<string[]>([]);
   let refresh = $state(0);
+  let heading: HTMLHeadingElement;
   let generation = 0;
   let requestedType: MediaType | undefined;
   const localZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -60,6 +61,7 @@
     }
     return () => { if (generation === current) generation += 1; };
   });
+  function retryDashboard() { heading?.focus({ preventScroll: true }); refresh += 1; }
   async function progress(entry: Entry) {
     if (busy.includes(entry.mediaId)) return;
     const focused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -80,9 +82,9 @@
   }
 </script>
 
-<header class="home-header"><h1>Home</h1><button class="ghost-button" aria-label="Refresh dashboard" onclick={() => refresh += 1} disabled={loading}><RefreshCw size={15} />Refresh</button></header>
+<header class="home-header"><h1 bind:this={heading} tabindex="-1">Home</h1><button class="ghost-button" aria-label="Refresh dashboard" onclick={() => refresh += 1} disabled={loading}><RefreshCw size={15} />Refresh</button></header>
 <div class="home-type" aria-label="Dashboard media type">{#each ['', 'Anime', 'Manga'] as item}<button aria-pressed={type === item} class:selected={type === item} onclick={() => type = item as MediaType | ''}>{item || 'All titles'}</button>{/each}<span>{summary?.insights.totalEntries ?? '—'} {summary?.insights.totalEntries === 1 ? 'title' : 'titles'} tracked</span></div>
-{#if error}<div class="load-error" role="alert"><AlertCircle size={20} /><div><strong>Your dashboard could not load</strong><p>{error}</p></div><button class="ghost-button" onclick={() => refresh += 1}>Try again</button></div>{/if}
+{#if error}<div class="load-error" role="alert"><AlertCircle size={20} /><div><strong>Your dashboard could not load</strong><p>{error}</p></div><button class="ghost-button" onclick={retryDashboard}>Try again</button></div>{/if}
 {#if actionError}<p class="error-text" role="alert">{actionError}</p>{/if}
 <div class="dashboard-columns">
   <div class="dashboard-main">

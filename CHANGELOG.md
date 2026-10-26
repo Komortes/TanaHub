@@ -11,6 +11,7 @@ Changes are recorded here for each release.
 - Recognition ignores image paste while title details are open and discards clipboard requests from a previous visit, including delayed failures after Back.
 - Choosing a newer recognition image or clearing the source cancels pending clipboard results and errors, so delayed paste cannot undo the latest choice.
 - Clearing Library or Discover search returns keyboard focus to the search input after restoring the results.
+- Retrying an initial Library, Discover or Home load transfers focus to the page heading before loading; delayed responses preserve later keyboard choices and navigation.
 
 ### Improved
 

@@ -178,8 +178,36 @@ native startup color, and validate the actual WebKit app with isolated data.
   failed-load retry and rating dismissal. Review remaining pages before choosing
   the next useful iteration instead of stopping automatically at ten.
 
-Next priorities: native WebKit and journey-audit results; remaining-page hierarchy
-review; verify the next pushed CI batch. Keep ordinary decisions autonomous.
+### Native checkpoint after iteration 10
+
+- The local macOS `.app` builds and passes deep/strict signature verification.
+  Tested an immutable copy of a7d65b2 with a fresh isolated profile: empty library
+  → Discover → title → Add → first episode correctly enters Watching.
+- Home records episode 2 and keeps action focus. Search Tab→Enter Clear returns
+  to the input in actual WebKit. Original cover loads; Escape returns to Enlarge;
+  Back returns to the original Home cover. All six real character photos load.
+- Saved a Unicode note, quit cleanly (exit 0), then read through the exact bundled
+  core: progress 2, Watching and the note persist. Recorded 37 cached-image
+  inode/size pairs for later comparison. Native runtime log is empty. Screenshots
+  and reports stay in the external QA folder; no user profile was opened.
+- A read-only journey audit passes 9/9 scenarios with 22 screenshots and no
+  runtime/console/request errors. It covers empty/add/continue, both filtered-empty
+  clears, three retries and rating Cancel/Escape at desktop and 320px. Initial
+  offscreen-image assertions were corrected to scroll before judging lazy loads.
+
+### Iteration 11 — keep a clear focus target while retrying
+
+- The audit confirmed first-page Retry lost focus when its error panel vanished.
+  Library/Discover now use their persistent heading; Home binds its own heading.
+  Transfer happens synchronously before requesting, without an asynchronous
+  restoration that could steal a later field or navigation choice.
+- All seven new click/Enter and delayed-response cases failed first, then passed.
+  Eighteen existing Home/filter/third-page retry scenarios pass; next-page retry
+  behavior is unchanged. Svelte diagnostics are clean; independent review approves.
+
+Next priorities: verify the Schedule/Recognition visual increments; clear first-use
+copy and remaining overlay accents; final native and CI checks. Continue iterating
+while a concrete, useful improvement remains in the reviewed queue.
 
 ## 0.1.4 validation — 22 October 2026
 
