@@ -19,6 +19,7 @@
   import { mediaKey } from './lib/types';
   import { clearDrafts } from './lib/drafts';
   import { desktopUpdates } from './lib/desktop-updates.svelte';
+  import { applyTheme } from './lib/theme';
 
   function preferences(): { layout: Layout; coverSize: number } {
     try {
@@ -103,7 +104,7 @@
     const timer = setTimeout(() => void load(query, version), query.search ? 250 : 0);
     return () => clearTimeout(timer);
   });
-  $effect(() => { if (settings) document.documentElement.dataset.theme = settings.theme; });
+  $effect(() => { if (settings) return applyTheme(settings.theme); });
   $effect(() => {
     const names: Record<PageName, string> = { home: 'Home', library: 'My library', discover: 'Discover', schedule: 'Schedule', recognize: 'Recognize', settings: 'Settings' };
     document.title = `${selected?.title ?? (page === 'home' && homeView === 'statistics' ? 'Statistics' : names[page])} · TanaHub`;

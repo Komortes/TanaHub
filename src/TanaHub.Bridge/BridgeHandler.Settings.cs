@@ -14,7 +14,7 @@ public sealed partial class BridgeHandler
         var current = await SettingsAsync(ct);
         var theme = OptionalString(parameters, "theme", 50) ?? current.Theme;
         var source = OptionalString(parameters, "preferredSyncSource", 30) ?? current.PreferredSyncSource;
-        if (theme is not ("Nebula dark" or "High contrast")) throw Validation("Unsupported theme.");
+        if (theme is not ("Nebula dark" or "High contrast" or "Light" or "System")) throw Validation("Unsupported theme.");
         if (source is not ("AniList" or "MyAnimeList" or "MangaDex")) throw Validation("Unsupported catalog source.");
         return await PersistSettingsAsync(current with
         {

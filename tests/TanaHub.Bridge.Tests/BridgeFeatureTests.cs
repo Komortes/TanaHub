@@ -14,6 +14,37 @@ namespace TanaHub.Bridge.Tests;
 public sealed class BridgeFeatureTests
 {
     [Theory]
+    [InlineData("Nebula dark")]
+    [InlineData("High contrast")]
+    [InlineData("Light")]
+    [InlineData("System")]
+    public async Task ThemeSaveReturnsThePreferenceAndPreservesItDuringUnrelatedSaves(string theme)
+    {
+        var fixture = new Fixture();
+        var saved = await Call(fixture.Handler, "settings.save", new { theme });
+
+        Assert.Equal(theme, saved.GetProperty("theme").GetString());
+        Assert.Equal(theme, fixture.Settings.Value.Theme);
+
+        var updated = await Call(fixture.Handler, "settings.save", new { notificationsEnabled = false });
+        Assert.Equal(theme, updated.GetProperty("theme").GetString());
+        Assert.False(updated.GetProperty("notificationsEnabled").GetBoolean());
+        Assert.Equal(theme, fixture.Settings.Value.Theme);
+    }
+
+    [Fact]
+    public async Task UnknownThemeIsRejectedWithoutChangingSettings()
+    {
+        var fixture = new Fixture();
+        var previous = fixture.Settings.Value;
+
+        var error = await Error(fixture.Handler, "settings.save", new { theme = "Unknown", notificationsEnabled = false });
+
+        Assert.Equal("validation_error", error.GetProperty("code").GetString());
+        Assert.Equal(previous, fixture.Settings.Value);
+    }
+
+    [Theory]
     [InlineData("library.progress", "anilist:1")]
     [InlineData("library.progress.set", "anilist:1")]
     [InlineData("library.progress", "anilist:2")]

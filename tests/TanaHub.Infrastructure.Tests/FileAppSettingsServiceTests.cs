@@ -5,6 +5,33 @@ namespace TanaHub.Infrastructure.Tests;
 
 public sealed class FileAppSettingsServiceTests
 {
+    [Theory]
+    [InlineData("Nebula dark")]
+    [InlineData("High contrast")]
+    [InlineData("Light")]
+    [InlineData("System")]
+    public async Task ThemePreferenceSurvivesRestart(string theme)
+    {
+        var storagePath = CreateStoragePath();
+        var service = new FileAppSettingsService(storagePath);
+        try
+        {
+            var saved = await service.SaveAsync(new AppSettings { Theme = theme });
+            Assert.True(saved.IsSuccess);
+
+            var restarted = new FileAppSettingsService(storagePath);
+            var loaded = await restarted.GetAsync();
+
+            Assert.True(loaded.IsSuccess);
+            Assert.Equal(theme, loaded.Value!.Theme);
+        }
+        finally
+        {
+            var directory = Path.GetDirectoryName(storagePath)!;
+            if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+        }
+    }
+
     [Fact]
     public async Task GetAsync_ReturnsDefaultsWhenFileDoesNotExist()
     {

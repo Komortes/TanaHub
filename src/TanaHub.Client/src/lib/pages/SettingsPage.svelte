@@ -95,13 +95,13 @@
 {/snippet}
 
 <section class="settings-page page-enter" aria-label="Settings">
-  <header><h1>Settings</h1><p>Make TanaHub feel like home.</p></header>
+  <header><h1>Settings</h1></header>
   {#if loading}<p role="status">Loading settings…</p>{/if}
   {#if loadError}<div class="load-error" role="alert"><div><strong>Settings unavailable</strong><p>{loadError}</p></div><button class="ghost-button" onclick={onReload}>Try again</button></div>{/if}
   {#if data}
     <div class="settings-grid">
       <section class="panel"><h2>Appearance &amp; preferences</h2>
-        <label class="field">Theme<select aria-label="Theme" value={data.theme} disabled={disabled} onchange={(event) => void select(event, 'theme')}><option value="Nebula dark">Dark</option><option>High contrast</option></select></label>
+        <label class="field">Theme<select aria-label="Theme" value={data.theme} disabled={disabled} onchange={(event) => void select(event, 'theme')}><option>System</option><option value="Nebula dark">Dark</option><option>Light</option><option>High contrast</option></select></label>
         <label class="toggle"><span><strong>Notifications</strong><small>Reminders for titles airing today.</small></span><input type="checkbox" role="switch" aria-label="Notifications" checked={data.notificationsEnabled} disabled={disabled} onchange={(event) => void toggle(event, 'notificationsEnabled')} /></label>
         <label class="toggle"><span><strong>Offline cache</strong><small>Keep previously loaded titles available.</small></span><input type="checkbox" role="switch" aria-label="Offline cache" checked={data.offlineCacheEnabled} disabled={disabled} onchange={(event) => void toggle(event, 'offlineCacheEnabled')} /></label>
         <label class="field">Catalog source<select aria-label="Catalog source" value={data.preferredSyncSource} disabled={disabled} onchange={(event) => void select(event, 'preferredSyncSource')}><option value="AniList">AniList · anime and manga</option>{#if data.preferredSyncSource === 'MyAnimeList'}<option value="MyAnimeList" disabled>MyAnimeList · uses AniList</option>{/if}<option value="MangaDex">MangaDex · manga</option></select></label>
@@ -147,7 +147,7 @@
 </section>
 
 <style>
-  header { margin-bottom:28px; } h1 { font-size:30px; letter-spacing:-.035em; margin:0 0 8px; } header p { margin:0; color:var(--secondary); font-size:14px; }
+  header { margin-bottom:28px; } h1 { font-size:30px; letter-spacing:-.035em; margin:0; font-weight:650; }
   .settings-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; max-width:1100px; align-items:start; }
   .panel { background:var(--shell); border:1px solid var(--border); border-radius:12px; padding:22px; min-width:0; } h2 { font-size:16px; font-weight:600; margin:0 0 18px; display:flex; align-items:center; gap:8px; }
   .field { display:flex; flex-direction:column; gap:8px; font-size:12px; color:var(--secondary); margin:16px 0; } .field input,.field select { width:100%; min-height:40px; }

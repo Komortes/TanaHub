@@ -41,6 +41,12 @@ positions, scores or times are compared. Keep normal text readable without the
 high-contrast theme; preserve that theme and reduced-motion support independently.
 Existing persisted theme values remain compatible even if display labels change.
 
+The current Tauri client offers System, Dark, Light and High contrast. Dark retains
+the `Nebula dark` wire value and the existing default. System stores the preference
+and resolves it separately for the document, with one removable OS-change observer.
+Light uses paper surfaces and dark ink; text on a primary action has a separate
+on-accent token. Check native controls, imagery, dialogs and focus in each palette.
+
 Validate first-use, populated, filtered-empty, loading and failed states. Inspect
 at 320/360, 768, 1024 and 1440px; verify both pointer and keyboard use. Browser
 fixtures must use isolated data. Keep screenshots outside source.

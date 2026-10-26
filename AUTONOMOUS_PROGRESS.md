@@ -284,8 +284,29 @@ count and expose truthful behavior. Current app source is unreleased, version
   build has zero diagnostics. Thirty-nine dark/light/contrast views include Stats
   at 320/1440px and have no page overflow or browser errors.
 
-Next: commit verified themes and updater history, then notification delivery
-honesty and final native/CI checks. Continue ordinary choices autonomously.
+### Iteration 17 — add useful Light and System themes
+
+- Added Light and System to the backend whitelist and Settings. Kept Dark's
+  `Nebula dark` wire value, High contrast and the existing default. File settings
+  round trips preserve all four choices without a data migration.
+- System resolves the OS light/dark preference for the document and observes
+  changes without settings.save calls. Cleanup prevents an old System observer
+  from overriding an explicit theme. Failed saves retain the old select/palette.
+- Light has a complete semantic palette, native control color-scheme, dark select
+  arrows and an independent on-accent foreground. Token checks give minimum normal
+  text contrast 4.67, primary 6.71 and input boundary 3.35; this is palette evidence,
+  not a claim of a complete accessibility certification.
+- Backend red: Light/System rejected (2 fail, 3 guards pass); Bridge 73/73 and
+  Infrastructure 197/197 green. Frontend red: 7 fail/2 explicit-theme guards pass.
+  All nine browser cases now pass; three initial green assertions were corrected
+  to inspect option text rather than requiring an optional HTML value attribute.
+- Full 237 browser/372 .NET checks and build pass. Thirty-nine screenshots include
+  Light shelf, Stats, title, rating/cover dialogs, errors and recovery at 320/1440px.
+  Independent observer/contract/routing reviews are clean. Actual native Light/
+  System restart validation remains in the final combined app checkpoint.
+
+Next: commit verified updater history, then notification delivery honesty and
+final native/CI checks. Continue ordinary choices autonomously.
 
 ## 0.1.4 validation — 22 October 2026
 
