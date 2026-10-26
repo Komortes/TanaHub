@@ -345,8 +345,39 @@ app and CI. Preserve explicit installation/restart and the published 0.1.4 chann
   247/247 and .NET suite 391/391 pass. Svelte check and final solution format check
   have zero diagnostics. Independent backend/frontend reviews found no P1/P2.
 
-Next: document the confirmed startup-theme fix and native restart checkpoint;
-fix the CI Statistics test fixture omission, then push and verify all platform jobs.
+### Iteration 20 — restore appearance before settings arrive
+
+- Reproduced a saved Light preference painting Dark until `settings.get` returned.
+  Cache only the four confirmed raw preferences, apply synchronously before mount,
+  and let backend settings take precedence. Failed saves never cache a tentative
+  preference; invalid/denied storage remains safe.
+- The App owns exactly one removable System observer, including during a delayed
+  settings read. Bootstrap itself installs none. No inline script or CSP change.
+- Five targeted cases produced four intended red failures and one existing guard;
+  all 14 theme/bootstrap cases now pass. Full combined browser suite 247/247,
+  build/check zero diagnostics, final solution formatting clean. Independent
+  startup/observer/Settings reviews found no P1/P2.
+
+### Native checkpoint after iteration 20
+
+- Built a signed-for-local-testing macOS Release bundle from the current source
+  with QA-only identifier `com.tanahub.interfaceqa` and separate WebView/profile
+  directories. Production package config and version 0.1.4 remain unchanged.
+  Deep/strict signature verification passes; notarization was not attempted.
+- Actual WebView verifies Light and System selection/saving/restart, Home →
+  Statistics → Back focus, local watch-time values, enlarged cover dismissal
+  focus, and all six character photos. The published preview feed check succeeds;
+  Settings shows completed attempt/success/outcome after restart. Gated browser
+  tests separately prove earlier history survives a pending/offline check.
+- Three native runs quit with exit code 0 and empty runtime logs. Exact bundled
+  core readback preserves progress 2, Watching, the Unicode note and System;
+  notifications remain disabled. All 37 cached artwork files retain their inode
+  and size. Native screenshots and persistence evidence stay in the QA directory.
+- Interactive Windows/Linux WebView verification remains external; their CI build
+  and core-test jobs passed at a47850b. Latest frontend CI exposed a test fixture
+  omission, now reproduced and fixed separately before the next push.
+
+Next: commit the CI fixture correction/documentation, push and verify all four jobs.
 
 ## 0.1.4 validation — 22 October 2026
 

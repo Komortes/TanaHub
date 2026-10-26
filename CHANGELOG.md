@@ -20,6 +20,7 @@ Changes are recorded here for each release.
 - Clearing Library or Discover search returns keyboard focus to the search input after restoring the results.
 - Retrying an initial Library, Discover or Home load transfers focus to the page heading before loading; delayed responses preserve later keyboard choices and navigation.
 - Reminders count only accepted notification commands. Failed sends remain retryable, unsupported Windows sends return zero, and hung notification helpers are bounded and cleaned up.
+- Saved appearance applies before settings finish loading, avoiding a dark startup flash for Light/System. Failed saves and unavailable browser storage preserve a usable, confirmed preference.
 
 ### Improved
 

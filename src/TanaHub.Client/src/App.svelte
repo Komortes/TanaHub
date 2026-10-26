@@ -19,7 +19,7 @@
   import { mediaKey } from './lib/types';
   import { clearDrafts } from './lib/drafts';
   import { desktopUpdates } from './lib/desktop-updates.svelte';
-  import { applyTheme } from './lib/theme';
+  import { applyTheme, readThemePreference, cacheThemePreference } from './lib/theme';
 
   function preferences(): { layout: Layout; coverSize: number } {
     try {
@@ -30,6 +30,7 @@
     } catch { return { layout: 'grid', coverSize: 170 }; }
   }
   const saved = preferences();
+  const startupTheme = readThemePreference();
   let page = $state<PageName>('library');
   let homeView = $state<'overview' | 'statistics'>('overview');
   let homeType = $state<MediaType | ''>('');
@@ -104,7 +105,10 @@
     const timer = setTimeout(() => void load(query, version), query.search ? 250 : 0);
     return () => clearTimeout(timer);
   });
-  $effect(() => { if (settings) return applyTheme(settings.theme); });
+  $effect(() => {
+    if (settings) cacheThemePreference(settings.theme);
+    return applyTheme(settings?.theme ?? startupTheme);
+  });
   $effect(() => {
     const names: Record<PageName, string> = { home: 'Home', library: 'My library', discover: 'Discover', schedule: 'Schedule', recognize: 'Recognize', settings: 'Settings' };
     document.title = `${selected?.title ?? (page === 'home' && homeView === 'statistics' ? 'Statistics' : names[page])} · TanaHub`;
