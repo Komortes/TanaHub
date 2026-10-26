@@ -449,9 +449,29 @@ feature failures and eight existing guards passing before implementation.
   and all-platform CI21. Reminder persistence/expiry was exercised through the
   native updater browser harness; no real update was downloaded or installed.
 
-Next: push this final client iteration, verify the exact CI run, and record the
-finished checkpoint. This reviewed queue has no further confirmed defects; any
-later feature should first establish a concrete benefit and its own evidence.
+### Final verified checkpoint — 26 October 2026
+
+- All 22 iterations are committed and pushed. The final application change is
+  5be10f96a76cf8b54fa8da766b7e058fc8d75b79. GitHub CI run **40290340511** completed
+  successfully in all four jobs: frontend/browser, macOS, Windows and Ubuntu.
+  The browser log confirms **265 passed**, with no retries/flaky tests; Svelte has
+  zero errors/warnings and transport passes. All platform core/native checks pass.
+- Local final evidence: 265 browser scenarios, 391 .NET tests, clean format and
+  production build, independent reviews, isolated actual macOS Light/System
+  restarts, local data/artwork preservation, and narrow/desktop feature captures.
+  The reminder deadline uses the browser native-updater harness; no real package
+  was downloaded or installed. Interactive Windows/Linux UI and live account/
+  notification-permission/recognition-upload checks remain unperformed.
+- Temporary servers on 1424, 1426 and 1430 are stopped; native test apps quit
+  cleanly. Evidence remains under `/private/tmp/tanahub-interface-20261026`.
+  Production data, release assets, signing keys, feeds and version 0.1.4 are intact.
+- This final journal-only follow-up changes no application, tests, build or
+  release configuration; it records the already completed CI rather than
+  launching another identical build. Current source changes remain unreleased.
+- The bounded overnight heartbeat is `tanahub` (six hourly occurrences configured
+  at 01:07 UTC). Do not create a duplicate. The reviewed queue has no further
+  confirmed defects. A continuation should first inspect new user direction,
+  actual changed state or a reproduced bug; do not invent features for activity.
 
 ## 0.1.4 validation — 22 October 2026
 
