@@ -117,9 +117,24 @@ fix that separately, then recheck the complete browser suite.
   Published 0.1.4 assets and update feeds remain unchanged. Later native WebKit
   verification should check the complete visual changes before closing the run.
 
-Next priorities: flat library shelf; lighter collection controls; broader
-first-use/empty/error/contrast review; native WebKit verification. Continue beyond
-the first five increments, recording checks and the next concrete tasks.
+### Iteration 7 — make the collection a shelf
+
+- Removed the enclosing card surface and floating/zooming cover effects. Covers,
+  title captions and quick actions remain directly accessible. List view now has
+  row separators; size preferences and cover aspect ratios remain unchanged.
+- Status is plain text; the progress bookmark and EP/CH position span the full
+  caption width. A small footer grid preserves the mixed tracked/catalog geometry
+  and lets maximum values wrap without competing with the rating control.
+- Actual text-range measurement exposed 10px vertical centering differences in
+  short versus two-line button captions. A plain inner text span reserves the
+  same two-line box and aligns their first line, preserving accessible names.
+- All 71 affected browser scenarios pass, including mixed baselines, unknown/
+  maximum progress, cover sizes, grid/list, keyboard focus and narrow layouts.
+  Build/16-view capture are clean; independent reviews approve both the grid and
+  caption wrapper. Final narrow screenshots confirm the first-line alignment.
+
+Next priorities: lighter collection controls; search-clear focus; theme/startup
+consistency; broader empty/error/contrast review and native WebKit verification.
 
 ## 0.1.4 validation — 22 October 2026
 
