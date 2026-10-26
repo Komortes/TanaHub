@@ -146,8 +146,25 @@ fix that separately, then recheck the complete browser suite.
   overflow or browser errors. Independent review found no actionable defect.
 - First GitHub CI batch now passes all four frontend/macOS/Windows/Linux jobs.
 
-Next priorities: search-clear focus; theme/startup consistency; broader empty/error/
-contrast review and native WebKit verification. Keep ordinary decisions autonomous.
+### Iteration 9 — return focus after clearing a search
+
+- Library and Discover removed their focused Clear search button after clearing
+  the query. Four pointer/Tab→Enter reproductions all failed at input focus even
+  though the result sets restored correctly. Bind and focus the persistent input
+  synchronously with preventScroll; preserve its accessible name and query logic.
+- All four regression scenarios now pass. No timing workaround or extra network
+  request was added. Follow with the full suite and native keyboard verification.
+
+### Broader review after iteration 9
+
+The principal collection/Home/title surfaces now follow the personal-library
+direction. First-use, filtered-empty, failure/retry and modal paths need a fresh
+rendered pass after these structural changes. Complete that read-only audit,
+retain the saved theme wire value while replacing its old display name, align the
+native startup color, and validate the actual WebKit app with isolated data.
+
+Next priorities: theme/startup consistency; broader empty/error/contrast review;
+native WebKit and final CI verification. Keep ordinary decisions autonomous.
 
 ## 0.1.4 validation — 22 October 2026
 

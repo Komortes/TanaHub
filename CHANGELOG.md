@@ -10,6 +10,7 @@ Changes are recorded here for each release.
 - Cancelling or completing MAL XML import restores keyboard focus to the import control; failed imports remain usable for retry.
 - Recognition ignores image paste while title details are open and discards clipboard requests from a previous visit, including delayed failures after Back.
 - Choosing a newer recognition image or clearing the source cancels pending clipboard results and errors, so delayed paste cannot undo the latest choice.
+- Clearing Library or Discover search returns keyboard focus to the search input after restoring the results.
 
 ### Improved
 

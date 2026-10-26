@@ -6,6 +6,7 @@
     { page: 'library' | 'discover'; type: MediaType | ''; status: Status | ''; search: string; sort: string; layout: Layout; coverSize: number; total: number | null; genre?: string; librarySort?: string; tag?: string; customList?: string; tags?: string[]; customLists?: string[]; preset?: string; emptyLibrary?: boolean } = $props();
   let optionsOpen = $state(false);
   let optionsToggle = $state<HTMLButtonElement>();
+  let searchInput: HTMLInputElement;
   const activeFilters = $derived(page === 'library' ? Number(!!tag) + Number(!!customList) : 0);
   const hasLibraryFilters = $derived(page === 'library' && !!(tags.length || customLists.length || activeFilters));
 </script>
@@ -16,8 +17,8 @@
   </div>
   <div class="search-box">
     <Search size={18} strokeWidth={1.7} />
-    <input aria-label={page === 'library' ? 'Search your library' : 'Search the catalog'} placeholder={page === 'library' ? 'Search your library' : 'Search the catalog'} bind:value={search} type="search" autocomplete="off" />
-    {#if search}<button aria-label="Clear search" onclick={() => search = ''}><X size={16} /></button>{/if}
+    <input aria-label={page === 'library' ? 'Search your library' : 'Search the catalog'} placeholder={page === 'library' ? 'Search your library' : 'Search the catalog'} bind:this={searchInput} bind:value={search} type="search" autocomplete="off" />
+    {#if search}<button aria-label="Clear search" onclick={() => { search = ''; searchInput?.focus({ preventScroll: true }); }}><X size={16} /></button>{/if}
   </div>
 </header>
 {#if !emptyLibrary}
