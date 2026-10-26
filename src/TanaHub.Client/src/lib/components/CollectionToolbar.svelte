@@ -98,7 +98,7 @@
   .segmented button.selected { border-bottom-color: var(--bookmark); color: var(--text); }
   .collection-count { font-size: 12px; color: var(--muted); margin-left: auto; }
   .collection-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; justify-content: space-between; padding: 12px 0 22px; }
-  .status-tabs { display: flex; gap: 4px; overflow-x: auto; max-width: 100%; min-width: 0; scrollbar-width: thin; padding: 3px; margin: -3px; }
+  .status-tabs { display: flex; gap: 4px; overflow-x: auto; max-width: 100%; min-width: 0; scrollbar-width: thin; padding: 5px; margin: -5px; }
   .status-tabs button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; padding: 11px 10px; min-height: 44px; font-size: 12px; white-space: nowrap; color: var(--secondary); }
   .status-tabs button.selected { border-bottom-color: var(--bookmark); color: var(--text); }
   .status-tabs button:hover:not(.selected) { background: var(--raised); color: var(--text); }

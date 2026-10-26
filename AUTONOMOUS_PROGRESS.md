@@ -205,9 +205,32 @@ native startup color, and validate the actual WebKit app with isolated data.
   Eighteen existing Home/filter/third-page retry scenarios pass; next-page retry
   behavior is unchanged. Svelte diagnostics are clean; independent review approves.
 
-Next priorities: verify the Schedule/Recognition visual increments; clear first-use
-copy and remaining overlay accents; final native and CI checks. Continue iterating
-while a concrete, useful improvement remains in the reviewed queue.
+### Iteration 12 — read the schedule as a timetable
+
+- Flat ruled rows align time, cover and title within each day. Library status is
+  plain text; date ranges use 44px tabs and a selected rule. Removed the generic
+  header subtitle. Range/timezone/notification and detail-return logic are intact.
+- Range and collection status scrollers now reserve 5px for the shared 2px focus
+  outline plus its 3px offset, including the first/last tab.
+- Complete browser coverage passes 202/202; client build has zero diagnostics.
+  Populated timetable screenshots at 320/1440px and keyboard tab focus are clean.
+  Static independent review approves the CSS, header and focus-space adjustments.
+
+### Broader review after iteration 12 and updated feature direction
+
+- Twenty-five controlled screenshots cover the full interface including selected
+  recognition images, matches and history; no page overflow or browser errors.
+  Second pushed CI batch a7d65b2 passes all four platform/frontend jobs.
+- The user asked to continue useful feature work on themes, notifications,
+  statistics placement and updates, while avoiding excess. Queue: Statistics as
+  #home/statistics with the six sidebar destinations preserved; Light/System themes
+  preserving legacy values; last attempt/result/success in updater Settings.
+- A source audit found Windows notification delivery is a no-op but still counted
+  as sent. Address delivery honesty/retry as a separate verified notification task.
+  Avoid adding a notification center or forcing platform permission prompts.
+
+Next: commit Recognition/empty-copy/overlay polish; then implement the bounded
+feature queue in tested increments. Continue autonomous ordinary decisions.
 
 ## 0.1.4 validation — 22 October 2026
 

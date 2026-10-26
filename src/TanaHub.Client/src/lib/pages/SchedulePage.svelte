@@ -56,7 +56,7 @@
   });
 </script>
 
-<header class="schedule-header"><div><h1>Schedule</h1><p>Make room for your next episode.</p></div><button class="ghost-button" aria-label="Refresh schedule" onclick={() => refresh += 1} disabled={loading}><RefreshCw size={15} />Refresh</button></header>
+<header class="schedule-header"><h1>Schedule</h1><button class="ghost-button" aria-label="Refresh schedule" onclick={() => refresh += 1} disabled={loading}><RefreshCw size={15} />Refresh</button></header>
 <div class="schedule-controls"><div class="range-tabs" aria-label="Schedule range">{#each ranges as option}<button class:selected={range === option} aria-pressed={range === option} onclick={() => range = option}>{option}</button>{/each}</div><div class="schedule-filters"><label class="library-filter"><input type="checkbox" bind:checked={libraryOnly} />My library only</label><label class="zone-label"><Clock3 size={14} /><select aria-label="Schedule timezone" bind:value={zone}>{#each zones as item}<option value={item}>{item === localZone ? `Local · ${item.replaceAll('_', ' ')}` : item.replaceAll('_', ' ')}</option>{/each}</select></label></div></div>
 <div class="schedule-caption"><span><CalendarDays size={14} />{range === 'Today' ? 'Remaining today' : range === 'Tomorrow' ? 'Tomorrow’s releases' : range === 'This week' ? 'Next 7 days' : 'The following 7 days'}</span><span>AniList airing · {zone.replaceAll('_', ' ')}</span></div>
 {#if notificationError}<p class="error-text" role="status">{notificationError}</p>{/if}
@@ -68,36 +68,38 @@
 </section>
 
 <style>
-  .schedule-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 28px; }
-  h1 { font-size: 30px; font-weight: 700; letter-spacing: -.035em; line-height: 1.2; margin: 0 0 8px; }
-  .schedule-header p { color: var(--secondary); font-size: 14px; margin: 0; }
-  .schedule-controls { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
-  .range-tabs { display: flex; gap: 4px; overflow-x: auto; max-width: 100%; padding: 2px; }
-  .range-tabs button { background: var(--shell); border: 1px solid var(--border); color: var(--secondary); padding: 9px 14px; white-space: nowrap; font-size: 12px; }
-  .range-tabs button.selected { background: var(--violet-soft); color: var(--lavender); border-color: var(--border-lit); }
+  .schedule-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; }
+  h1 { font-size: 30px; font-weight: 650; letter-spacing: -.035em; line-height: 1.2; margin: 0; }
+  .schedule-controls { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+  .range-tabs { display: flex; gap: 4px; overflow-x: auto; max-width: 100%; min-width: 0; padding: 5px; margin: -5px; scrollbar-width: thin; }
+  .range-tabs button { background: transparent; border: 0; border-bottom: 2px solid transparent; border-radius: 0; color: var(--secondary); min-height: 44px; padding: 10px 12px; white-space: nowrap; font-size: 12px; }
+  .range-tabs button.selected { color: var(--text); border-bottom-color: var(--bookmark); }
+  .range-tabs button:hover:not(.selected) { background: var(--raised); color: var(--text); }
   .schedule-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 18px; }
   .library-filter { display: flex; align-items: center; gap: 8px; color: var(--secondary); font-size: 12px; }
   .library-filter input { accent-color: var(--violet); width: 15px; height: 15px; margin: 0; padding: 0; }
   .zone-label { display: flex; align-items: center; gap: 8px; color: var(--secondary); }
   .zone-label select { min-height: 36px; padding: 7px 32px 7px 8px; max-width: 210px; font-size: 11px; }
-  .schedule-caption { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin: 18px 0 24px; color: var(--secondary); font-size: 12px; }
+  .schedule-caption { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin: 16px 0 24px; color: var(--secondary); font-size: 12px; }
   .schedule-caption > span:first-child { display: inline-flex; gap: 8px; align-items: center; }
   .schedule-caption > span:last-child { color: var(--muted); font-size: 11px; }
   .schedule-days { display: flex; flex-direction: column; gap: 28px; }
-  .day-group > h2 { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 15px; font-weight: 600; margin: 0 0 14px; }
+  .day-group > h2 { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 12px; font-size: 14px; font-weight: 600; margin: 0; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
   .day-group > h2 > span { color: var(--muted); font-size: 11px; font-weight: 400; }
-  .schedule-rows { display: flex; flex-direction: column; gap: 10px; }
-  .schedule-row { display: grid; grid-template-columns: 70px 64px minmax(0,1fr) 20px; align-items: center; gap: 18px; padding: 12px 18px; min-width: 0; width: 100%; background: var(--shell); border: 1px solid var(--border); color: var(--text); text-align: left; }
-  .schedule-row:hover { background: var(--raised); border-color: var(--border-lit); }
-  .airing-time { font-size: 20px; letter-spacing: -.025em; color: var(--lavender); }
-  .episode-info { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .schedule-rows { display: flex; flex-direction: column; }
+  .schedule-row { display: grid; grid-template-columns: 70px 64px minmax(0,1fr) 20px; align-items: center; gap: 18px; padding: 12px 0; min-width: 0; width: 100%; background: transparent; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; color: var(--text); text-align: left; }
+  .schedule-row:hover { background: var(--raised); }
+  .schedule-row:focus-visible { position: relative; z-index: 1; }
+  .airing-time { align-self: start; padding-top: 2px; font-size: 18px; font-weight: 500; line-height: 1.5; letter-spacing: -.025em; color: var(--text); }
+  .episode-info { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
   .episode-info > strong { font-size: 15px; font-weight: 600; line-height: 1.5; height: 3em; overflow-wrap: anywhere; display: -webkit-box; line-clamp: 2; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .episode-info > span { display: grid; grid-template-columns: max-content minmax(0,1fr); align-items: start; gap: 6px 12px; font-size: 12px; color: var(--secondary); min-height: 42px; }
-  .episode-info > span > .mono { color: var(--cyan); white-space: nowrap; }
+  .episode-info > span { display: grid; grid-template-columns: max-content minmax(0,1fr); align-items: start; gap: 6px 12px; font-size: 12px; line-height: 1.5; color: var(--secondary); min-height: 42px; }
+  .episode-info > span > .mono { white-space: nowrap; }
   .format { color: var(--muted); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .library-badge { display: inline-flex; align-items: center; gap: 5px; grid-column: 1 / -1; justify-self: start; color: var(--lavender); background: var(--violet-soft); border-radius: 5px; padding: 4px 7px; font-size: 10px; }
+  .library-badge { display: inline-flex; align-items: center; gap: 5px; grid-column: 1 / -1; justify-self: start; color: var(--secondary); font-size: 11px; }
+  .library-badge :global(svg) { color: var(--bookmark); flex-shrink: 0; }
   .row-chevron { font-size: 26px; color: var(--muted); }
-  .schedule-skeletons { display: flex; flex-direction: column; gap: 10px; }
-  .schedule-skeletons span { background: var(--shell); border: 1px solid var(--border); border-radius: 8px; height: 120px; animation: pulse 1.5s ease-in-out infinite; }
-  @media (max-width: 640px) { h1 { font-size: 28px; } .schedule-header > button { font-size: 0; padding: 10px; } .schedule-controls { gap: 14px; } .range-tabs { width: 100%; } .range-tabs button { padding-inline: 10px; } .schedule-filters { width: 100%; gap: 12px; justify-content: space-between; } .zone-label select { max-width: 178px; } .schedule-row { grid-template-columns: 58px minmax(0,1fr); gap: 10px 14px; padding: 12px; } .schedule-cover { grid-column: 1; grid-row: 1 / span 2; } .airing-time { grid-column: 2; grid-row: 1; font-size: 14px; align-self: end; } .episode-info { grid-column: 2; grid-row: 2; gap: 5px; } .episode-info > strong { font-size: 13px; } .episode-info > span { font-size: 11px; gap: 6px 8px; } .row-chevron { display: none; } }
+  .schedule-skeletons { display: flex; flex-direction: column; }
+  .schedule-skeletons span { background: var(--shell); border-bottom: 1px solid var(--border); height: 120px; animation: pulse 1.5s ease-in-out infinite; }
+  @media (max-width: 640px) { h1 { font-size: 28px; } .schedule-header > button { font-size: 0; padding: 12px; min-width: 44px; min-height: 44px; } .schedule-controls { gap: 14px; } .range-tabs { width: 100%; } .range-tabs button { padding-inline: 8px; } .schedule-filters { width: 100%; gap: 12px; justify-content: space-between; } .zone-label select { max-width: 178px; } .schedule-row { grid-template-columns: 58px minmax(0,1fr); gap: 6px 14px; } .schedule-cover { grid-column: 1; grid-row: 1 / span 2; } .airing-time { grid-column: 2; grid-row: 1; font-size: 14px; align-self: end; padding-top: 0; } .episode-info { grid-column: 2; grid-row: 2; gap: 5px; } .episode-info > strong { font-size: 13px; } .episode-info > span { font-size: 11px; gap: 6px 8px; } .row-chevron { display: none; } }
 </style>

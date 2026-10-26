@@ -21,6 +21,7 @@ Changes are recorded here for each release.
 - Library and catalog covers sit on a flat shelf with aligned captions, plain status labels and a full-width progress bookmark. List view uses row separators and covers no longer lift or zoom on hover.
 - Collection filters use quiet tabs; Discover presets share the controls row when space allows. Search has a clearer boundary and primary controls have larger targets.
 - Settings calls the default theme Dark while preserving saved preferences. The native window starts with the same graphite background as the interface.
+- Schedule uses a timetable with aligned times, day separators and quiet range tabs. Scrollable status/range controls reserve enough room for keyboard focus outlines.
 
 ## [0.1.4 preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.4) — 2026-10-21
 
