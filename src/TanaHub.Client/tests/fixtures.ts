@@ -138,6 +138,7 @@ export class MockLibrary {
         return updated;
       }
       case 'library.remove': return { removed: this.entries.delete(String(params.mediaId)) };
+      case 'notifications.support': return { supported: true, reason: null };
       case 'settings.get': return this.settings;
       case 'settings.save': {
         const { aniListClientSecret, sauceNaoApiKey, ...plain } = params;

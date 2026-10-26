@@ -108,16 +108,19 @@ public sealed partial class MainWindowViewModel
         IReadOnlyList<AiringScheduleItem> items,
         IReadOnlySet<string> libraryIds)
     {
+        if (!notificationService.Support.Supported) return;
         var today = DateTimeOffset.Now.Date;
         foreach (var item in items)
         {
             if (!libraryIds.Contains(item.MediaId)) continue;
             if (item.AiringAt.LocalDateTime.Date != today) continue;
-            if (!notifiedThisSession.Add(item.MediaId + ":" + item.Episode)) continue;
+            var key = item.MediaId + ":" + item.Episode;
+            if (notifiedThisSession.Contains(key)) continue;
 
-            await notificationService.NotifyAsync(
+            if (!await notificationService.NotifyAsync(
                 "TanaHub — Airing today",
-                $"EP {item.Episode} of {item.Title} is out!");
+                $"EP {item.Episode} of {item.Title} is out!")) return;
+            notifiedThisSession.Add(key);
         }
     }
 

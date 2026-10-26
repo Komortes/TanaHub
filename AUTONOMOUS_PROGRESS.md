@@ -328,8 +328,25 @@ another global navigation destination, account dependency or update prompt. Full
 notification support/count/retry defect, then verify the latest complete native
 app and CI. Preserve explicit installation/restart and the published 0.1.4 channel.
 
-Next: notification capability and truthful send result; Settings support hint;
-native Light/System/Stats/updater restart checks; full CI and documentation.
+### Iteration 19 — report reminder support and send results honestly
+
+- Added read-only `notifications.support`. Settings preserves the saved preference
+  while support loads or fails, disables unavailable controls, explains foreground
+  checks and OS settings, and offers Retry reminder check with stable focus.
+- Windows reports unsupported in this build instead of counting reminders that
+  were never sent. macOS/Linux count an accepted command, not visible delivery.
+  Failed sends stay retryable; earlier successful sends remain deduplicated.
+- Notification helpers have a five-second limit, drain output and kill/reap their
+  owned process on cancellation or timeout. Caller cancellation remains cancelled,
+  including a reproduced cancellation/fault race. No real OS alerts or permission
+  prompts were triggered during tests or native QA.
+- Intended red cases confirmed backend semantics and all five missing frontend
+  states. Final affected browser batch 49/49 passes; full combined browser suite
+  247/247 and .NET suite 391/391 pass. Svelte check and final solution format check
+  have zero diagnostics. Independent backend/frontend reviews found no P1/P2.
+
+Next: document the confirmed startup-theme fix and native restart checkpoint;
+fix the CI Statistics test fixture omission, then push and verify all platform jobs.
 
 ## 0.1.4 validation — 22 October 2026
 

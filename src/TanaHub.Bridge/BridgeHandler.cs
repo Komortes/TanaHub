@@ -58,6 +58,7 @@ public sealed partial class BridgeHandler(
                 "home.recommendations" => await RecommendationsAsync(parameters, cancellationToken),
                 "schedule.list" => await ScheduleAsync(parameters, cancellationToken),
                 "schedule.notify" => await NotifyScheduleAsync(parameters, cancellationToken),
+                "notifications.support" => Service<INotificationService>().Support,
                 "media.related" => await RelatedAsync(parameters, cancellationToken),
                 "settings.get" => SettingsDto.From(await SettingsAsync(cancellationToken)),
                 "settings.save" => await SaveSettingsAsync(parameters, cancellationToken),

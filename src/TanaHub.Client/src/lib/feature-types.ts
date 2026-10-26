@@ -6,6 +6,7 @@ export interface HomeSummary {
 }
 export interface Recommendations { items: Media[]; genres: { name: string; weight: number }[]; notice: string | null }
 export interface ScheduleResult { items: { mediaId: string; title: string; episode: number; airingAt: string; format: string; releaseStatus: string; posterUrl: string | null; inLibrary: boolean; status: Status | null }[]; from: string; to: string }
+export interface NotificationSupport { supported: boolean; reason: string | null }
 export interface Settings {
   theme: string; notificationsEnabled: boolean; offlineCacheEnabled: boolean; recognitionServicesEnabled: boolean; preferredSyncSource: string; aniListClientId: string; hasAniListClientSecret: boolean; hasSauceNaoApiKey: boolean; isAniListConnected: boolean; aniListUsername: string; aniListUserId: number; aniListLastSyncAt: string | null;
 }

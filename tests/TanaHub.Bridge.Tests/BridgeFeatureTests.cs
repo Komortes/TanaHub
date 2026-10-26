@@ -342,6 +342,111 @@ public sealed class BridgeFeatureTests
     }
 
     [Fact]
+    public async Task NotificationSupportExplainsUnsupportedBuildsWithoutSending()
+    {
+        var fixture = new Fixture();
+        fixture.Notifications.Supported = false;
+
+        var support = await Call(fixture.Handler, "notifications.support", new { });
+
+        Assert.False(support.GetProperty("supported").GetBoolean());
+        Assert.Equal("System reminders are not supported on Windows in this build.", support.GetProperty("reason").GetString());
+        Assert.Equal(0, fixture.Notifications.Attempts);
+    }
+
+    [Fact]
+    public async Task UnsupportedNotificationsDoNotCountOrPoisonSessionDeduplication()
+    {
+        var fixture = new Fixture([new(Anime.Id, MediaType.Anime, MediaListStatus.Current)]);
+        fixture.Notifications.Supported = false;
+        var window = await PrepareNotificationSchedule(fixture);
+
+        Assert.Equal(0, (await Call(fixture.Handler, "schedule.notify", window)).GetProperty("notifiedCount").GetInt32());
+        Assert.Equal(0, fixture.Notifications.Attempts);
+        fixture.Notifications.Supported = true;
+        Assert.Equal(1, (await Call(fixture.Handler, "schedule.notify", window)).GetProperty("notifiedCount").GetInt32());
+        Assert.Equal(0, (await Call(fixture.Handler, "schedule.notify", window)).GetProperty("notifiedCount").GetInt32());
+        Assert.Single(fixture.Notifications.Messages);
+    }
+
+    [Fact]
+    public async Task FailedNotificationsRemainRetryableWithoutExposingProcessDetails()
+    {
+        var fixture = new Fixture([new(Anime.Id, MediaType.Anime, MediaListStatus.Current)]);
+        fixture.Notifications.Outcomes.Enqueue(false);
+        fixture.Notifications.Outcomes.Enqueue(true);
+        var window = await PrepareNotificationSchedule(fixture);
+
+        var error = await Error(fixture.Handler, "schedule.notify", window);
+        Assert.Equal("notification_failed", error.GetProperty("code").GetString());
+        Assert.Contains("retry", error.GetProperty("message").GetString(), StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("private-process-diagnostic", error.GetRawText());
+        Assert.Empty(fixture.Notifications.Messages);
+        Assert.Equal(1, (await Call(fixture.Handler, "schedule.notify", window)).GetProperty("notifiedCount").GetInt32());
+        Assert.Equal(0, (await Call(fixture.Handler, "schedule.notify", window)).GetProperty("notifiedCount").GetInt32());
+        Assert.Equal(2, fixture.Notifications.Attempts);
+        Assert.Single(fixture.Notifications.Messages);
+    }
+
+    [Fact]
+    public async Task DisabledNotificationsRemainEligibleAfterThePreferenceIsEnabled()
+    {
+        var fixture = new Fixture([new(Anime.Id, MediaType.Anime, MediaListStatus.Current)]);
+        fixture.Settings.Value = fixture.Settings.Value with { NotificationsEnabled = false };
+        var window = await PrepareNotificationSchedule(fixture);
+
+        Assert.Equal(0, (await Call(fixture.Handler, "schedule.notify", window)).GetProperty("notifiedCount").GetInt32());
+        Assert.Equal(0, fixture.Notifications.Attempts);
+        fixture.Settings.Value = fixture.Settings.Value with { NotificationsEnabled = true };
+        Assert.Equal(1, (await Call(fixture.Handler, "schedule.notify", window)).GetProperty("notifiedCount").GetInt32());
+        Assert.Single(fixture.Notifications.Messages);
+    }
+
+    [Fact]
+    public async Task PartialNotificationFailureRetriesOnlyEpisodesThatWereNotAccepted()
+    {
+        var fixture = new Fixture([new(Anime.Id, MediaType.Anime, MediaListStatus.Current)]);
+        foreach (var outcome in new[] { true, false, true }) fixture.Notifications.Outcomes.Enqueue(outcome);
+        var window = await PrepareNotificationSchedule(fixture, episodes: 2);
+
+        var error = await Error(fixture.Handler, "schedule.notify", window);
+        Assert.Equal("notification_failed", error.GetProperty("code").GetString());
+        Assert.Single(fixture.Notifications.Messages);
+        Assert.Equal(1, (await Call(fixture.Handler, "schedule.notify", window)).GetProperty("notifiedCount").GetInt32());
+        Assert.Equal(0, (await Call(fixture.Handler, "schedule.notify", window)).GetProperty("notifiedCount").GetInt32());
+        Assert.Equal(3, fixture.Notifications.Attempts);
+        Assert.Equal(2, fixture.Notifications.Messages.Count);
+        Assert.Single(fixture.Notifications.Messages, message => message.StartsWith("EP 1 ", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task CancelledNotificationsRemainEligibleForTheNextRequest()
+    {
+        var fixture = new Fixture([new(Anime.Id, MediaType.Anime, MediaListStatus.Current)]);
+        var window = await PrepareNotificationSchedule(fixture);
+        using var cancellation = new CancellationTokenSource();
+        fixture.Notifications.BeforeSend = cancellation.Cancel;
+        using var response = JsonDocument.Parse(await fixture.Handler.HandleAsync(JsonSerializer.Serialize(new { id = "cancel-notification", method = "schedule.notify", @params = window }), cancellation.Token));
+
+        Assert.Equal("cancelled", response.RootElement.GetProperty("error").GetProperty("code").GetString());
+        Assert.Empty(fixture.Notifications.Messages);
+        fixture.Notifications.BeforeSend = null;
+        Assert.Equal(1, (await Call(fixture.Handler, "schedule.notify", window)).GetProperty("notifiedCount").GetInt32());
+        Assert.Single(fixture.Notifications.Messages);
+    }
+
+    private static async Task<object> PrepareNotificationSchedule(Fixture fixture, int episodes = 1)
+    {
+        var from = DateTimeOffset.UtcNow.AddMinutes(-1);
+        var to = from.AddHours(1);
+        fixture.Services.Items[typeof(IAiringScheduleService)] = new ScheduleFake(Enumerable.Range(1, episodes)
+            .Select(episode => new AiringScheduleItem(Anime.Id, "Anime", episode, from.AddMinutes(episode * 10), "TV", "Releasing", null)).ToArray());
+        var window = new { from, to };
+        await Call(fixture.Handler, "schedule.list", new { from, to, libraryOnly = true });
+        return window;
+    }
+
+    [Fact]
     public async Task MalRoundTripUpdatesTheExistingAniListEntryWithoutCreatingADuplicate()
     {
         var fixture = new Fixture([new(Anime.Id, MediaType.Anime, MediaListStatus.Current)
@@ -631,8 +736,20 @@ public sealed class BridgeFeatureTests
     private sealed class NotificationsFake : INotificationService
     {
         public readonly List<string> Messages = [];
-        public Task NotifyAsync(string title, string message, CancellationToken cancellationToken = default)
-        { Messages.Add(message); return Task.CompletedTask; }
+        public readonly Queue<bool> Outcomes = new();
+        public bool Supported { get; set; } = true;
+        public NotificationSupport Support => new(Supported, Supported ? null : "System reminders are not supported on Windows in this build.");
+        public int Attempts { get; private set; }
+        public Action? BeforeSend { get; set; }
+        public Task<bool> NotifyAsync(string title, string message, CancellationToken cancellationToken = default)
+        {
+            Attempts++;
+            BeforeSend?.Invoke();
+            cancellationToken.ThrowIfCancellationRequested();
+            if (Outcomes.TryDequeue(out var accepted) && !accepted) return Task.FromResult(false);
+            Messages.Add(message);
+            return Task.FromResult(true);
+        }
     }
 
     private sealed class InboxFake : IRecognitionInboxService

@@ -9,6 +9,7 @@ Changes are recorded here for each release.
 - A dedicated Statistics page under Home, with shared anime/manga filtering, local library metrics, charts and direct/back/forward navigation. Home keeps current titles and recommendations first.
 - Light and System appearance choices. System follows OS changes without rewriting the saved preference; existing Dark and High contrast settings remain supported.
 - Settings shows the latest update-check attempt, result and successful check time. Completed history survives restart/offline checks; automatic startup failures remain quiet elsewhere.
+- Settings checks desktop reminder support and explains availability before enabling Notifications. Unsupported platforms keep the saved preference without offering a non-working switch; failed checks have an explicit retry.
 
 ### Fixed
 
@@ -18,11 +19,12 @@ Changes are recorded here for each release.
 - Choosing a newer recognition image or clearing the source cancels pending clipboard results and errors, so delayed paste cannot undo the latest choice.
 - Clearing Library or Discover search returns keyboard focus to the search input after restoring the results.
 - Retrying an initial Library, Discover or Home load transfers focus to the page heading before loading; delayed responses preserve later keyboard choices and navigation.
+- Reminders count only accepted notification commands. Failed sends remain retryable, unsupported Windows sends return zero, and hung notification helpers are bounded and cleaned up.
 
 ### Improved
 
 - Quieter graphite and paper surfaces put cover art first. Navigation separates library browsing from secondary tools and keeps readable labels and usable targets on narrow windows.
-- Home starts with in-progress titles and episode/chapter actions. Library statistics follow recommendations, with quieter charts and compact activity rows.
+- Home starts with in-progress titles and episode/chapter actions. A separate Statistics view keeps the dashboard focused, with quieter charts and compact activity rows.
 - Title pages distinguish tracking controls, reading and supporting facts. Genres and metadata use plain text; cover-viewer focus and compact poster sizes are preserved.
 - Library and catalog covers sit on a flat shelf with aligned captions, plain status labels and a full-width progress bookmark. List view uses row separators and covers no longer lift or zoom on hover.
 - Collection filters use quiet tabs; Discover presets share the controls row when space allows. Search has a clearer boundary and primary controls have larger targets.

@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { tick } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { Download, Upload, RefreshCw, ExternalLink, Check, Link2, ShieldCheck } from '@lucide/svelte';
   import { featureApi } from '../feature-api';
   import { saveExport, isDesktop } from '../native';
   import { version } from '../../../package.json';
   import DesktopUpdates from '../components/DesktopUpdates.svelte';
-  import type { Settings, SettingsPatch, ImportPreview, UpdateCheck } from '../feature-types';
+  import type { Settings, SettingsPatch, NotificationSupport, ImportPreview, UpdateCheck } from '../feature-types';
   let { data, loading = false, loadError = '', busy = '', onReload, onSave, onConnect, onSync, onDisconnect, onLibraryChanged }:
     { data: Settings | null; loading?: boolean; loadError?: string; busy?: string; onReload: () => void; onSave: (patch: SettingsPatch) => Promise<void>; onConnect: (id: string, secret?: string) => Promise<void>; onSync: () => Promise<{ importedCount: number }>; onDisconnect: () => Promise<void>; onLibraryChanged: () => void } = $props();
   let clientId = $state('');
@@ -17,6 +17,12 @@
   let feedbackSection = $state('preferences');
   let localBusy = $state('');
   let updaterBusy = $state(false);
+  let notificationSupport = $state<NotificationSupport | null>(null);
+  let notificationSupportLoading = $state(true);
+  let notificationSupportError = $state('');
+  let preferencesHeading = $state<HTMLHeadingElement>();
+  let notificationSupportActive = true;
+  let notificationSupportGeneration = 0;
   let preview = $state<ImportPreview | null>(null);
   let importXml = $state('');
   let importName = $state('');
@@ -30,6 +36,24 @@
   const disabled = $derived(!!busy || !!localBusy || loading || updaterBusy);
   const clientIdChanged = $derived(clientId.trim() !== (data?.aniListClientId ?? '').trim());
   $effect(() => { if (!clientIdDirty) clientId = data?.aniListClientId ?? ''; });
+  onMount(() => {
+    void loadNotificationSupport();
+    return () => { notificationSupportActive = false; notificationSupportGeneration += 1; };
+  });
+  async function loadNotificationSupport() {
+    const current = ++notificationSupportGeneration;
+    notificationSupportLoading = true; notificationSupportError = '';
+    try {
+      const result = await featureApi.notificationSupport();
+      if (!result || typeof result.supported !== 'boolean' || (result.reason != null && typeof result.reason !== 'string')) throw new Error('Invalid reminder support response.');
+      if (notificationSupportActive && current === notificationSupportGeneration) notificationSupport = { supported: result.supported, reason: result.reason ?? null };
+    } catch {
+      if (notificationSupportActive && current === notificationSupportGeneration) {
+        notificationSupport = null; notificationSupportError = 'Could not check reminder availability.';
+      }
+    } finally { if (notificationSupportActive && current === notificationSupportGeneration) notificationSupportLoading = false; }
+  }
+  function retryNotificationSupport() { preferencesHeading?.focus({ preventScroll: true }); void loadNotificationSupport(); }
   async function run(name: string, action: () => Promise<void>) {
     if (disabled) return;
     feedbackSection = ({ connect: 'anilist', sync: 'anilist', disconnect: 'anilist', 'anilist-help': 'anilist', 'save-key': 'recognition', 'clear-key': 'recognition', export: 'library', preview: 'library', import: 'library', updates: 'about', open: 'about' } as Record<string, string>)[name] ?? 'preferences';
@@ -100,9 +124,15 @@
   {#if loadError}<div class="load-error" role="alert"><div><strong>Settings unavailable</strong><p>{loadError}</p></div><button class="ghost-button" onclick={onReload}>Try again</button></div>{/if}
   {#if data}
     <div class="settings-grid">
-      <section class="panel"><h2>Appearance &amp; preferences</h2>
+      <section class="panel"><h2 bind:this={preferencesHeading} tabindex="-1">Appearance &amp; preferences</h2>
         <label class="field">Theme<select aria-label="Theme" value={data.theme} disabled={disabled} onchange={(event) => void select(event, 'theme')}><option>System</option><option value="Nebula dark">Dark</option><option>Light</option><option>High contrast</option></select></label>
-        <label class="toggle"><span><strong>Notifications</strong><small>Reminders for titles airing today.</small></span><input type="checkbox" role="switch" aria-label="Notifications" checked={data.notificationsEnabled} disabled={disabled} onchange={(event) => void toggle(event, 'notificationsEnabled')} /></label>
+        <label class="toggle"><span><strong>Notifications</strong><small>Desktop reminders for upcoming episodes in your library.</small></span><input type="checkbox" role="switch" aria-label="Notifications" aria-describedby="notifications-support-note" checked={data.notificationsEnabled} disabled={disabled || notificationSupport?.supported !== true} onchange={(event) => void toggle(event, 'notificationsEnabled')} /></label>
+        <div class="hint" id="notifications-support-note" role={notificationSupportLoading || !!notificationSupportError ? 'status' : undefined}>
+          {#if notificationSupportLoading}Checking reminder availability…
+          {:else if notificationSupportError}<span>{notificationSupportError}</span><button class="text-button" disabled={disabled} onclick={retryNotificationSupport}>Retry reminder check</button>
+          {:else if notificationSupport?.supported}Checked on Home and today's Schedule. Your system notification settings still apply.
+          {:else}{notificationSupport?.reason || 'System reminders are not available on this system.'}{/if}
+        </div>
         <label class="toggle"><span><strong>Offline cache</strong><small>Keep previously loaded titles available.</small></span><input type="checkbox" role="switch" aria-label="Offline cache" checked={data.offlineCacheEnabled} disabled={disabled} onchange={(event) => void toggle(event, 'offlineCacheEnabled')} /></label>
         <label class="field">Catalog source<select aria-label="Catalog source" value={data.preferredSyncSource} disabled={disabled} onchange={(event) => void select(event, 'preferredSyncSource')}><option value="AniList">AniList · anime and manga</option>{#if data.preferredSyncSource === 'MyAnimeList'}<option value="MyAnimeList" disabled>MyAnimeList · uses AniList</option>{/if}<option value="MangaDex">MangaDex · manga</option></select></label>
         <p class="hint">AniList includes anime and manga. To browse MangaDex, select it here and choose Manga or All in Discover.</p>

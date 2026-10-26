@@ -272,8 +272,9 @@ public sealed partial class MainWindowViewModelRecognitionTests
 
     private sealed class FakeNotificationService : INotificationService
     {
-        public Task NotifyAsync(string title, string message, CancellationToken cancellationToken = default) =>
-            Task.CompletedTask;
+        public NotificationSupport Support => new(true, null);
+        public Task<bool> NotifyAsync(string title, string message, CancellationToken cancellationToken = default) =>
+            Task.FromResult(true);
     }
 
     private sealed class FakeCatalogSourceSelector : ICatalogSourceSelector

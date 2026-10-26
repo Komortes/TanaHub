@@ -106,12 +106,15 @@ public sealed partial class BridgeHandler
         var settings = await SettingsAsync(ct);
         var notifiedCount = 0;
         if (!settings.NotificationsEnabled) return new { notifiedCount };
+        var notifications = Service<INotificationService>();
+        if (!notifications.Support.Supported) return new { notifiedCount };
         var ids = (await AllEntriesAsync(ct)).Select(entry => entry.MediaId).ToHashSet(StringComparer.OrdinalIgnoreCase);
         foreach (var item in lastSchedule.Where(item => item.AiringAt >= from && item.AiringAt < to && ids.Contains(item.MediaId)))
         {
             var key = $"{item.MediaId}:{item.Episode}";
             if (notifiedEpisodes.Contains(key)) continue;
-            await Service<INotificationService>().NotifyAsync("TanaHub — Airing today", $"EP {item.Episode} of {item.Title} airs today.", ct);
+            if (!await notifications.NotifyAsync("TanaHub — Airing today", $"EP {item.Episode} of {item.Title} airs today.", ct))
+                throw new BridgeException("notification_failed", "System reminders could not be sent. Refresh Home or Today in Schedule to retry.");
             notifiedEpisodes.Add(key);
             notifiedCount++;
         }

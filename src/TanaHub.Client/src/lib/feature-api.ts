@@ -1,12 +1,13 @@
 import { request } from './api';
 import { openExternal } from './native';
 import type { Entry, MediaType } from './types';
-import type { HomeSummary, Recommendations, ScheduleResult, Settings, SettingsPatch, RelatedTitlesResult, LibraryExport, ImportPreview, UpdateCheck, RecognitionResult, RecognitionHistoryItem } from './feature-types';
+import type { HomeSummary, Recommendations, ScheduleResult, NotificationSupport, Settings, SettingsPatch, RelatedTitlesResult, LibraryExport, ImportPreview, UpdateCheck, RecognitionResult, RecognitionHistoryItem } from './feature-types';
 export const featureApi = {
   home: (type?: MediaType) => request<HomeSummary>('home.get', { type }),
   recommendations: (limit = 8, type?: MediaType) => request<Recommendations>('home.recommendations', { limit, type }),
   schedule: (from: string, to: string, libraryOnly = false) => request<ScheduleResult>('schedule.list', { from, to, libraryOnly }),
   scheduleNotify: (from: string, to: string) => request<{ notifiedCount: number }>('schedule.notify', { from, to }),
+  notificationSupport: () => request<NotificationSupport>('notifications.support'),
   relations: (mediaId: string, forceRefresh = false) => request<RelatedTitlesResult>('media.related', { mediaId, forceRefresh }),
   progressSet: (mediaId: string, progress: number) => request<Entry>('library.progress.set', { mediaId, progress }),
   review: (mediaId: string, review: string) => request<Entry>('library.review', { mediaId, review }),
