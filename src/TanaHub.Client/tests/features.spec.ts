@@ -13,7 +13,7 @@ async function navigate(page: Page, name: string) {
   await expect(page.getByRole('heading', { name, exact: true, level: 1 })).toBeVisible();
 }
 
-test('Home statistics follow the selected media type and tracking actions refresh the dashboard', async ({ page, library }) => {
+test('Home tracking refreshes the dashboard and its Statistics subpage follows the selected media type', async ({ page, library }) => {
   await page.goto('/');
   await navigate(page, 'Home');
   await expect(page.getByText('4 titles tracked', { exact: true })).toBeVisible();
@@ -32,6 +32,8 @@ test('Home statistics follow the selected media type and tracking actions refres
   await expect(page.getByRole('region', { name: 'Continue tracking' }).getByRole('article', { name: 'Berserk', exact: true })).toBeVisible();
   await expect(card).not.toBeVisible();
   expect(library.requests.filter(request => request.method === 'home.get').at(-1)?.params.type).toBe('Manga');
+  await expect(page.getByRole('region', { name: 'Library statistics' })).not.toBeVisible();
+  await page.getByRole('button', { name: 'Statistics', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Library statistics' })).toContainText('Chapters read');
 });
 
@@ -326,7 +328,7 @@ for (const name of ['Home', 'Schedule', 'Recognize', 'Settings']) {
       await page.setViewportSize({ width, height: 800 });
       await page.goto('/');
       await navigate(page, name);
-      if (name === 'Home') await expect(page.getByRole('region', { name: 'Library statistics' })).toBeVisible();
+      if (name === 'Home') { await expect(page.getByRole('button', { name: 'Statistics', exact: true })).toBeVisible(); await expect(page.getByRole('region', { name: 'Library statistics' })).not.toBeVisible(); }
       if (name === 'Schedule') { await page.getByRole('button', { name: 'This week', exact: true }).click(); await expect(page.getByRole('button', { name: `Open ${frieren}, episode 4`, exact: true })).toBeVisible(); }
       if (name === 'Recognize') { await page.getByLabel('Choose recognition image').setInputFiles(image); await page.getByRole('button', { name: 'Find matches with trace.moe', exact: true }).click(); await expect(page.getByRole('article', { name: `Match ${frieren}`, exact: true })).toBeVisible(); }
       if (name === 'Settings') await expect(page.getByRole('switch', { name: 'Notifications', exact: true })).toBeVisible();

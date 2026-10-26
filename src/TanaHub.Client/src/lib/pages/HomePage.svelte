@@ -1,16 +1,14 @@
 <script lang="ts">
   import { tick } from 'svelte';
-  import { RefreshCw, ChevronRight, Plus, Star, BookOpen, AlertCircle } from '@lucide/svelte';
+  import { RefreshCw, ChevronRight, Plus, Star, BookOpen, AlertCircle, ChartNoAxesCombined } from '@lucide/svelte';
   import { featureApi } from '../feature-api';
   import { unitLabel, statusLabel, formatLabel, maxProgress } from '../types';
   import type { Entry, Media, MediaType, PageName } from '../types';
   import type { HomeSummary, Recommendations, ScheduleResult } from '../feature-types';
   import MiniCover from './MiniCover.svelte';
-  import InsightsPanel from './InsightsPanel.svelte';
 
-  let { onOpen, onProgress, onRate, onNavigate, revision = 0, active = true }:
-    { onOpen: (media: Media) => void; onProgress: (entry: Entry) => Promise<void>; onRate: (entry: Entry, anchor: DOMRect) => void; onNavigate: (page: PageName) => void; revision?: number; active?: boolean } = $props();
-  let type = $state<MediaType | ''>('');
+  let { onOpen, onProgress, onRate, onNavigate, onStatistics, type = $bindable<MediaType | ''>(''), revision = 0, active = true }:
+    { onOpen: (media: Media) => void; onProgress: (entry: Entry) => Promise<void>; onRate: (entry: Entry, anchor: DOMRect) => void; onNavigate: (page: PageName) => void; onStatistics: () => void; type?: MediaType | ''; revision?: number; active?: boolean } = $props();
   let summary = $state<HomeSummary | null>(null);
   let recommendations = $state<Recommendations | null>(null);
   let airing = $state<ScheduleResult | null>(null);
@@ -82,7 +80,7 @@
   }
 </script>
 
-<header class="home-header"><h1 bind:this={heading} tabindex="-1">Home</h1><button class="ghost-button" aria-label="Refresh dashboard" onclick={() => refresh += 1} disabled={loading}><RefreshCw size={15} />Refresh</button></header>
+<header class="home-header"><h1 bind:this={heading} tabindex="-1">Home</h1><div class="home-actions"><button class="ghost-button statistics-link" onclick={onStatistics}><ChartNoAxesCombined size={16} />Statistics</button><button class="ghost-button refresh-dashboard" aria-label="Refresh dashboard" onclick={() => refresh += 1} disabled={loading}><RefreshCw size={15} />Refresh</button></div></header>
 <div class="home-type" aria-label="Dashboard media type">{#each ['', 'Anime', 'Manga'] as item}<button aria-pressed={type === item} class:selected={type === item} onclick={() => type = item as MediaType | ''}>{item || 'All titles'}</button>{/each}<span>{summary?.insights.totalEntries ?? '—'} {summary?.insights.totalEntries === 1 ? 'title' : 'titles'} tracked</span></div>
 {#if error}<div class="load-error" role="alert"><AlertCircle size={20} /><div><strong>Home could not load</strong><p>{error}</p></div><button class="ghost-button" onclick={retryDashboard}>Try again</button></div>{/if}
 {#if actionError}<p class="error-text" role="alert">{actionError}</p>{/if}
@@ -110,7 +108,6 @@
       {:else if recommendations?.items.length}<p class="section-notice">{recommendations.notice || (recommendations.genres.length ? `Inspired by your interest in ${recommendations.genres.slice(0, 3).map(genre => genre.name).join(', ')}.` : 'More stories to explore.')}</p><div class="recommendation-grid">{#each recommendations.items as media (media.id)}<button class="recommendation-card" aria-label={`Open ${media.title}`} title={media.title} onclick={() => onOpen(media)}><MiniCover url={media.posterUrl} thumbnail={media.thumbnailUrl} preview={media.previewUrl} title={media.title} /><strong>{media.title}</strong><span><span class="recommendation-format" title={formatLabel(media.format)}>{formatLabel(media.format)}</span><span class="mono">{media.averageScore === null ? '—' : `${media.averageScore}/100`}</span></span></button>{/each}</div>
       {:else}<p class="section-notice">{recommendations?.notice || 'Rate or track a few titles to discover recommendations based on your library.'}</p>{/if}
     </section>
-    {#if summary}<InsightsPanel insights={summary.insights} mode="metrics" />{/if}
   </div>
   <aside class="dashboard-aside">
     {#if type !== 'Manga'}
@@ -128,12 +125,13 @@
       {:else if error}<p class="section-notice">Recent activity is unavailable until the dashboard reloads.</p>
       {:else}<p class="section-notice">Your recent library activity will appear here.</p>{/if}
     </section>
-    {#if summary}<InsightsPanel insights={summary.insights} mode="charts" />{/if}
   </aside>
 </div>
 
 <style>
   .home-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; }
+  .home-actions { display: flex; align-items: center; gap: 8px; }
+  .home-actions > button { min-height: 44px; }
   h1 { font-size: 30px; font-weight: 650; letter-spacing: -.035em; line-height: 1.2; margin: 0; }
   .home-type { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; padding-bottom: 26px; }
   .home-type button { background: transparent; color: var(--secondary); border: 0; border-radius: 0; border-bottom: 2px solid transparent; padding: 11px 14px; font-size: 12px; min-height: 44px; }
@@ -180,5 +178,5 @@
   .row-time { font-size: 12px; color: var(--text); }
   .recent-progress { font-size: 10px; color: var(--secondary); white-space: nowrap; }
   @media (max-width: 1100px) { .dashboard-columns { grid-template-columns: minmax(0,1fr); } .dashboard-aside { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); border-left: 0; border-top: 1px solid var(--border); padding: 24px 0 0; } }
-  @media (max-width: 640px) { h1 { font-size: 28px; } .home-header > button { font-size: 0; padding: 12px; min-width: 44px; min-height: 44px; } .home-type > span { flex-basis: 100%; margin: 10px 0 0; } .dashboard-aside { grid-template-columns: minmax(0,1fr); } .progress-action, .rate-button { min-height: 44px; } .recommendation-grid { grid-template-columns: repeat(auto-fill,minmax(min(100%,130px),1fr)); } .recommendation-card { max-width: 160px; } }
+  @media (max-width: 640px) { h1 { font-size: 28px; } .home-actions .refresh-dashboard { font-size: 0; padding: 12px; min-width: 44px; } .home-actions .statistics-link { padding: 10px; } .home-type > span { flex-basis: 100%; margin: 10px 0 0; } .dashboard-aside { grid-template-columns: minmax(0,1fr); } .progress-action, .rate-button { min-height: 44px; } .recommendation-grid { grid-template-columns: repeat(auto-fill,minmax(min(100%,130px),1fr)); } .recommendation-card { max-width: 160px; } }
 </style>

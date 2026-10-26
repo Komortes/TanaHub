@@ -4,6 +4,10 @@ Changes are recorded here for each release.
 
 ## Unreleased
 
+### Added
+
+- A dedicated Statistics page under Home, with shared anime/manga filtering, local library metrics, charts and direct/back/forward navigation. Home keeps current titles and recommendations first.
+
 ### Fixed
 
 - Recognition-history refresh preserves successful concurrent saves and deletions while including newly fetched rows.

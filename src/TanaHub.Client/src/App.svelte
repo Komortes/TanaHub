@@ -8,6 +8,7 @@
   import TitlePage from './lib/components/TitlePage.svelte';
   import RatingDialog from './lib/components/RatingDialog.svelte';
   import HomePage from './lib/pages/HomePage.svelte';
+  import StatisticsPage from './lib/pages/StatisticsPage.svelte';
   import SchedulePage from './lib/pages/SchedulePage.svelte';
   import RecognizePage from './lib/pages/RecognizePage.svelte';
   import SettingsPage from './lib/pages/SettingsPage.svelte';
@@ -29,6 +30,8 @@
   }
   const saved = preferences();
   let page = $state<PageName>('library');
+  let homeView = $state<'overview' | 'statistics'>('overview');
+  let homeType = $state<MediaType | ''>('');
   let type = $state<MediaType | ''>('');
   const collectionViews: Record<'library' | 'discover', { type: MediaType | ''; search: string }> = {
     library: { type: '', search: '' }, discover: { type: 'Anime', search: '' },
@@ -74,6 +77,9 @@
   let returnFocusLabel = '';
   let returnFocusTitle = '';
   let returnMediaId = '';
+  let statisticsReturnFocus: HTMLElement | null = null;
+  let statisticsReturnScroll = 0;
+  let homeViewVersion = 0;
   type CollectionQuery = { page: 'library' | 'discover'; type: MediaType | ''; status: Status | ''; search: string; sort: string; filters: Record<string, unknown> };
   let collectionRunning = false;
   let pendingCollection: { query: CollectionQuery; version: number; next: number } | null = null;
@@ -100,7 +106,7 @@
   $effect(() => { if (settings) document.documentElement.dataset.theme = settings.theme; });
   $effect(() => {
     const names: Record<PageName, string> = { home: 'Home', library: 'My library', discover: 'Discover', schedule: 'Schedule', recognize: 'Recognize', settings: 'Settings' };
-    document.title = `${selected?.title ?? names[page]} · TanaHub`;
+    document.title = `${selected?.title ?? (page === 'home' && homeView === 'statistics' ? 'Statistics' : names[page])} · TanaHub`;
   });
   $effect(() => {
     if (page !== 'settings' || !settings || requestedSettingsSection !== 'library') return;
@@ -183,15 +189,41 @@
   }
   function pushRoute(route: string) { if (location.hash !== route) history.pushState({ tanahub: true, from: location.hash || '#library' }, '', route); }
   function navigate(next: PageName, push = true) {
-    if (next === page && !selected) return;
+    if (next === page && !selected && !(next === 'home' && homeView === 'statistics')) return;
+    homeViewVersion += 1;
     requestedSettingsSection = '';
     if (page === 'library' || page === 'discover') collectionViews[page] = { type, search };
     page = next;
+    homeView = 'overview';
     if (next === 'library' || next === 'discover') ({ type, search } = collectionViews[next]);
     else search = '';
     selected = null; rating = null; detailVersion += 1;
     if (push) pushRoute(`#${next}`); window.scrollTo(0, 0);
     void tick().then(focusMainHeading);
+  }
+  function showHomeView(view: 'overview' | 'statistics', push = true) {
+    const returning = page === 'home' && homeView === 'statistics' && view === 'overview';
+    if (push && view === 'statistics' && page === 'home' && !selected) {
+      statisticsReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      statisticsReturnScroll = window.scrollY;
+    }
+    if (page !== 'home') navigate('home', false);
+    homeView = view;
+    selected = null; rating = null; detailVersion += 1;
+    const version = ++homeViewVersion;
+    if (push) pushRoute(view === 'statistics' ? '#home/statistics' : '#home');
+    if (!returning) window.scrollTo(0, 0);
+    void tick().then(() => {
+      if (version !== homeViewVersion || page !== 'home' || homeView !== view || selected) return;
+      if (returning && statisticsReturnFocus?.isConnected) {
+        window.scrollTo(0, statisticsReturnScroll);
+        statisticsReturnFocus.focus({ preventScroll: true });
+      } else { window.scrollTo(0, 0); focusMainHeading(); }
+    });
+  }
+  function backToHome() {
+    if (history.state?.tanahub && history.state.from === '#home') history.back();
+    else { history.replaceState({ tanahub: true }, '', '#home'); showHomeView('overview', false); }
   }
   function focusMainHeading() {
     const heading = document.querySelector<HTMLElement>('main h1');
@@ -215,10 +247,13 @@
   function applyRoute() {
     const route = location.hash.slice(1);
     if (route.startsWith('title/')) { try { void openId(decodeURIComponent(route.slice(6)), false); } catch { navigate('library', false); } }
+    else if (route === 'home/statistics') showHomeView('statistics', false);
     else if (['home', 'library', 'discover', 'schedule', 'recognize', 'settings'].includes(route)) {
       const next = route as PageName; const wasDetail = !!selected;
       selected = null; rating = null; detailVersion += 1;
-      if (page !== next) navigate(next, false); else if (wasDetail) void restoreCollection();
+      if (page !== next) navigate(next, false);
+      else if (next === 'home' && homeView === 'statistics') showHomeView('overview', false);
+      else if (wasDetail) void restoreCollection();
     }
   }
   async function loadSettings() {
@@ -296,7 +331,10 @@
     {/if}
     <div hidden={!!selected} inert={!!selected}>
     {#if page === 'home'}
-      <HomePage {revision} active={!selected} onOpen={(media) => void openDetails(media)} onProgress={(entry) => mutate(entry.mediaId, () => api.progress(entry.mediaId), 'Progress saved')} onRate={(entry, anchor) => rating = { entry, anchor }} onNavigate={navigate} />
+      {#if homeView === 'statistics'}<StatisticsPage bind:type={homeType} {revision} active={!selected} onBack={backToHome} />{/if}
+      <div hidden={homeView === 'statistics'} inert={homeView === 'statistics'}>
+        <HomePage bind:type={homeType} {revision} active={!selected && homeView === 'overview'} onStatistics={() => showHomeView('statistics')} onOpen={(media) => void openDetails(media)} onProgress={(entry) => mutate(entry.mediaId, () => api.progress(entry.mediaId), 'Progress saved')} onRate={(entry, anchor) => rating = { entry, anchor }} onNavigate={navigate} />
+      </div>
     {:else if page === 'schedule'}
       <SchedulePage {revision} active={!selected} onOpenId={(id) => void openId(id)} />
     {:else if page === 'recognize'}

@@ -269,8 +269,23 @@ notification center. Separately correct Windows's false notification-delivery
 count and expose truthful behavior. Current app source is unreleased, version
 0.1.4; publishing installers/update feeds remains outside this request.
 
-Next: Statistics red/implementation/green; theme backend/frontend integration;
-updater status; notification delivery honesty; full/native/CI verification.
+### Iteration 16 — give statistics its own place
+
+- Added #home/statistics with an explicit Home entry and Back, preserving all six
+  navigation destinations. Home stays mounted hidden/inert and pauses remote work;
+  the new page reads only local home.get and shares the anime/manga filter.
+- Direct links, reload, Back/Forward, heading/return focus, stale responses, Retry,
+  empty/large counters and title-detail context are covered. No recommendations,
+  schedule or notification request runs on a direct Statistics entry.
+- All 13 new scenarios failed before the feature. The 27-case affected batch is
+  green; five initial metric assertions were corrected to locate native dt text,
+  without changing production semantics. Independent routing/focus review is clean.
+- Combined feature validation passes 237 browser scenarios and all 372 .NET tests;
+  build has zero diagnostics. Thirty-nine dark/light/contrast views include Stats
+  at 320/1440px and have no page overflow or browser errors.
+
+Next: commit verified themes and updater history, then notification delivery
+honesty and final native/CI checks. Continue ordinary choices autonomously.
 
 ## 0.1.4 validation — 22 October 2026
 
