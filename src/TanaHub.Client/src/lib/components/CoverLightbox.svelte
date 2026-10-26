@@ -27,7 +27,7 @@
 
 <style>
   .cover-lightbox { position: fixed; margin: auto; inset: 0; width: fit-content; max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px); padding: 0; border: 1px solid var(--border-lit); border-radius: 12px; background: var(--shell); color: var(--text); overflow: auto; animation: cover-in 160ms var(--ease); }
-  .cover-lightbox::backdrop { background: #09080fe6; }
+  .cover-lightbox::backdrop { background: rgb(var(--scrim-rgb) / 90%); }
   .cover-viewer { position: relative; padding: 12px; }
   .cover-stage { position: relative; display: grid; place-items: center; }
   .cover-stage.loading { width: min(520px,calc(100vw - 58px),calc((100dvh - 122px) * 2 / 3)); aspect-ratio: 2 / 3; background: var(--raised); border-radius: 6px; }

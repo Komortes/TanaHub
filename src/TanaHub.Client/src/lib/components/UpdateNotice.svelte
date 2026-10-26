@@ -50,7 +50,7 @@
   .notice-actions button { min-height: 40px; max-width: 100%; white-space: normal; }
   progress { width: 100%; margin-top: 8px; accent-color: var(--violet); }
   dialog { margin: auto; padding: 28px; border: 1px solid var(--border-lit); border-radius: 12px; background: var(--shell); color: var(--text); max-width: calc(100vw - 32px); }
-  dialog::backdrop { background: #09080fe6; } dialog h2 { font-size: 18px; } dialog p { margin-bottom: 16px; font-size: 13px; }
+  dialog::backdrop { background: rgb(var(--scrim-rgb) / 90%); } dialog h2 { font-size: 18px; } dialog p { margin-bottom: 16px; font-size: 13px; }
   @media (max-width: 760px) { .update-notice { flex-direction: column; align-items: stretch; } }
   @media (max-width: 640px) { .update-notice { top: 80px; } }
 </style>

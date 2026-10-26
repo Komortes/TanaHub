@@ -60,7 +60,7 @@
 
 <style>
   .detail-dialog { width: 780px; max-width: calc(100vw - 32px); max-height: calc(100dvh - 48px); padding: 0; color: var(--text); background: var(--shell); border: 1px solid var(--border-lit); border-radius: 14px; overscroll-behavior: contain; animation: detail-in 200ms var(--ease); }
-  .detail-dialog::backdrop { background: #09080fbb; }
+  .detail-dialog::backdrop { background: rgb(var(--scrim-rgb) / 73%); }
   .detail-content { padding: 30px; position: relative; }
   .close-button { position: absolute; top: 14px; right: 14px; }
   .detail-top { display: grid; grid-template-columns: 180px minmax(0,1fr); gap: 26px; padding-right: 10px; }

@@ -250,8 +250,27 @@ native startup color, and validate the actual WebKit app with isolated data.
 - Full 202-case run, build and populated responsive captures pass. Independent
   review confirms this changes copy/presentation without changing actions or data.
 
-Next: commit neutral overlays; implement Statistics, themes and updater status in
-bounded increments; fix the confirmed notification delivery-count gap.
+### Iteration 15 — remove the remaining tinted modal backdrops
+
+- Actual native cover viewing exposed four remaining hard-coded purple scrims.
+  Cover, rating, detail and update dialogs now share semantic neutral RGB channels
+  while retaining their individual opacity levels. High contrast uses black.
+- Client build, all 202 browser scenarios and 25-view QA remain clean; independent
+  review approves the shared token/consumers. Final native verification will cover
+  these overlays together with the new theme feature.
+
+### Broader review after iteration 15
+
+The main visual queue is complete and tested. Continue with the user's bounded
+feature direction: Statistics under Home without a seventh navigation item;
+Light/System with explicit saved preference versus resolved palette; check status
+in updater Settings while startup failures remain quiet. Do not expand into a
+notification center. Separately correct Windows's false notification-delivery
+count and expose truthful behavior. Current app source is unreleased, version
+0.1.4; publishing installers/update feeds remains outside this request.
+
+Next: Statistics red/implementation/green; theme backend/frontend integration;
+updater status; notification delivery honesty; full/native/CI verification.
 
 ## 0.1.4 validation — 22 October 2026
 

@@ -71,7 +71,7 @@
 
 <style>
   .rating-dialog { position: fixed; inset: 0; margin: auto; width: 400px; max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px); overflow: hidden; padding: 0; border: 1px solid var(--border-lit); border-radius: 14px; background: var(--shell); color: var(--text); box-shadow: 0 20px 80px #0006; animation: pop-in 180ms var(--ease); }
-  .rating-dialog::backdrop { background: #09080fa8; }
+  .rating-dialog::backdrop { background: rgb(var(--scrim-rgb) / 66%); }
   .rating-panel { padding: 24px; display: flex; flex-direction: column; max-height: calc(100dvh - 34px); }
   .rating-body { min-height: 0; overflow: auto; overscroll-behavior: contain; margin-inline: -4px; padding-inline: 4px; }
   .dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-shrink: 0; }
