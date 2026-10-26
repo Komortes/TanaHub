@@ -22,6 +22,7 @@ Changes are recorded here for each release.
 - Collection filters use quiet tabs; Discover presets share the controls row when space allows. Search has a clearer boundary and primary controls have larger targets.
 - Settings calls the default theme Dark while preserving saved preferences. The native window starts with the same graphite background as the interface.
 - Schedule uses a timetable with aligned times, day separators and quiet range tabs. Scrollable status/range controls reserve enough room for keyboard focus outlines.
+- Recognition emphasizes image choice and explicit search. Empty matches, result cards and saved history use a quieter hierarchy while retaining upload instructions and all actions.
 
 ## [0.1.4 preview](https://github.com/Komortes/TanaHub/releases/tag/v0.1.4) — 2026-10-21
 

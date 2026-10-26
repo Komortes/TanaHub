@@ -152,7 +152,7 @@
 </script>
 
 <svelte:window onpaste={paste} />
-<header class="recognize-header"><div><h1>Recognize</h1><p>Find the story behind an image.</p></div><button class="ghost-button" aria-label="Recognition settings" title="Recognition settings" onclick={() => onNavigate('settings')}><Settings2 size={15} />Settings</button></header>
+<header class="recognize-header"><h1>Recognize</h1><button class="ghost-button" aria-label="Recognition settings" title="Recognition settings" onclick={() => onNavigate('settings')}><Settings2 size={15} />Settings</button></header>
 <div class="provider-tabs" aria-label="Recognition service"><button class:selected={provider === 'trace'} aria-pressed={provider === 'trace'} disabled={working} onclick={() => changeProvider('trace')}>Anime screenshot<span>trace.moe</span></button><button class:selected={provider === 'art'} aria-pressed={provider === 'art'} disabled={working} onclick={() => changeProvider('art')}>Artwork &amp; manga<span>SauceNAO</span></button></div>
 <input class="file-input" bind:this={fileInput} type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose recognition image" onchange={(event) => void selectFile(event.currentTarget.files?.[0])} disabled={working} />
 <div class="recognition-workspace">
@@ -178,27 +178,26 @@
 </section>
 
 <style>
-  .recognize-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 24px; }
-  h1 { font-size: 30px; font-weight: 700; letter-spacing: -.035em; line-height: 1.2; margin: 0 0 8px; }
-  .recognize-header p { color: var(--secondary); font-size: 14px; margin: 0; }
+  .recognize-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; }
+  h1 { font-size: 30px; font-weight: 650; letter-spacing: -.035em; line-height: 1.2; margin: 0; }
   .provider-tabs { display: grid; grid-template-columns:repeat(2,minmax(0,1fr)); max-width:520px; gap: 8px; margin-bottom: 24px; }
-  .provider-tabs button { display: flex; align-items: center; gap: 12px; padding: 10px 16px; color: var(--secondary); background: var(--shell); border: 1px solid var(--border); font-size: 12px; }
+  .provider-tabs button { display: flex; align-items: center; gap: 12px; padding: 12px; min-height: 48px; color: var(--secondary); background: transparent; border: 0; border-bottom: 2px solid transparent; border-radius: 0; font-size: 12px; }
   .provider-tabs button > span { font-size: 11px; color: var(--secondary); }
-  .provider-tabs button.selected { border-color: var(--border-lit); color: var(--lavender); background: var(--violet-soft); }
+  .provider-tabs button.selected { border-bottom-color: var(--bookmark); color: var(--text); }
   .file-input { display: none; }
   .recognition-workspace { display: grid; grid-template-columns: minmax(280px,.9fr) minmax(0,1.1fr); gap: 24px; align-items: start; }
-  .image-panel { border: 1px dashed var(--border-lit); border-radius: 12px; background: var(--shell); padding: 20px; transition: border-color 160ms var(--ease), background 160ms var(--ease); min-width: 0; }
+  .image-panel { border: 1px dashed var(--border-lit); border-radius: 6px; background: var(--shell); padding: 20px; transition: border-color 160ms var(--ease), background 160ms var(--ease); min-width: 0; }
   .image-panel.dragging { background: var(--violet-soft); border-color: var(--violet); }
-  .upload-empty { min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px 10px; }
-  .upload-icon { width: 60px; height: 60px; display: grid; place-items: center; border-radius: 14px; background: var(--violet-soft); color: var(--lavender); margin-bottom: 18px; }
+  .upload-empty { min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px 10px; }
+  .upload-icon { width: 40px; height: 40px; display: grid; place-items: center; color: var(--secondary); margin-bottom: 12px; }
   .upload-empty h2 { margin: 0 0 10px; font-size: 16px; font-weight: 600; }
   .upload-empty p { color: var(--secondary); line-height: 1.7; font-size: 12px; max-width: 280px; margin: 0 0 12px; }
   .upload-empty > span:last-child { color: var(--muted); font-size: 11px; }
   .upload-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 16px 0; }
-  .upload-actions button { min-height:40px; }
-  .source-preview { position: relative; min-height: 160px; border-radius: 8px; overflow: hidden; background: var(--ink); }
+  .upload-actions button { min-height:44px; }
+  .source-preview { position: relative; min-height: 160px; border-radius: 4px; overflow: hidden; background: var(--ink); }
   .source-preview > img { width: 100%; display: block; max-height: 340px; object-fit: contain; }
-  .clear-image { position: absolute; top: 8px; right: 8px; width:40px; height:40px; background: var(--shell); border: 1px solid var(--border); }
+  .clear-image { position: absolute; top: 8px; right: 8px; width:44px; height:44px; background: var(--shell); border: 1px solid var(--border-lit); }
   .source-caption { display: flex; justify-content: space-between; gap: 10px; align-items: center; margin-top: 12px; font-size: 11px; color: var(--secondary); }
   .source-caption > strong { font-weight: 500; min-width: 0; overflow-wrap: anywhere; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; overflow:hidden; line-height:1.5; }
   .source-caption > span { white-space: nowrap; font-size: 10px; color: var(--muted); }
@@ -208,24 +207,24 @@
   .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px; }
   .section-heading h2 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 15px; font-weight: 600; }
   .section-heading > span { color: var(--muted); font-size: 11px; }
-  .results-empty { min-height: 290px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--secondary); border: 1px solid var(--border); border-radius: 10px; background: var(--shell); padding: 28px; }
-  .results-empty h3 { font-size: 14px; font-weight: 600; color: var(--text); margin: 16px 0 8px; }
+  .results-empty { min-height: 180px; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; text-align: left; color: var(--secondary); border-top: 1px solid var(--border); padding: 24px 0; }
+  .results-empty h3 { font-size: 14px; font-weight: 600; color: var(--text); margin: 12px 0 8px; }
   .results-empty p { font-size: 12px; line-height: 1.7; max-width: 280px; margin: 0; }
-  .matches { display: flex; flex-direction: column; gap: 12px; }
+  .matches { display: flex; flex-direction: column; }
   .recognition-error { display: flex; align-items: center; gap: 10px; color: var(--red); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 18px; }
   .recognition-error p { font-size: 12px; line-height: 1.6; margin: 0; }
   .recognition-notice { color: var(--green); font-size: 12px; margin-top: 18px; }
   .recognition-history { border-top: 1px solid var(--border); padding-top: 24px; margin-top: 32px; }
   .history-empty { font-size: 12px; line-height: 1.6; color: var(--secondary); margin: 0; }
-  .history-rows { display: flex; flex-direction: column; gap: 10px; }
-  .history-row { display: grid; grid-template-columns: 56px minmax(0,1fr) auto; gap: 16px; align-items: center; border: 1px solid var(--border); border-radius: 9px; background: var(--shell); padding: 12px; }
+  .history-rows { display: flex; flex-direction: column; }
+  .history-row { display: grid; grid-template-columns: 56px minmax(0,1fr) auto; gap: 16px; align-items: center; border-bottom: 1px solid var(--border); padding: 14px 0; }
   .history-copy { min-width: 0; }
   .history-copy h3 { font-size: 13px; font-weight: 500; line-height: 1.5; overflow-wrap: anywhere; margin: 0 0 5px; }
   .history-copy p { display: flex; flex-wrap: wrap; gap: 5px; font-size: 11px; line-height: 1.5; color: var(--secondary); margin: 0 0 7px; overflow-wrap: anywhere; }
   .history-copy > div { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; color: var(--muted); font-size: 10px; }
   .history-copy > div > .mono { color: var(--cyan); }
   .history-actions { display: flex; align-items: center; gap: 6px; }
-  .history-actions .ghost-button { min-height: 34px; font-size: 11px; padding: 7px 10px; }
+  .history-actions .ghost-button { min-height: 36px; font-size: 11px; padding: 7px 10px; }
   @media (max-width: 1050px) { .recognition-workspace { grid-template-columns: minmax(0,1fr); } .source-preview > img { max-height: 320px; } }
-  @media (max-width: 640px) { h1 { font-size: 28px; } .recognize-header > button { font-size: 0; padding: 10px; } .provider-tabs { gap: 6px; } .provider-tabs button { flex-direction: column; align-items: flex-start; gap: 5px; padding: 10px 12px; font-size: 11px; } .image-panel { padding: 16px; } .upload-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); } .upload-actions button { font-size:11px; padding:10px 8px; } .upload-empty { min-height:180px; padding:16px 8px; } .results-empty { min-height:220px; padding:22px; } .history-row { grid-template-columns: 52px minmax(0,1fr); gap: 10px 14px; } .history-actions { grid-column: 2; } .history-cover { grid-row: 1 / span 2; align-self: start; } }
+  @media (max-width: 640px) { h1 { font-size: 28px; } .recognize-header > button { font-size: 0; padding: 12px; min-height: 44px; min-width: 44px; } .provider-tabs { gap: 6px; } .provider-tabs button { flex-direction: column; align-items: flex-start; gap: 5px; padding: 10px 12px; font-size: 11px; } .image-panel { padding: 16px; } .upload-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); } .upload-actions button { font-size:11px; padding:10px 8px; } .upload-empty { min-height:160px; padding:16px 8px; } .results-empty { min-height:160px; padding:20px 0; } .history-actions .ghost-button { min-height: 44px; } .history-row { grid-template-columns: 52px minmax(0,1fr); gap: 10px 14px; } .history-actions { grid-column: 2; } .history-cover { grid-row: 1 / span 2; align-self: start; } }
 </style>

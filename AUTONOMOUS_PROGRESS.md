@@ -229,8 +229,19 @@ native startup color, and validate the actual WebKit app with isolated data.
   as sent. Address delivery honesty/retry as a separate verified notification task.
   Avoid adding a notification center or forcing platform permission prompts.
 
-Next: commit Recognition/empty-copy/overlay polish; then implement the bounded
-feature queue in tested increments. Continue autonomous ordinary decisions.
+### Iteration 13 — make recognition's first action clear
+
+- The image/drop area remains the main enclosure. Service tabs, smaller upload
+  icon and unboxed empty Matches clarify where to begin. Results and saved history
+  use separated rows; similarity is a neutral value rather than always green.
+- Kept explicit provider/upload instructions, image/clipboard/history generation
+  guards and every action. Cover sizes remain 80/64px; mobile actions are larger.
+- Full 202-case suite and build pass. Captures cover empty, chosen image, explicit
+  mocked search, saved match and mobile results without overflow/errors. No image
+  was uploaded to a real recognition service. Independent review is clean.
+
+Next: commit empty-copy/overlay polish; implement Statistics, themes and updater
+status in bounded increments; fix the confirmed notification delivery-count gap.
 
 ## 0.1.4 validation — 22 October 2026
 

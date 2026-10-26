@@ -13,17 +13,17 @@
 </article>
 
 <style>
-  .match-card { display: grid; grid-template-columns: 80px minmax(0,1fr); gap: 16px; border: 1px solid var(--border); background: var(--shell); border-radius: 10px; padding: 14px; }
+  .match-card { display: grid; grid-template-columns: 80px minmax(0,1fr); gap: 16px; border-bottom: 1px solid var(--border); padding: 16px 0; }
   .match-info { min-width: 0; display: flex; flex-direction: column; justify-content: center; }
   h3 { font-size: 15px; line-height: 1.45; font-weight: 600; margin: 0 0 7px; overflow-wrap: anywhere; }
   .author { font-size: 12px; line-height: 1.5; color: var(--secondary); margin: 0 0 8px; }
   .match-details { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; margin-bottom: 14px; }
-  .similarity { color: var(--green); font-size: 14px; }
+  .similarity { color: var(--text); font-size: 14px; }
   .similarity > span { color: var(--secondary); font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 11px; margin-left: 4px; }
-  .episode { font-size: 11px; color: var(--cyan); }
+  .episode { font-size: 11px; color: var(--secondary); border-left: 2px solid var(--bookmark); padding-left: 8px; }
   .match-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
-  .match-actions > .ghost-button, .match-actions > .primary-button { min-height: 34px; padding: 7px 10px; font-size: 11px; }
+  .match-actions > .ghost-button, .match-actions > .primary-button { min-height: 36px; padding: 7px 10px; font-size: 11px; }
   .save-match { display: inline-flex; align-items: center; gap: 5px; background: transparent; border: 0; color: var(--secondary); font-size: 11px; padding: 7px 5px; }
   .save-match:hover:enabled { color: var(--lavender); }
-  @media (max-width: 520px) { .match-card { grid-template-columns: 64px minmax(0,1fr); gap: 12px; padding: 12px; } h3 { font-size: 13px; } .match-details { margin-bottom: 10px; } }
+  @media (max-width: 520px) { .match-card { grid-template-columns: 64px minmax(0,1fr); gap: 12px; padding: 16px 0; } .match-actions > .ghost-button, .match-actions > .primary-button, .save-match { min-height: 44px; } h3 { font-size: 13px; } .match-details { margin-bottom: 10px; } }
 </style>
