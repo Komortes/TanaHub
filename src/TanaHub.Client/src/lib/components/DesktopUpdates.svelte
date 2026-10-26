@@ -3,6 +3,8 @@
   import { desktopUpdates as updates } from '../desktop-updates.svelte';
   let { busy = false, onBusyChange }: { busy?: boolean; onBusyChange: (busy: boolean) => void } = $props();
   const mb = (bytes: number) => (bytes / 1024 / 1024).toFixed(1);
+  const checkStatus = $derived({ never: 'Not checked yet', checking: 'Checking for updates', available: 'Update available', current: 'Up to date', failed: 'Check failed', unsupported: 'Updates unavailable for this package' }[updates.checkOutcome]);
+  const date = (value: number) => new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(value);
   $effect(() => onBusyChange(['downloading', 'installing', 'installed'].includes(updates.phase)));
 </script>
 
@@ -11,6 +13,12 @@
   <p class="hint">Updates include previews and are verified before installation. Your library stays on this device.</p>
   {#if updates.message}<p class="hint" role="status">{updates.message}</p>{/if}
   {#if updates.error}<p class="update-error" role="alert">{updates.error}</p>{/if}
+  <div class="check-status" role="group" aria-label="Update check status">
+    <p class="hint check-row"><span>Last attempt</span>{#if updates.lastAttempt !== null}<time datetime={new Date(updates.lastAttempt).toISOString()}>{date(updates.lastAttempt)}</time>{:else}<span>Not yet</span>{/if}</p>
+    <p class="hint check-row"><span>Last successful check</span>{#if updates.lastSuccessfulCheck !== null}<time datetime={new Date(updates.lastSuccessfulCheck).toISOString()}>{date(updates.lastSuccessfulCheck)}</time>{:else}<span>Not yet</span>{/if}</p>
+    <p class="hint check-row"><span>Check status</span><span>{checkStatus}</span></p>
+    {#if updates.checkFailure && updates.checkFailure !== updates.error}<p class="update-error">{updates.checkFailure}</p>{/if}
+  </div>
   {#if updates.phase === 'downloading'}
     <progress max="100" value={updates.percent} aria-label="Update download progress"></progress>
     <p class="hint" aria-live="polite">Downloaded {mb(updates.downloaded)} MB{#if updates.total} of {mb(updates.total!)} MB ({updates.percent}%){/if}</p>
@@ -35,6 +43,9 @@
   .update-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .update-actions > button { min-height: 40px; max-width: 100%; white-space: normal; }
   .update-error { color: var(--red); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+  .check-status { margin-block: 16px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .check-row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; margin-block: 8px; }
+  .check-row > :last-child { color: var(--text); }
   progress { width: 100%; accent-color: var(--violet); }
   details { margin-top: 16px; font-size: 12px; } summary { cursor: pointer; }
   .release-notes { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 240px; overflow: auto; color: var(--secondary); line-height: 1.6; }

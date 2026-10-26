@@ -8,6 +8,7 @@ Changes are recorded here for each release.
 
 - A dedicated Statistics page under Home, with shared anime/manga filtering, local library metrics, charts and direct/back/forward navigation. Home keeps current titles and recommendations first.
 - Light and System appearance choices. System follows OS changes without rewriting the saved preference; existing Dark and High contrast settings remain supported.
+- Settings shows the latest update-check attempt, result and successful check time. Completed history survives restart/offline checks; automatic startup failures remain quiet elsewhere.
 
 ### Fixed
 

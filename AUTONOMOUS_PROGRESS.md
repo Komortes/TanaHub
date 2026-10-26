@@ -305,8 +305,31 @@ count and expose truthful behavior. Current app source is unreleased, version
   Independent observer/contract/routing reviews are clean. Actual native Light/
   System restart validation remains in the final combined app checkpoint.
 
-Next: commit verified updater history, then notification delivery honesty and
-final native/CI checks. Continue ordinary choices autonomously.
+### Iteration 18 — make update checks understandable
+
+- Settings shows last attempt, last successful feed check and the result. Startup
+  failures stay quiet outside Settings; manual retry remains explicit. Download,
+  signature/install and resource-cleanup behavior are unchanged.
+- A tiny versioned localStorage record retains only completed timestamps/outcome.
+  It never restores native update objects, install phases, pending requests or raw
+  failures. Invalid/future metadata and unavailable storage fall back safely.
+  A completed successful check can be later than its attempt; both valid time
+  orderings survive reload while a new check is pending.
+- Five missing-status cases failed first, then all 18 memory-stage updater tests
+  passed. Persistence red had seven failures and one denied-storage guard passing;
+  all 26 updater cases now pass. Svelte check, independent review and 320px view
+  are clean. The complete combined suite passes 237/237.
+
+### Broader review after iteration 18
+
+Statistics, appearance and update history now have separate useful roles without
+another global navigation destination, account dependency or update prompt. Full
+372 .NET/237 browser tests, build and 39-view QA pass. Continue with the confirmed
+notification support/count/retry defect, then verify the latest complete native
+app and CI. Preserve explicit installation/restart and the published 0.1.4 channel.
+
+Next: notification capability and truthful send result; Settings support hint;
+native Light/System/Stats/updater restart checks; full CI and documentation.
 
 ## 0.1.4 validation — 22 October 2026
 
