@@ -133,8 +133,21 @@ fix that separately, then recheck the complete browser suite.
   Build/16-view capture are clean; independent reviews approve both the grid and
   caption wrapper. Final narrow screenshots confirm the first-line alignment.
 
-Next priorities: lighter collection controls; search-clear focus; theme/startup
-consistency; broader empty/error/contrast review and native WebKit verification.
+### Iteration 8 — lighten collection controls
+
+- Removed promotional header subtitles. Media/status/preset controls use quiet
+  tabs with selected rules. Discover presets share a wrapping row with the actions
+  when space allows, bringing artwork higher on the page.
+- Search has a stronger boundary; sort/options/layout controls have 44px heights.
+  Filters, active counts, disclosure state and clear-filter focus remain intact.
+  Narrow headers explicitly stretch to preserve left alignment after stacking.
+- All 71 affected scenarios pass; the 320px primary toolbar stays below its 135px
+  height guard. The same 16 screenshots cover narrow/wide/contrast with no page
+  overflow or browser errors. Independent review found no actionable defect.
+- First GitHub CI batch now passes all four frontend/macOS/Windows/Linux jobs.
+
+Next priorities: search-clear focus; theme/startup consistency; broader empty/error/
+contrast review and native WebKit verification. Keep ordinary decisions autonomous.
 
 ## 0.1.4 validation — 22 October 2026
 

@@ -13,7 +13,6 @@
 <header class="page-header">
   <div>
     <h1>{page === 'library' ? 'My library' : 'Discover'}</h1>
-    <p>{page === 'library' ? 'Your stories, at your pace.' : 'Find your next favourite story.'}</p>
   </div>
   <div class="search-box">
     <Search size={18} strokeWidth={1.7} />
@@ -30,6 +29,7 @@
   </div>
   {#if total !== null}<span class="collection-count"><span class="mono">{total}</span> {total === 1 ? 'title' : 'titles'}</span>{/if}
 </div>
+<div class="collection-toolbar">
 {#if page === 'discover'}
   <div class="browse-presets" aria-label="Discover collections">
     {#each ['Popular', 'Trending', 'This year', 'Top rated', 'Upcoming', 'Manhwa'] as item}
@@ -37,7 +37,6 @@
     {/each}
   </div>
 {/if}
-<div class="collection-toolbar">
   {#if page === 'library'}
     <div class="status-tabs" aria-label="Library status">
       <button class:selected={status === ''} aria-pressed={status === ''} onclick={() => status = ''}>All titles</button>
@@ -74,42 +73,41 @@
 {/if}
 
 <style>
-  .browse-presets { display:flex; flex-wrap:wrap; gap:6px; padding:16px 0 0; }
-  .browse-presets button { background:transparent; color:var(--secondary); border:1px solid var(--border); padding:7px 12px; font-size:12px; }
-  .browse-presets button.selected { color:var(--lavender); border-color:var(--border-lit); background:var(--violet-soft); }
+  .browse-presets { display: flex; flex-wrap: wrap; flex: 1 1 430px; gap: 4px; min-width: 0; }
+  .browse-presets button { background: transparent; color: var(--secondary); border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: 10px; font-size: 12px; min-height: 44px; }
+  .browse-presets button.selected { color: var(--text); border-bottom-color: var(--bookmark); }
   .toolbar-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-left: auto; }
-  .options-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 38px; padding: 8px 10px; background: transparent; color: var(--secondary); border: 1px solid var(--border); font-size: 12px; }
+  .options-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 8px 10px; background: transparent; color: var(--secondary); border: 1px solid var(--border-lit); font-size: 12px; }
   .options-toggle[aria-expanded='true'], .options-toggle.active { color: var(--lavender); border-color: var(--border-lit); background: var(--violet-soft); }
   .options-toggle :global(.expanded) { transform: rotate(180deg); }
   .filter-count { min-width: 17px; padding: 1px 4px; border-radius: 4px; background: var(--violet-soft); color: var(--lavender); font-size: 10px; }
-  .collection-options { display: flex; flex: 0 0 100%; flex-wrap: wrap; gap: 12px 18px; align-items: center; padding: 14px; border: 1px solid var(--border); background: var(--shell); border-radius: 8px; }
+  .collection-options { display: flex; flex: 0 0 100%; flex-wrap: wrap; gap: 12px 18px; align-items: center; padding: 16px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: transparent; }
   .collection-options label { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--secondary); min-width: 0; }
-  .collection-options select, .genre-filter { font-size: 12px; min-height: 38px; padding: 6px 32px 6px 10px; max-width: 180px; min-width: 0; }
+  .collection-options select, .genre-filter { font-size: 12px; min-height: 44px; padding: 6px 32px 6px 10px; max-width: 180px; min-width: 0; }
   .clear-filters { background: transparent; border: 0; color: var(--secondary); display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 8px 0; }
-  .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; padding-bottom: 24px; }
-  h1 { font-size: 30px; font-weight: 700; line-height: 1.2; letter-spacing: -.035em; margin: 0 0 8px; }
-  p { margin: 0; color: var(--secondary); font-size: 14px; }
-  .search-box { display: flex; align-items: center; gap: 10px; background: var(--shell); border: 1px solid var(--border); border-radius: 9px; padding: 0 13px; height: 42px; width: 290px; color: var(--secondary); }
+  .page-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-bottom: 24px; }
+  h1 { font-size: 30px; font-weight: 650; line-height: 1.2; letter-spacing: -.035em; margin: 0; }
+  .search-box { display: flex; align-items: center; gap: 10px; background: var(--shell); border: 1px solid var(--border-lit); border-radius: 5px; padding: 0 0 0 13px; height: 44px; width: 290px; color: var(--secondary); }
   .search-box:focus-within { border-color: var(--violet); background: var(--elevated); }
   .search-box input { background: none; border: none; outline: none; color: var(--text); width: 100%; min-width: 0; padding: 0; font-size: 13px; }
-  .search-box button { padding: 4px; border: none; background: transparent; color: var(--secondary); display: flex; }
-  .type-row { display: flex; align-items: center; gap: 16px; border-bottom: 1px solid var(--border); padding-bottom: 18px; }
-  .segmented { display: flex; padding: 3px; border-radius: 9px; background: var(--shell); gap: 3px; }
-  .segmented button { padding: 9px 20px; background: transparent; border: none; font-size: 13px; color: var(--secondary); }
-  .segmented button.selected { background: var(--violet-soft); color: var(--lavender); }
-  .collection-count { font-size: 12px; color: var(--muted); }
-  .collection-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; justify-content: space-between; padding: 16px 0 20px; }
+  .search-box button { padding: 0; border: none; background: transparent; color: var(--secondary); display: grid; place-items: center; min-width: 44px; min-height: 42px; }
+  .type-row { display: flex; align-items: center; gap: 16px; border-bottom: 1px solid var(--border); }
+  .segmented { display: flex; gap: 4px; }
+  .segmented button { padding: 11px 16px; background: transparent; border: 0; border-bottom: 2px solid transparent; border-radius: 0; font-size: 13px; color: var(--secondary); min-height: 44px; }
+  .segmented button.selected { border-bottom-color: var(--bookmark); color: var(--text); }
+  .collection-count { font-size: 12px; color: var(--muted); margin-left: auto; }
+  .collection-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; justify-content: space-between; padding: 12px 0 22px; }
   .status-tabs { display: flex; gap: 4px; overflow-x: auto; max-width: 100%; min-width: 0; scrollbar-width: thin; padding: 3px; margin: -3px; }
-  .status-tabs button { border: 1px solid transparent; background: transparent; padding: 9px 12px; font-size: 12px; white-space: nowrap; color: var(--secondary); }
-  .status-tabs button.selected { background: var(--violet-soft); border-color: #9b6ef822; color: var(--lavender); }
+  .status-tabs button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; padding: 11px 10px; min-height: 44px; font-size: 12px; white-space: nowrap; color: var(--secondary); }
+  .status-tabs button.selected { border-bottom-color: var(--bookmark); color: var(--text); }
   .status-tabs button:hover:not(.selected) { background: var(--raised); color: var(--text); }
   .layout-toggle { display: flex; gap: 3px; }
-  .layout-toggle button { padding: 8px; display: flex; border: none; background: transparent; color: var(--secondary); }
+  .layout-toggle button { padding: 8px; display: flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; border: none; background: transparent; color: var(--secondary); }
   .layout-toggle button.selected { background: var(--violet-soft); color: var(--lavender); }
   .size-control { margin-left: auto; white-space: nowrap; }
   .size-control input { width: 94px; padding: 0; height: 32px; }
   .sort-select { font-size: 12px; display: flex; align-items: center; gap: 10px; color: var(--secondary); }
-  .sort-select select { min-height: 38px; padding: 6px 32px 6px 8px; font-size: 12px; min-width: 0; }
-  @media (max-width: 740px) { .page-header { flex-direction: column; gap: 18px; padding-bottom: 20px; } .search-box { width: 100%; } h1 { font-size: 28px; } }
+  .sort-select select { min-height: 44px; padding: 6px 32px 6px 8px; font-size: 12px; min-width: 0; }
+  @media (max-width: 740px) { .page-header { flex-direction: column; align-items: stretch; gap: 18px; padding-bottom: 20px; } .search-box { width: 100%; } h1 { font-size: 28px; } }
   @media (max-width: 520px) { .status-tabs { width: 100%; } .status-tabs button { padding-inline: 11px; } .collection-toolbar { gap: 10px; padding-bottom: 14px; } .toolbar-actions { width: 100%; gap: 8px; } .sort-select { gap: 6px; } .sort-select > span { display: none; } .layout-toggle { margin-left: auto; } .layout-toggle button { padding: 8px 7px; } .options-toggle { padding: 8px; } .options-toggle :global(svg:last-child) { display: none; } .collection-options label { flex: 1 1 100%; justify-content: space-between; } .collection-options select { max-width: calc(100% - 40px); flex: 1; } .size-control { margin-left: 0; } .size-control input { flex: 1; max-width: 160px; } }
 </style>
