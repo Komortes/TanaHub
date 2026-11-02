@@ -1,5 +1,40 @@
 # Autonomous development progress
 
+## Continued interface development — 2 November 2026
+
+The user renewed autonomous iterative development. Baseline main/origin is
+851cb41, with 22 prior iterations, 265 browser/391 .NET checks and successful
+all-platform CI at application commit 5be10f9. Keep small reviewed commits and
+authorized pushes; no new release, installer, signing/feed or production change.
+The old bounded heartbeat was deleted after completion; do not recreate it.
+
+Use isolated Playwright fixtures (Browser plugin not available), ports 1430/1432/
+1434 and `/private/tmp/tanahub-iteration-20261102`. The old temporary browser was
+cleaned up; the repository's matching Chromium headless shell is prepared under
+that directory's `playwright-browsers`. No personal data, accounts, notifications
+or recognition uploads are needed. Coordinate frontend edits around browser runs.
+
+### Current confirmed queue
+
+- Reset filters removes its focused control instead of returning to a usable
+  search field. Four pointer/Enter reproductions fail as intended.
+- A Library media-type filter with no results claims the entire library is empty
+  even when other saved types exist. Confirm the distinction and complete reset.
+- Audit pagination completion, title removal confirmation and delayed title
+  actions for focus/context loss. Separate reviewers are checking Home, Schedule,
+  Statistics, update clocks and title drafts before further changes.
+
+### Iteration 23 — keep search usable after resetting filters
+
+- Four browser reproductions confirmed Reset filters dropped focus when its
+  empty-state button disappeared, in Library and Discover after pointer/Enter.
+- Focus the persistent search input synchronously before clearing filters. Normal
+  focus scrolling keeps the destination visible in a narrow window, and no late
+  request callback can take a user's subsequent focus choice.
+- All four cases now pass (2.1s); results and navigation remain usable. Independent
+  read-only review found no actionable defect. Next: distinguish an empty media-
+  type filter from a genuinely empty library (two red cases, first-use guard green).
+
 ## Overnight interface iteration — 26 October 2026
 
 The user authorized autonomous iterative UI work, ordinary design decisions,

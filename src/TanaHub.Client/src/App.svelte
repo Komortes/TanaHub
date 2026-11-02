@@ -188,6 +188,7 @@
     } else { focusMainHeading(); retry += 1; }
   }
   function resetFilters() {
+    document.querySelector<HTMLInputElement>('main input[type="search"]')?.focus();
     search = '';
     if (page === 'library') { status = ''; tag = ''; customList = ''; }
     else { genre = ''; if (preset !== 'Popular') { preset = 'Popular'; sort = 'Popularity'; type = 'Anime'; } }
