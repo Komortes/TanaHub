@@ -141,6 +141,25 @@ needed. The native test bundle/profile uses a distinct QA identifier and data ro
   Final local Release build is clean. Visual QA found a separate narrow-window
   visibility issue with Keep title; reproduce and correct that before final QA.
 
+### Iteration 31 — make the safe confirmation action visible
+
+- Viewport QA at 320px found Keep title focused below the bottom edge after an
+  expanded date editor pushed confirmation downward. Two 320/360 reproductions
+  failed full-viewport assertions; the existing safe-cancel guard passed.
+- Use normal focus scrolling for the safe action, retaining the connected/body
+  guard. All three cases pass, including visible restoration after cancelling.
+  Eight repeated 320/1440 captures now have visible focus, no overlay, console
+  errors or horizontal overflow. Independent review confirms the narrow fix.
+
+### Broader review after iteration 31
+
+Focus ownership alone is insufficient when content expansion moves the next
+action outside the viewport. Visual QA verified this distinction and found one
+more confirmed instance: failed installation in Settings moves its focused retry
+button below 320px-window bounds. Reproduce that exact case and fix only its
+proven surface; do not change the unproven global-notice scrolling behavior.
+The remaining reviewed interactions are green; no new feature work is needed.
+
 ## Overnight interface iteration — 26 October 2026
 
 The user authorized autonomous iterative UI work, ordinary design decisions,

@@ -19,7 +19,7 @@ Changes are recorded here for each release.
 - Loading more titles or retrying a partial page preserves keyboard position at the first new title, with safe fallbacks for empty or overlapping pages and no focus theft after navigation.
 - Clearing date drafts keeps focus in the date editor without saving or moving the keyboard position to removal actions.
 - Related-title Refresh and Try again keep keyboard focus on the section heading; late responses preserve later focus and navigation.
-- Opening removal confirmation focuses Keep title; cancelling restores the original removal control without changing the library.
+- Opening removal confirmation focuses Keep title and scrolls it into view in narrow windows; cancelling restores the original removal control without changing the library.
 - Schedule retry focuses its persistent heading while loading and preserves later timezone choices and navigation.
 - Download completion and failed installation keep keyboard users on the next usable update action in Settings and the startup notice, respecting later focus and navigation.
 - Recognition-history refresh preserves successful concurrent saves and deletions while including newly fetched rows.

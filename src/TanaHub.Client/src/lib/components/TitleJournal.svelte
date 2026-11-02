@@ -95,7 +95,7 @@
     if (locked) return;
     confirmRemove = true;
     await tick();
-    if (keepButton?.isConnected && document.activeElement === document.body) keepButton.focus({ preventScroll: true });
+    if (keepButton?.isConnected && document.activeElement === document.body) keepButton.focus();
   }
   async function keepTitle() { confirmRemove = false; await tick(); panel?.querySelector<HTMLElement>('#remove-title')?.focus({ preventScroll: true }); }
 </script>
