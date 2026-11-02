@@ -2,7 +2,7 @@
   import { artwork } from '../artwork';
   import { tick } from 'svelte';
   import { Plus, Star, BookOpen, Play } from '@lucide/svelte';
-  import { formatLabel, statusLabel, unitLabel, maxProgress } from '../types';
+  import { formatLabel, statusLabel, unitLabel, maxProgress, mediaKey } from '../types';
   import type { Entry, Layout, Media } from '../types';
   let { media, entry, layout, busy = false, onOpen, onProgress, onRate, onAdd }:
     { media: Media; entry?: Entry; layout: Layout; busy?: boolean; onOpen: () => void; onProgress: () => Promise<void>; onRate: (anchor: DOMRect) => void; onAdd: () => Promise<void> } = $props();
@@ -30,7 +30,7 @@
   ].filter(Boolean).join(' · '));
 </script>
 
-<article bind:this={card} class="media-card" class:list-card={layout === 'list'} aria-label={media.title}>
+<article bind:this={card} class="media-card" class:list-card={layout === 'list'} aria-label={media.title} data-media-id={mediaKey(media.id)}>
   <button class="poster" onclick={onOpen} aria-label={`Open ${media.title}`}>
     {#if media.posterUrl && !failed}
       <img use:artwork={{ url: media.posterUrl, thumbnail: media.thumbnailUrl, preview: media.previewUrl }} alt={`Cover of ${media.title}`} loading="lazy" decoding="async" onerror={() => failed = true} />

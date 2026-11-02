@@ -49,6 +49,30 @@ or recognition uploads are needed. Coordinate frontend edits around browser runs
   reproductions fail; two late focus/navigation guards already pass. Also queue
   verified leaf-component focus fixes for dates, relations, Schedule and updates.
 
+### Iteration 25 — keep position after loading more titles
+
+- Library and Discover lost focus after the final Load more button disappeared.
+  Four pointer/Enter reproductions failed; two existing later-search/navigation
+  guards passed. Preserve the triggering control and visible IDs around the
+  request, then focus the first newly appended title only while focus is still
+  owned by that operation. Stable canonical media IDs handle duplicate names.
+- Apply the same behavior to partial-page retry; retain earlier cards and retry
+  the same page. If no new IDs arrive, keep a connected trigger or the last
+  retained title, with search as a final fallback.
+- Independent review found the empty/overlapping final-page gap in the first
+  fix; two further reproductions failed alongside eight passing guards. The
+  follow-up resolves both. All 17 pagination/collection cases pass (5.8s).
+
+### Broader review after iteration 25
+
+The current first-use distinction and collection recovery are now consistent.
+Fresh isolated audits found additional concrete focus gaps in title dates,
+related-title refresh/retry, safe removal confirmation, Schedule retry and update
+action replacement. Their red cases are recorded before production changes;
+small leaf changes pass targeted guards and have independent cross-review.
+No feature expansion, provider/account change or redesign is needed. Finish
+those verified interactions, then combine the full suite/build and visual QA.
+
 ## Overnight interface iteration — 26 October 2026
 
 The user authorized autonomous iterative UI work, ordinary design decisions,

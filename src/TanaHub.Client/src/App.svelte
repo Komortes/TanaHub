@@ -178,13 +178,28 @@
   }
   function loadMore() {
     if (loading || loadingMore || (page !== 'library' && page !== 'discover')) return;
-    loadingMore = true; void load({ page, type, status, search: search.trim(), sort, filters: collectionFilters }, requestVersion, currentPage + 1);
+    void loadCollectionPage({ page, type, status, search: search.trim(), sort, filters: collectionFilters }, requestVersion, currentPage + 1);
+  }
+  async function loadCollectionPage(query: CollectionQuery, version: number, next: number) {
+    const focused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousIds = new Set(visibleMedia.map(media => mediaKey(media.id)));
+    loadingMore = true;
+    await load(query, version, next);
+    await tick();
+    if (version !== requestVersion || page !== query.page || selected || rating || !focused
+      || (document.activeElement !== document.body && document.activeElement !== focused)) return;
+    const firstNew = visibleMedia.find(media => !previousIds.has(mediaKey(media.id)));
+    const target = firstNew
+      ? document.querySelector<HTMLElement>(`article[data-media-id="${CSS.escape(mediaKey(firstNew.id))}"] .poster`)
+      : focused.isConnected && !focused.matches(':disabled') ? focused
+        : document.querySelector<HTMLElement>('.collection .media-card:last-child .poster')
+          ?? document.querySelector<HTMLInputElement>('main input[type="search"]');
+    target?.focus();
   }
   function retryCollection() {
     if (loading || loadingMore) return;
     if (failedCollection && failedCollection.version === requestVersion && failedCollection.next > 1) {
-      loadingMore = true;
-      void load(failedCollection.query, failedCollection.version, failedCollection.next);
+      void loadCollectionPage(failedCollection.query, failedCollection.version, failedCollection.next);
     } else { focusMainHeading(); retry += 1; }
   }
   function resetFilters() {
