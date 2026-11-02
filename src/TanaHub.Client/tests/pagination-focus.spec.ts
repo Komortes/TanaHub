@@ -91,8 +91,10 @@ test('retrying a failed final page focuses the first new title without duplicati
   const loadMore = page.getByRole('button', { name: 'Load more titles', exact: true });
   await loadMore.click();
   await expect(page.getByRole('alert')).toContainText('The last page is temporarily unavailable.');
-  await expect(loadMore).toBeFocused();
-  await page.getByRole('button', { name: 'Try again', exact: true }).click();
+  const retry = page.getByRole('button', { name: 'Try again', exact: true });
+  await expect(retry).toBeFocused();
+  await expect(loadMore).toHaveCount(0);
+  await retry.click();
   await expect(cards).toHaveCount(total);
   await expect(cards.nth(48).getByRole('button', { name: /^Open / })).toBeFocused();
   expect(library.requests.filter(request => request.method === 'library.list').map(request => request.params.page)).toEqual([1, 2, 2]);

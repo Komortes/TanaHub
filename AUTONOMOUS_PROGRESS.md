@@ -177,6 +177,24 @@ The remaining reviewed interactions are green; no new feature work is needed.
   viewport intersection. The original offscreen failure still exceeds that
   bound. The corrected final updater run passes all 52/52 (15.7s).
 
+### Iteration 33 — show pagination failures where more results were requested
+
+- Confirmed a mouse-visible recovery gap: after page 2 failed, the ordinary Load
+  more button remained focused at the footer while its error/Retry was over
+  3,000px above the viewport. Library1440 and Discover320 reproductions failed
+  visibility, focus and obsolete-action assertions before the change.
+- Render page>1 failures in the existing footer, replacing Load more with one
+  Retry. Keep initial page errors above the collection; a shared snippet retains
+  identical messages/action state. The existing pagination ownership guards now
+  select the matching failed-page Retry, preserving deliberate later navigation.
+- All 19 new/current collection cases and three older pagination/re-filter guards
+  pass. Repeat failure retries the same page; loaded cards retain IDs/order and
+  recovery introduces no duplicates. Fixed 320/1440 captures show error/Retry
+  fully visible, no overflow and no runtime/console errors.
+- Re-fetched main: no upstream changes to reconcile. Final combined 305-case
+  browser run and isolated macOS Release build are in progress; no further source
+  edits are planned unless those checks reveal a concrete issue.
+
 ## Overnight interface iteration — 26 October 2026
 
 The user authorized autonomous iterative UI work, ordinary design decisions,

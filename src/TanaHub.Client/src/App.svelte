@@ -89,6 +89,7 @@
   let toastTimeout: ReturnType<typeof setTimeout>;
   const visibleMedia = $derived(page === 'library' ? entries.map(entry => entry.media) : catalog);
   const selectedEntry = $derived(selected ? knownEntries[mediaKey(selected.id)] : undefined);
+  const partialCollectionError = $derived(!!error && !!failedCollection && failedCollection.next > 1);
   const hasCollectionFilters = $derived(!!search.trim() || (page === 'library' ? !!(type || status || tag || customList) : page === 'discover' && !!(genre || preset !== 'Popular')));
   const collectionFilters = $derived(page === 'library' ? { sort: librarySort, tag: tag || undefined, customList: customList || undefined } : { genres: genre ? [genre] : [], seasonYear: preset === 'This year' ? new Date().getFullYear() : undefined, releaseStatus: preset === 'Upcoming' ? 'NotYetReleased' : undefined, countryCode: preset === 'Manhwa' ? 'KR' : undefined });
 
@@ -189,11 +190,12 @@
     if (version !== requestVersion || page !== query.page || selected || rating || !focused
       || (document.activeElement !== document.body && document.activeElement !== focused)) return;
     const firstNew = visibleMedia.find(media => !previousIds.has(mediaKey(media.id)));
-    const target = firstNew
-      ? document.querySelector<HTMLElement>(`article[data-media-id="${CSS.escape(mediaKey(firstNew.id))}"] .poster`)
-      : focused.isConnected && !focused.matches(':disabled') ? focused
-        : document.querySelector<HTMLElement>('.collection .media-card:last-child .poster')
-          ?? document.querySelector<HTMLInputElement>('main input[type="search"]');
+    const target = failedCollection?.version === version && failedCollection.next === next
+      ? document.querySelector<HTMLElement>('.collection .load-error button')
+      : firstNew ? document.querySelector<HTMLElement>(`article[data-media-id="${CSS.escape(mediaKey(firstNew.id))}"] .poster`)
+        : focused.isConnected && !focused.matches(':disabled') ? focused
+          : document.querySelector<HTMLElement>('.collection .media-card:last-child .poster')
+            ?? document.querySelector<HTMLInputElement>('main input[type="search"]');
     target?.focus();
   }
   function retryCollection() {
@@ -340,6 +342,10 @@
   }
 </script>
 
+{#snippet collectionError(more: boolean)}
+  <div class="load-error" role="alert"><AlertCircle size={20} /><div><strong>{more ? 'Could not load more titles' : 'Could not load your titles'}</strong><p>{error}</p></div><button class="ghost-button" disabled={loading || loadingMore} onclick={retryCollection}><RefreshCw size={15} />{loadingMore ? 'Retrying…' : 'Try again'}</button></div>
+{/snippet}
+
 <a class="skip-link" href="#main-content" onclick={(event) => { event.preventDefault(); focusMainHeading(); }}>Skip to content</a>
 <div class="app-shell">
   <Sidebar {page} onNavigate={navigate} />
@@ -366,7 +372,7 @@
       <div class="page-enter">
         <CollectionToolbar {page} bind:type bind:status bind:search bind:sort bind:layout bind:coverSize bind:genre bind:preset bind:librarySort bind:tag bind:customList emptyLibrary={page === 'library' && !type && total === 0 && !hasCollectionFilters} tags={organizationFilters.tags} customLists={organizationFilters.customLists} {total} />
         <section class="collection" aria-label={page === 'library' ? 'Your library titles' : 'Catalog titles'} aria-busy={loading}>
-          {#if error}<div class="load-error" role="alert"><AlertCircle size={20} /><div><strong>{failedCollection && failedCollection.next > 1 ? 'Could not load more titles' : 'Could not load your titles'}</strong><p>{error}</p></div><button class="ghost-button" disabled={loading || loadingMore} onclick={retryCollection}><RefreshCw size={15} />{loadingMore ? 'Retrying…' : 'Try again'}</button></div>{/if}
+          {#if error && !partialCollectionError}{@render collectionError(false)}{/if}
           {#if loading}<div class="media-grid skeleton-grid" style:--cover-size={`${coverSize}px`} role="status" aria-label="Loading titles">{#each Array(8) as _}<div class="skeleton-card"><div></div><span></span><span></span></div>{/each}</div>
           {:else if !visibleMedia.length && !error}
             <div class="empty-state"><div class="empty-icon">{#if hasCollectionFilters}<SearchX size={32} strokeWidth={1.3} />{:else if page === 'discover'}<Compass size={32} strokeWidth={1.3} />{:else}<BookOpen size={32} strokeWidth={1.3} />{/if}</div><h2>{hasCollectionFilters ? 'No matching titles' : page === 'discover' ? 'No titles found' : 'Your library is empty'}</h2><p>{hasCollectionFilters ? 'Try changing or resetting your filters.' : page === 'discover' ? 'Try another search or media type.' : 'Find a title in Discover, or import an existing list.'}</p>{#if hasCollectionFilters}<button class="ghost-button" onclick={resetFilters}>Reset filters</button>{:else if page === 'library'}<div class="empty-actions"><button class="primary-button" onclick={() => navigate('discover')}><Compass size={16} />Discover titles</button><button class="ghost-button" onclick={openImport}>Import a list</button></div><p class="onboarding-note">No account required. Your library stays on this device.</p>{/if}</div>
@@ -374,7 +380,8 @@
             <div class:media-grid={layout === 'grid'} class:media-list={layout === 'list'} style:--cover-size={`${coverSize}px`}>
               {#each visibleMedia as media (mediaKey(media.id))}<MediaCard {media} entry={knownEntries[mediaKey(media.id)]} {layout} busy={busyIds.includes(mediaKey(media.id))} onOpen={() => void openDetails(media)} onProgress={() => cardAction(() => mutate(media.id, () => api.progress(media.id), 'Progress saved'))} onRate={(anchor) => rating = { entry: knownEntries[mediaKey(media.id)], anchor }} onAdd={() => cardAction(() => mutate(media.id, () => api.add(media.id), 'Saved to your library'))} />{/each}
             </div>
-            {#if hasNext}<div class="load-more"><button class="ghost-button" disabled={loadingMore} onclick={loadMore}>{loadingMore ? 'Loading…' : 'Load more titles'}</button></div>{/if}
+            {#if partialCollectionError}<div class="load-more">{@render collectionError(true)}</div>
+            {:else if hasNext}<div class="load-more"><button class="ghost-button" disabled={loadingMore} onclick={loadMore}>{loadingMore ? 'Loading…' : 'Load more titles'}</button></div>{/if}
           {/if}
         </section>
       </div>

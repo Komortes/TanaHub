@@ -23,6 +23,7 @@ Changes are recorded here for each release.
 - Schedule retry focuses its persistent heading while loading and preserves later timezone choices and navigation.
 - Download completion and failed installation keep keyboard users on the next usable update action in Settings and the startup notice, respecting later focus and navigation.
 - Failed installation in Settings scrolls its retry action into view after the error message expands, including narrow windows.
+- Failed pagination shows its error and a single Retry where Load more was, preserving loaded cards and retrying the same page.
 - Recognition-history refresh preserves successful concurrent saves and deletions while including newly fetched rows.
 - Cancelling or completing MAL XML import restores keyboard focus to the import control; failed imports remain usable for retry.
 - Recognition ignores image paste while title details are open and discards clipboard requests from a previous visit, including delayed failures after Back.
