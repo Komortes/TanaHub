@@ -14,7 +14,7 @@ cleaned up; the repository's matching Chromium headless shell is prepared under
 that directory's `playwright-browsers`. No personal data, accounts, notifications
 or recognition uploads are needed. Coordinate frontend edits around browser runs.
 
-### Current confirmed queue
+### Confirmed queue at the start of this run
 
 - Reset filters removes its focused control instead of returning to a usable
   search field. Four pointer/Enter reproductions fail as intended.
@@ -194,6 +194,37 @@ The remaining reviewed interactions are green; no new feature work is needed.
 - Re-fetched main: no upstream changes to reconcile. Final combined 305-case
   browser run and isolated macOS Release build are in progress; no further source
   edits are planned unless those checks reveal a concrete issue.
+
+### Final verified checkpoint — 2 November 2026
+
+- Completed 11 further iterations (23–33), committed and pushed. The tested
+  application commit is **6b346c139f811aee8993ad3080e1068591bde473**. Re-fetched
+  main had no upstream divergence; no other changes were overwritten.
+- GitHub CI **41453755610** passes all four jobs: frontend/browser and core/native
+  shell on macOS, Windows and Ubuntu. Logs confirm **305 browser cases pass
+  without retries**, zero Svelte errors/warnings, transport success, and **391
+  .NET + 6 Rust tests on each OS**. Version/tooling/format checks pass.
+- Local final complete browser run passes **305/305 (2.0m)**. Final macOS QA
+  Release build has zero Svelte diagnostics and passes deep/strict local signing
+  verification. Fourteen reviewed recovery/updater/footer viewport captures and
+  the 320/360 regression cases verify visible focus, readable inline errors,
+  retained data and no runtime errors or horizontal overflow.
+- **Interactive native UI verification did not run:** the Mac was locked and
+  computer use could not access the window. Do not describe that check as passed.
+  The isolated QA app was stopped after the blocked attempt; its runtime log is
+  empty. The exact bundled core readback preserves all 12 saved library fields,
+  including progress 3, Watching, Unicode notes and the saved start date;
+  notifications remain disabled. No real install, alert, account or upload ran.
+- Test servers 1430/1432/1434 and the QA app are stopped. Logs, traces, captures,
+  build and readback evidence remain under
+  `/private/tmp/tanahub-iteration-20261102`. Production data and release/signing/
+  feed/workflow configuration are untouched; all versions remain 0.1.4 and these
+  source changes are unreleased. No recurring automation was created.
+- This final follow-up changes the journal only and records completed CI; the
+  application tree remains the tested commit above. A future continuation can
+  perform native UI checks when the Mac is unlocked, then choose a reproduced
+  issue or concrete new user direction. The confirmed queue from this run is
+  handled; do not invent work to keep the session active.
 
 ## Overnight interface iteration — 26 October 2026
 
