@@ -114,7 +114,13 @@ for (const width of [320, 360]) {
     await expect(page.getByRole('alert')).toContainText('Installer is busy');
     await expect(install).toBeFocused();
     await page.screenshot({ path: testInfo.outputPath('visible-install-retry.png') });
-    await expect(install).toBeInViewport({ ratio: 1 });
+    await expect(install).toBeInViewport({ ratio: .99 });
+    // Allow at most one CSS pixel of browser scroll rounding.
+    const box = (await install.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(-1);
+    expect(box.y).toBeGreaterThanOrEqual(-1);
+    expect(box.x + box.width).toBeLessThanOrEqual(width + 1);
+    expect(box.y + box.height).toBeLessThanOrEqual(901);
     expect(await calls(page)).toContain('resume_after_update');
     expect(await calls(page)).not.toContain('plugin:process|restart');
   });

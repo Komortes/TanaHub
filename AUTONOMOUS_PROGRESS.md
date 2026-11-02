@@ -171,6 +171,11 @@ The remaining reviewed interactions are green; no new feature work is needed.
   no errors/overlay/overflow. At 320px the failed-install retry moved from below
   900px to 722–762px. Independent review is clean. Before final packaging, check
   whether partial-page errors appear where users request more results.
+- Validation follow-up: the first combined run was 51/52; the 360px viewport
+  assertion rejected a 0.2 CSS-pixel browser scroll-rounding difference. Bound
+  the permitted rounding to at most one CSS pixel on every edge, while retaining
+  viewport intersection. The original offscreen failure still exceeds that
+  bound. The corrected final updater run passes all 52/52 (15.7s).
 
 ## Overnight interface iteration — 26 October 2026
 
