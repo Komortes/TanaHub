@@ -18,6 +18,7 @@
   let error = $state('');
   let notificationError = $state('');
   let refresh = $state(0);
+  let headingElement = $state<HTMLHeadingElement>();
   let generation = 0;
   const time = (value: string) => new Intl.DateTimeFormat(undefined, { timeZone: zone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(value));
   const heading = (value: string) => {
@@ -54,14 +55,15 @@
       .finally(() => { if (current === generation) loading = false; });
     return () => { if (generation === current) generation += 1; };
   });
+  function retry() { headingElement?.focus({ preventScroll: true }); refresh += 1; }
 </script>
 
-<header class="schedule-header"><h1>Schedule</h1><button class="ghost-button" aria-label="Refresh schedule" onclick={() => refresh += 1} disabled={loading}><RefreshCw size={15} />Refresh</button></header>
+<header class="schedule-header"><h1 bind:this={headingElement} tabindex="-1">Schedule</h1><button class="ghost-button" aria-label="Refresh schedule" onclick={() => refresh += 1} disabled={loading}><RefreshCw size={15} />Refresh</button></header>
 <div class="schedule-controls"><div class="range-tabs" aria-label="Schedule range">{#each ranges as option}<button class:selected={range === option} aria-pressed={range === option} onclick={() => range = option}>{option}</button>{/each}</div><div class="schedule-filters"><label class="library-filter"><input type="checkbox" bind:checked={libraryOnly} />My library only</label><label class="zone-label"><Clock3 size={14} /><select aria-label="Schedule timezone" bind:value={zone}>{#each zones as item}<option value={item}>{item === localZone ? `Local · ${item.replaceAll('_', ' ')}` : item.replaceAll('_', ' ')}</option>{/each}</select></label></div></div>
 <div class="schedule-caption"><span><CalendarDays size={14} />{range === 'Today' ? 'Remaining today' : range === 'Tomorrow' ? 'Tomorrow’s releases' : range === 'This week' ? 'Next 7 days' : 'The following 7 days'}</span><span>AniList airing · {zone.replaceAll('_', ' ')}</span></div>
 {#if notificationError}<p class="error-text" role="status">{notificationError}</p>{/if}
 <section aria-label="Upcoming episodes" aria-busy={loading}>
-  {#if error}<div class="load-error" role="alert"><AlertCircle size={20} /><div><strong>The schedule could not load</strong><p>{error}</p></div><button class="ghost-button" onclick={() => refresh += 1}>Try again</button></div>
+  {#if error}<div class="load-error" role="alert"><AlertCircle size={20} /><div><strong>The schedule could not load</strong><p>{error}</p></div><button class="ghost-button" onclick={retry}>Try again</button></div>
   {:else if loading}<div class="schedule-skeletons" role="status" aria-label="Loading airing schedule">{#each Array(4) as _}<span></span>{/each}</div>
   {:else if !groups.length}<div class="empty-state"><div class="empty-icon"><CalendarDays size={30} strokeWidth={1.4} /></div><h2>No upcoming episodes</h2><p>{libraryOnly ? 'No titles in your library are airing in this period. Try another date range or turn off the library filter.' : 'No episodes are scheduled in this period. Try another date range.'}</p></div>
   {:else}<div class="schedule-days">{#each groups as items}<section class="day-group" aria-label={heading(items[0].airingAt)}><h2>{heading(items[0].airingAt)}<span>{items.length} {items.length === 1 ? 'episode' : 'episodes'}</span></h2><div class="schedule-rows">{#each items as item (`${item.mediaId}:${item.episode}:${item.airingAt}`)}<button class="schedule-row" aria-label={`Open ${item.title}, episode ${item.episode}`} title={item.title} onclick={() => onOpenId(item.mediaId)}><span class="airing-time mono">{time(item.airingAt)}</span><span class="schedule-cover"><MiniCover url={item.posterUrl} title={item.title} /></span><span class="episode-info"><strong>{item.title}</strong><span><span class="mono">EP {item.episode}</span><span class="format" title={formatLabel(item.format)}>{formatLabel(item.format)}</span>{#if item.inLibrary}<span class="library-badge"><BookMarked size={11} />{item.status ? statusLabel(item.status, 'Anime') : 'In library'}</span>{/if}</span></span><span class="row-chevron" aria-hidden="true">›</span></button>{/each}</div></section>{/each}</div>{/if}

@@ -116,6 +116,16 @@ and updater action focus gaps, then verify this combined source in visual/native
 QA and CI. No backend, database, dependency or release configuration change is
 needed. The native test bundle/profile uses a distinct QA identifier and data root.
 
+### Iteration 29 — retry Schedule with a usable focus target
+
+- Schedule Try again removed its focused error action. Focus the persistent
+  Schedule h1 before starting an explicit retry, matching Home/collection recovery.
+- Pointer and Enter red cases now pass, alongside later-timezone/navigation
+  guards. The four Schedule focus scenarios and the full 299-case suite pass.
+  No late request moves focus, and range/timezone/reminder behavior is unchanged.
+- Independent cross-review is clean. Next: preserve the next updater action
+  after download or failed installation without taking later chosen focus.
+
 ## Overnight interface iteration — 26 October 2026
 
 The user authorized autonomous iterative UI work, ordinary design decisions,
