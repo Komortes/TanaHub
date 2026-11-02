@@ -49,6 +49,11 @@
     start = dayValue(entry.startedAt); completion = dayValue(entry.completedAt); error = ''; editing = false;
     await tick(); toggle?.focus({ preventScroll: true });
   }
+  function clearDates() {
+    if (locked) return;
+    input?.focus({ preventScroll: true });
+    start = ''; completion = ''; error = '';
+  }
   async function save() {
     if (locked || !dirty || invalidOrder) return;
     saving = true; error = '';
@@ -79,7 +84,7 @@
       <p id="dates-help" class="date-help">Dates use your device's local timezone. Saving dates keeps your status and progress.</p>
       {#if invalidOrder}<p class="error-text" id="dates-validation" role="alert">Completion date cannot be before the start date.</p>{/if}
       {#if error}<p class="error-text" role="alert">{error}</p>{/if}
-      <div class="field-actions">{#if dirty}<button class="text-button" type="button" disabled={locked} onclick={discard}>Discard dates draft</button>{/if}<button class="text-button" type="button" disabled={locked || (!start && !completion)} onclick={() => { start = ''; completion = ''; error = ''; }}>Clear dates</button><button class="ghost-button" type="submit" disabled={locked || !dirty || invalidOrder}><Save size={13} />{saving ? 'Saving…' : 'Save dates'}</button></div>
+      <div class="field-actions">{#if dirty}<button class="text-button" type="button" disabled={locked} onclick={discard}>Discard dates draft</button>{/if}<button class="text-button" type="button" disabled={locked || (!start && !completion)} onclick={clearDates}>Clear dates</button><button class="ghost-button" type="submit" disabled={locked || !dirty || invalidOrder}><Save size={13} />{saving ? 'Saving…' : 'Save dates'}</button></div>
     </form>
   {:else if entry.startedAt || entry.completedAt}
     <dl class="dates"><CalendarDays size={13} />{#if dateLabel(entry.startedAt)}<div><dt>Started</dt><dd class="mono">{dateLabel(entry.startedAt)}</dd></div>{/if}{#if dateLabel(entry.completedAt)}<div><dt>Completed</dt><dd class="mono">{dateLabel(entry.completedAt)}</dd></div>{/if}</dl>

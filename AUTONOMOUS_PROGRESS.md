@@ -73,6 +73,17 @@ small leaf changes pass targeted guards and have independent cross-review.
 No feature expansion, provider/account change or redesign is needed. Finish
 those verified interactions, then combine the full suite/build and visual QA.
 
+### Iteration 26 — clear date drafts without losing the editor
+
+- Clear dates could disable its own focused button and remove draft actions,
+  leaving the next Tab at Remove from library. Move focus synchronously to the
+  persistent start-date field before clearing the local values.
+- A dedicated reproduction failed first and now passes. The seven title-action
+  cases and 19 existing date/draft/removal guards pass; clearing remains a local
+  draft action, with existing Save/Discard and date validation intact.
+- Independent cross-review found no actionable defect. Continue with related-
+  title refresh/retry focus, then the safe removal-confirmation entry point.
+
 ## Overnight interface iteration — 26 October 2026
 
 The user authorized autonomous iterative UI work, ordinary design decisions,
