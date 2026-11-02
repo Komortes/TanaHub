@@ -95,6 +95,27 @@ those verified interactions, then combine the full suite/build and visual QA.
   and artwork retry behavior remain intact. Independent cross-review is clean.
 - Next: enter removal confirmation on the safe Keep title action.
 
+### Iteration 28 — start removal confirmation on Keep title
+
+- Opening the inline confirmation removed its focused trigger. Focus Keep title
+  after render only while focus is still on body and the button is connected;
+  cancellation restores Remove from library without making a removal request.
+- The dedicated red case now passes. Cross-review confirms explicit destructive
+  confirmation remains required and navigation/unmount cannot receive stale focus.
+- Full browser suite passes 299/299. A subsequent Svelte check exposed a conditional
+  ref warning; changed only keepButton to a $state ref, then all 19 title/new-user
+  cases pass again. The exact final native Release build has zero Svelte errors
+  and warnings; its deep/strict local signature verification passes.
+
+### Broader review after iteration 28
+
+The current collection and title editing/recovery queue is covered by reproduced
+cases and existing draft/data/keyboard guards. Keep the one shared native update
+resource and explicit installation consent. Finish the already confirmed Schedule
+and updater action focus gaps, then verify this combined source in visual/native
+QA and CI. No backend, database, dependency or release configuration change is
+needed. The native test bundle/profile uses a distinct QA identifier and data root.
+
 ## Overnight interface iteration — 26 October 2026
 
 The user authorized autonomous iterative UI work, ordinary design decisions,

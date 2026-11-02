@@ -19,6 +19,7 @@ Changes are recorded here for each release.
 - Loading more titles or retrying a partial page preserves keyboard position at the first new title, with safe fallbacks for empty or overlapping pages and no focus theft after navigation.
 - Clearing date drafts keeps focus in the date editor without saving or moving the keyboard position to removal actions.
 - Related-title Refresh and Try again keep keyboard focus on the section heading; late responses preserve later focus and navigation.
+- Opening removal confirmation focuses Keep title; cancelling restores the original removal control without changing the library.
 - Recognition-history refresh preserves successful concurrent saves and deletions while including newly fetched rows.
 - Cancelling or completing MAL XML import restores keyboard focus to the import control; failed imports remain usable for retry.
 - Recognition ignores image paste while title details are open and discards clipboard requests from a previous visit, including delayed failures after Back.

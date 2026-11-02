@@ -19,6 +19,7 @@
   let error = $state('');
   let confirmRemove = $state(false);
   let panel: HTMLElement;
+  let keepButton = $state<HTMLButtonElement>();
   const locked = $derived(busy || !!saving);
   const tags = $derived(parseItems(tagsText));
   const lists = $derived(parseItems(listsText));
@@ -90,6 +91,12 @@
       }
     }
   }
+  async function askRemove() {
+    if (locked) return;
+    confirmRemove = true;
+    await tick();
+    if (keepButton?.isConnected && document.activeElement === document.body) keepButton.focus({ preventScroll: true });
+  }
   async function keepTitle() { confirmRemove = false; await tick(); panel?.querySelector<HTMLElement>('#remove-title')?.focus({ preventScroll: true }); }
 </script>
 
@@ -136,7 +143,7 @@
   <TitleDates {entry} busy={locked} onSave={onDates} />
   {#if error}<p class="error-text" role="alert">{error}</p>{/if}
   <div class="remove-row">
-    {#if confirmRemove}<div class="confirmation"><p>Remove this title and its saved progress, notes and review?</p><div><button class="ghost-button" onclick={keepTitle} disabled={locked}>Keep title</button><button class="danger-button" onclick={() => change('remove', onRemove)} disabled={locked}>{saving === 'remove' ? 'Removing…' : 'Remove title'}</button></div></div>{:else}<button id="remove-title" class="remove-button" onclick={() => confirmRemove = true} disabled={locked}><Trash2 size={14} />Remove from library</button>{/if}
+    {#if confirmRemove}<div class="confirmation"><p>Remove this title and its saved progress, notes and review?</p><div><button bind:this={keepButton} class="ghost-button" onclick={keepTitle} disabled={locked}>Keep title</button><button class="danger-button" onclick={() => change('remove', onRemove)} disabled={locked}>{saving === 'remove' ? 'Removing…' : 'Remove title'}</button></div></div>{:else}<button id="remove-title" class="remove-button" onclick={() => void askRemove()} disabled={locked}><Trash2 size={14} />Remove from library</button>{/if}
   </div>
 </section>
 
