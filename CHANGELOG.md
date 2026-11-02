@@ -21,6 +21,7 @@ Changes are recorded here for each release.
 - Related-title Refresh and Try again keep keyboard focus on the section heading; late responses preserve later focus and navigation.
 - Opening removal confirmation focuses Keep title; cancelling restores the original removal control without changing the library.
 - Schedule retry focuses its persistent heading while loading and preserves later timezone choices and navigation.
+- Download completion and failed installation keep keyboard users on the next usable update action in Settings and the startup notice, respecting later focus and navigation.
 - Recognition-history refresh preserves successful concurrent saves and deletions while including newly fetched rows.
 - Cancelling or completing MAL XML import restores keyboard focus to the import control; failed imports remain usable for retry.
 - Recognition ignores image paste while title details are open and discards clipboard requests from a previous visit, including delayed failures after Back.

@@ -5,12 +5,18 @@
   let { inSettings = false, busy = false, onDismiss }: { inSettings?: boolean; busy?: boolean; onDismiss: () => void } = $props();
   let actionButton = $state<HTMLButtonElement>();
   const mb = (bytes: number) => (bytes / 1024 / 1024).toFixed(1);
-  async function download() {
+  async function runAction(action: () => Promise<void>) {
     if (busy) return;
-    await updates.download();
+    const owner = actionButton?.closest('main');
+    const ownsFocus = actionButton?.isConnected && document.activeElement === actionButton;
+    const route = location.hash;
+    const settingsContext = inSettings;
+    await action();
     await tick();
-    // Keep keyboard users on the next action unless they navigated or moved focus.
-    if (document.activeElement === document.body) actionButton?.focus({ preventScroll: true });
+    if (ownsFocus && owner?.isConnected && route === location.hash && settingsContext === inSettings
+      && document.activeElement === document.body && actionButton?.isConnected && !actionButton.disabled) {
+      actionButton.focus({ preventScroll: true });
+    }
   }
   async function later() {
     if (updates.phase === 'available' && !updates.error) updates.remindIn24Hours();
@@ -29,8 +35,8 @@
       {#if updates.phase === 'downloading'}<progress max="100" value={updates.percent} aria-label="Update download progress"></progress><p>Downloaded {mb(updates.downloaded)} MB{#if updates.total} of {mb(updates.total)} MB ({updates.percent}%){/if}</p>{/if}
     </div>
     <div class="notice-actions">
-      {#if updates.phase === 'available'}<button bind:this={actionButton} class="primary-button" disabled={busy} onclick={download}>Download update</button>
-      {:else if updates.phase === 'ready'}<button bind:this={actionButton} class="primary-button" disabled={busy} onclick={() => { if (!busy) void updates.install(); }}>Install and restart</button>
+      {#if updates.phase === 'available'}<button bind:this={actionButton} class="primary-button" disabled={busy} onclick={() => void runAction(() => updates.download())}>Download update</button>
+      {:else if updates.phase === 'ready'}<button bind:this={actionButton} class="primary-button" disabled={busy} onclick={() => void runAction(() => updates.install())}>Install and restart</button>
       {:else if updates.phase !== 'downloading'}<button bind:this={actionButton} class="primary-button" disabled={busy || updates.working} onclick={() => { if (!busy) void updates.check(); }}>Retry check</button>{/if}
       {#if updates.phase !== 'downloading'}<button class="ghost-button" title={updates.phase === 'available' && !updates.error ? 'Remind me about this version in 24 hours' : 'Remind me next launch'} onclick={later}>{updates.phase === 'available' && !updates.error ? 'Remind in 24 hours' : 'Later'}</button>{/if}
     </div>

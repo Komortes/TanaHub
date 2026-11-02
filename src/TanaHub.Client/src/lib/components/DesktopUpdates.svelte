@@ -1,14 +1,29 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import { version } from '../../../package.json';
   import { desktopUpdates as updates } from '../desktop-updates.svelte';
   let { busy = false, onBusyChange }: { busy?: boolean; onBusyChange: (busy: boolean) => void } = $props();
+  let panel = $state<HTMLElement>();
+  let actionButton = $state<HTMLButtonElement>();
   const mb = (bytes: number) => (bytes / 1024 / 1024).toFixed(1);
   const checkStatus = $derived({ never: 'Not checked yet', checking: 'Checking for updates', available: 'Update available', current: 'Up to date', failed: 'Check failed', unsupported: 'Updates unavailable for this package' }[updates.checkOutcome]);
   const date = (value: number) => new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(value);
   $effect(() => onBusyChange(['downloading', 'installing', 'installed'].includes(updates.phase)));
+  async function runAction(action: () => Promise<void>) {
+    if (busy) return;
+    const owner = panel;
+    const ownsFocus = actionButton?.isConnected && document.activeElement === actionButton;
+    const route = location.hash;
+    await action();
+    await tick();
+    if (ownsFocus && owner?.isConnected && owner === panel && route === location.hash
+      && document.activeElement === document.body && actionButton?.isConnected && !actionButton.disabled) {
+      actionButton.focus({ preventScroll: true });
+    }
+  }
 </script>
 
-<section class="panel update-panel" aria-busy={updates.working}>
+<section bind:this={panel} class="panel update-panel" aria-busy={updates.working}>
   <h2>About TanaHub</h2><p class="hint">TanaHub · {version}</p>
   <p class="hint">Updates include previews and are verified before installation. Your library stays on this device.</p>
   {#if updates.message}<p class="hint" role="status">{updates.message}</p>{/if}
@@ -26,9 +41,9 @@
   {#if updates.phase === 'ready'}<p class="hint">Save your changes before restarting. TanaHub will replace the application and reopen it.</p>{/if}
   <div class="update-actions">
     {#if updates.phase === 'installed'}<button class="primary-button" onclick={() => void updates.restart()}>Restart now</button>
-    {:else if updates.phase === 'available'}<button class="primary-button" disabled={busy || updates.working} onclick={() => { if (!busy) void updates.download(); }}>Download update</button>
-    {:else if updates.phase === 'ready'}<button class="primary-button" disabled={busy || updates.working} onclick={() => { if (!busy) void updates.install(); }}>Install and restart</button>
-    {:else}<button class="ghost-button" disabled={busy || updates.working} onclick={() => { if (!busy) void updates.check(); }}>{updates.phase === 'checking' ? 'Checking…' : 'Check for updates'}</button>{/if}
+    {:else if updates.phase === 'available'}<button bind:this={actionButton} class="primary-button" disabled={busy || updates.working} onclick={() => void runAction(() => updates.download())}>Download update</button>
+    {:else if updates.phase === 'ready'}<button bind:this={actionButton} class="primary-button" disabled={busy || updates.working} onclick={() => void runAction(() => updates.install())}>Install and restart</button>
+    {:else}<button bind:this={actionButton} class="ghost-button" disabled={busy || updates.working} onclick={() => { if (!busy) void updates.check(); }}>{updates.phase === 'checking' ? 'Checking…' : 'Check for updates'}</button>{/if}
     {#if !updates.working}<button class="text-button" onclick={() => void updates.browse()}>Browse releases</button>{/if}
   </div>
   {#if updates.update?.body}<details><summary>What's new in {updates.update.version}</summary><p class="release-notes">{updates.update.body.slice(0, 12_000)}</p></details>{/if}

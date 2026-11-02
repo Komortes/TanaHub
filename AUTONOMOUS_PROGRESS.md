@@ -126,6 +126,21 @@ needed. The native test bundle/profile uses a distinct QA identifier and data ro
 - Independent cross-review is clean. Next: preserve the next updater action
   after download or failed installation without taking later chosen focus.
 
+### Iteration 30 — recover the next usable update action
+
+- Settings download completion/failure replaced its focused action; a failed
+  installation closed the modal after removing its original trigger in both
+  Settings and the global notice. Snapshot the focused initiating action and
+  connected owner/context, then restore only an enabled successor while focus
+  is still on body and route/owner remain unchanged.
+- Four reproductions failed first; deliberate later-control/navigation guards
+  passed. All six new updater cases and 44 existing updater/snooze cases pass;
+  the combined Schedule/updater batch is 54/54. Full suite is 299/299.
+- Independent cross-review is clean; native update state/resource/signature/
+  installation logic is unchanged, including Escape prevention while installing.
+  Final local Release build is clean. Visual QA found a separate narrow-window
+  visibility issue with Keep title; reproduce and correct that before final QA.
+
 ## Overnight interface iteration — 26 October 2026
 
 The user authorized autonomous iterative UI work, ordinary design decisions,
