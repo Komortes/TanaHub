@@ -89,7 +89,7 @@
   let toastTimeout: ReturnType<typeof setTimeout>;
   const visibleMedia = $derived(page === 'library' ? entries.map(entry => entry.media) : catalog);
   const selectedEntry = $derived(selected ? knownEntries[mediaKey(selected.id)] : undefined);
-  const hasCollectionFilters = $derived(!!search.trim() || (page === 'library' ? !!(status || tag || customList) : page === 'discover' && !!(genre || preset !== 'Popular')));
+  const hasCollectionFilters = $derived(!!search.trim() || (page === 'library' ? !!(type || status || tag || customList) : page === 'discover' && !!(genre || preset !== 'Popular')));
   const collectionFilters = $derived(page === 'library' ? { sort: librarySort, tag: tag || undefined, customList: customList || undefined } : { genres: genre ? [genre] : [], seasonYear: preset === 'This year' ? new Date().getFullYear() : undefined, releaseStatus: preset === 'Upcoming' ? 'NotYetReleased' : undefined, countryCode: preset === 'Manhwa' ? 'KR' : undefined });
 
   $effect(() => { try { localStorage.setItem('tanahub-view', JSON.stringify({ layout, coverSize, version: 2 })); } catch { /* Private WebViews may disable storage. */ } });
@@ -190,7 +190,7 @@
   function resetFilters() {
     document.querySelector<HTMLInputElement>('main input[type="search"]')?.focus();
     search = '';
-    if (page === 'library') { status = ''; tag = ''; customList = ''; }
+    if (page === 'library') { type = ''; status = ''; tag = ''; customList = ''; }
     else { genre = ''; if (preset !== 'Popular') { preset = 'Popular'; sort = 'Popularity'; type = 'Anime'; } }
   }
   function pushRoute(route: string) { if (location.hash !== route) history.pushState({ tanahub: true, from: location.hash || '#library' }, '', route); }

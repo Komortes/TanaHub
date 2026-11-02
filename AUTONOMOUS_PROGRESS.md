@@ -35,6 +35,20 @@ or recognition uploads are needed. Coordinate frontend edits around browser runs
   read-only review found no actionable defect. Next: distinguish an empty media-
   type filter from a genuinely empty library (two red cases, first-use guard green).
 
+### Iteration 24 — distinguish an empty filter from an empty library
+
+- With saved Manga but no Anime (and the reverse), selecting the empty type
+  incorrectly offered Discover/import as if the entire library were empty.
+- Include the selected Library type in active-filter detection; Reset filters
+  now returns to All along with clearing search/status/organization filters.
+  Discover defaults and genuine first-use actions retain their own behavior.
+- Both type reproductions failed before the fix; the truly empty-library guard
+  already passed. All seven combined empty/reset scenarios now pass. Independent
+  review confirms toolbar visibility and retained Library/Discover context.
+- Next: finish pagination without losing the keyboard position. Four final-page
+  reproductions fail; two late focus/navigation guards already pass. Also queue
+  verified leaf-component focus fixes for dates, relations, Schedule and updates.
+
 ## Overnight interface iteration — 26 October 2026
 
 The user authorized autonomous iterative UI work, ordinary design decisions,
