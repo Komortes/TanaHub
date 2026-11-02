@@ -18,7 +18,7 @@
     await tick();
     if (ownsFocus && owner?.isConnected && owner === panel && route === location.hash
       && document.activeElement === document.body && actionButton?.isConnected && !actionButton.disabled) {
-      actionButton.focus({ preventScroll: true });
+      actionButton.focus();
     }
   }
 </script>

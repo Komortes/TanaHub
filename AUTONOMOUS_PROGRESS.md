@@ -160,6 +160,18 @@ button below 320px-window bounds. Reproduce that exact case and fix only its
 proven surface; do not change the unproven global-notice scrolling behavior.
 The remaining reviewed interactions are green; no new feature work is needed.
 
+### Iteration 32 — keep failed installation retry visible in Settings
+
+- The added installation error message could push its focused retry action below
+  a narrow viewport. Both 320/360 full-viewport reproductions failed.
+- Allow normal focus scrolling only for the already guarded Settings successor.
+  Leave the unproven global-notice scrolling unchanged. All 52 updater cases
+  pass, including explicit install, signatures, resources and later-focus guards.
+- Four repeated Settings updater captures at 320/1440 have fully visible actions,
+  no errors/overlay/overflow. At 320px the failed-install retry moved from below
+  900px to 722–762px. Independent review is clean. Before final packaging, check
+  whether partial-page errors appear where users request more results.
+
 ## Overnight interface iteration — 26 October 2026
 
 The user authorized autonomous iterative UI work, ordinary design decisions,
