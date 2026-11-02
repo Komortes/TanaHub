@@ -11,6 +11,7 @@
   let fetching = $state(false);
   let error = $state('');
   let failedPosters = $state<string[]>([]);
+  let heading: HTMLElement;
   let activeId = '';
   let generation = 0;
   const labels: Record<string, string> = { Prequel: 'Previous part', Sequel: 'Next part', Source: 'Source material', Adaptation: 'Adaptation', Parent: 'Main story', SideStory: 'Side story', SpinOff: 'Spin-off', Alternative: 'Alternative version', Summary: 'Recap', Compilation: 'Compilation', Contains: 'Contains', SameUniverse: 'Same universe', Character: 'Shared characters', Colored: 'Colour edition', Monochrome: 'Monochrome edition', Doujinshi: 'Fan work', Serialization: 'Serialization', PreSerialization: 'Pilot version' };
@@ -29,6 +30,11 @@
     return () => { generation += 1; };
   });
 
+  function refresh() {
+    if (fetching || loading || busy) return;
+    heading?.focus({ preventScroll: true });
+    void load(mediaId, true);
+  }
   async function load(id: string, force: boolean) {
     const requestGeneration = ++generation;
     fetching = true;
@@ -52,8 +58,8 @@
 </script>
 
 <section class="relations-panel" aria-labelledby="relations-heading" aria-busy={fetching || loading}>
-  <div class="section-heading"><h2 id="relations-heading">Related titles</h2><button class="refresh-button" onclick={() => load(mediaId, true)} disabled={fetching || loading || busy} aria-label="Refresh related titles"><RefreshCw size={13} class={fetching ? 'spinning' : ''} />{fetching ? 'Loading…' : 'Refresh'}</button></div>
-  {#if error}<div class="relation-notice error-notice" role="alert"><p>{error}</p><button class="ghost-button" onclick={() => load(mediaId, true)} disabled={fetching || loading || busy}>Try again</button></div>{/if}
+  <div class="section-heading"><h2 bind:this={heading} id="relations-heading" tabindex="-1">Related titles</h2><button class="refresh-button" onclick={refresh} disabled={fetching || loading || busy} aria-label="Refresh related titles"><RefreshCw size={13} class={fetching ? 'spinning' : ''} />{fetching ? 'Loading…' : 'Refresh'}</button></div>
+  {#if error}<div class="relation-notice error-notice" role="alert"><p>{error}</p><button class="ghost-button" onclick={refresh} disabled={fetching || loading || busy}>Try again</button></div>{/if}
   {#if result?.notice || result?.isStale}<p class="relation-notice" role="status">{result.notice ?? 'Showing saved connections. Refresh to check for updates.'}</p>{/if}
   {#if (fetching || loading) && !result}<div class="relation-skeleton" role="status"><span></span><div><span></span><span></span></div><span class="visually-hidden">Loading related titles…</span></div>{/if}
   {#if result && !result.titles.length && !error}<p class="empty-relations">No related titles listed by this source.</p>{/if}

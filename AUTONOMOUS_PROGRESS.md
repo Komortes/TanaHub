@@ -84,6 +84,17 @@ those verified interactions, then combine the full suite/build and visual QA.
 - Independent cross-review found no actionable defect. Continue with related-
   title refresh/retry focus, then the safe removal-confirmation entry point.
 
+### Iteration 27 — give related-title recovery a stable focus target
+
+- Both Refresh and Try again could disable/remove their focused control, leaving
+  focus at the document body during and after a request. Focus the persistent
+  Related titles heading synchronously for explicit refresh/retry only.
+- Four success/failure reproductions failed before the change; a late-response
+  editor/navigation guard already passed. All five now pass, plus the existing
+  date/draft/title checks. Background loads do not move focus, generation guards
+  and artwork retry behavior remain intact. Independent cross-review is clean.
+- Next: enter removal confirmation on the safe Keep title action.
+
 ## Overnight interface iteration — 26 October 2026
 
 The user authorized autonomous iterative UI work, ordinary design decisions,
